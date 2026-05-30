@@ -1,0 +1,60 @@
+@using BreadMaking.App.Models
+
+<div class="wizard-step">
+    <div class="step-explain">
+        <h3>🌾 What flour are you using?</h3>
+        <div class="explain-box">
+            <p><strong>Why it matters:</strong> Different flours absorb water at different rates and have different protein structures. Whole grain and rye flours contain bran — the outer husk of the grain — which cuts through gluten strands and needs a longer rest to fully absorb water.</p>
+            <p><strong>Enriched doughs</strong> (like brioche or milk bread) contain fat and eggs that coat the flour particles and prevent gluten from forming properly, which means a rest phase provides no benefit.</p>
+        </div>
+    </div>
+
+    <div class="step-input">
+        <div class="flour-grid">
+            @foreach (var flour in Enum.GetValues<FlourType>())
+            {
+                <button class="flour-card-large @(Value == flour ? "selected" : "")"
+                        @onclick="@(() => ValueChanged.InvokeAsync(flour))">
+                    <div class="flour-icon-large">@Icon(flour)</div>
+                    <div class="flour-name-large">@Label(flour)</div>
+                    <div class="flour-desc">@Desc(flour)</div>
+                </button>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public FlourType Value { get; set; } = FlourType.White;
+    [Parameter] public EventCallback<FlourType> ValueChanged { get; set; }
+
+    private string Icon(FlourType f) => f switch
+    {
+        FlourType.White => "🌾",
+        FlourType.WholeGrain => "🌿",
+        FlourType.Rye => "🍂",
+        FlourType.Spelt => "🌱",
+        FlourType.Enriched => "🧈",
+        _ => "🌾"
+    };
+
+    private string Label(FlourType f) => f switch
+    {
+        FlourType.White => "White / Strong",
+        FlourType.WholeGrain => "Whole Grain / Wheat",
+        FlourType.Rye => "Rye",
+        FlourType.Spelt => "Spelt",
+        FlourType.Enriched => "Enriched (Brioche / Milk Bread)",
+        _ => f.ToString()
+    };
+
+    private string Desc(FlourType f) => f switch
+    {
+        FlourType.White => "High-protein bread flour. Benefits most from a rest at any hydration above 65%.",
+        FlourType.WholeGrain => "Contains bran that cuts gluten. Needs a longer rest — 45–60 min minimum.",
+        FlourType.Rye => "Very high bran content, almost no gluten. Long rest helps water absorption.",
+        FlourType.Spelt => "Ancient grain with fragile gluten. Rest improves extensibility without over-developing.",
+        FlourType.Enriched => "Fat and eggs prevent proper gluten formation. Skip the rest entirely.",
+        _ => ""
+    };
+}

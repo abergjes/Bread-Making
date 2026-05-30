@@ -1,0 +1,25 @@
+@page "/"
+@using BreadMaking.App.Models
+@using BreadMaking.App.Components
+
+<PageTitle>Bread Strategy Advisor</PageTitle>
+
+@switch (_experience)
+{
+    case BakerExperience.None:
+        <ExperiencePicker OnSelect="OnExperienceSelected" />
+        break;
+    case BakerExperience.Experienced:
+        <ExperiencedForm OnBack="Reset" />
+        break;
+    case BakerExperience.Novice:
+        <NoviceWizard OnBack="Reset" />
+        break;
+}
+
+@code {
+    private BakerExperience _experience = BakerExperience.None;
+
+    private void OnExperienceSelected(BakerExperience exp) => _experience = exp;
+    private void Reset() => _experience = BakerExperience.None;
+}

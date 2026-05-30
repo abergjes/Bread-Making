@@ -1,0 +1,53 @@
+@using BreadMaking.App.Models
+
+<div class="wizard-step">
+    <div class="step-explain">
+        <h3>💧 What's your target dough hydration?</h3>
+        <div class="explain-box">
+            <p><strong>What is hydration?</strong> Hydration is the ratio of water to flour by weight, expressed as a percentage. A dough made with 700g flour and 504g water is 72% hydration. It tells you how wet or stiff the dough will be.</p>
+            <p><strong>Why it matters:</strong> Wetter doughs (above 75%) benefit most from a rest because the extra water takes longer to fully penetrate flour particles. Stiff doughs (below 65%) form gluten easily during kneading and may not need a rest at all.</p>
+            <ul>
+                <li><strong>Below 65%</strong> — Dense, stiff dough. Think bagels or pretzels. Rest provides little benefit with commercial yeast.</li>
+                <li><strong>65–74%</strong> — Moderate hydration. Good all-rounder. Autolyse gives a noticeable improvement.</li>
+                <li><strong>75% and above</strong> — Open crumb territory. A rest is highly recommended to manage the slack, wet dough.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="step-input">
+        <div class="hydration-display-large">@Value%</div>
+        <input type="range" min="55" max="90" step="1"
+               value="@Value"
+               @oninput="OnChange"
+               class="bakery-slider slider-large" />
+        <div class="slider-labels">
+            <span>55% — Stiff</span>
+            <span>90% — Very Wet</span>
+        </div>
+        <div class="hydration-zones">
+            <div class="hz-block @(Value < 65 ? "hz-active" : "")">
+                <strong>Low &lt;65%</strong>
+                <small>Rest may be skipped</small>
+            </div>
+            <div class="hz-block @(Value >= 65 && Value < 75 ? "hz-active" : "")">
+                <strong>Medium 65–74%</strong>
+                <small>Autolyse recommended</small>
+            </div>
+            <div class="hz-block @(Value >= 75 ? "hz-active" : "")">
+                <strong>High ≥75%</strong>
+                <small>Rest is essential</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public int Value { get; set; } = 72;
+    [Parameter] public EventCallback<int> ValueChanged { get; set; }
+
+    private void OnChange(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var v))
+            ValueChanged.InvokeAsync(v);
+    }
+}

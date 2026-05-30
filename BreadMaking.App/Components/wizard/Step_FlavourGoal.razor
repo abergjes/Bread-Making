@@ -1,0 +1,34 @@
+@using BreadMaking.App.Models
+
+<div class="wizard-step">
+    <div class="step-explain">
+        <h3>🍋 What flavour profile are you going for?</h3>
+        <div class="explain-box">
+            <p><strong>How does technique affect flavour?</strong> Sourdough flavour comes from organic acids produced by bacteria in the starter. The longer the bacteria have to work — and the earlier they start — the more acidic and complex the flavour becomes.</p>
+            <p><strong>Fermentolyse head-starts flavour:</strong> Including the starter during the rest means the bacteria begin producing acids from minute one. This gives you a deeper, tangier loaf with the same total baking time.</p>
+            <p><strong>Autolyse keeps it clean:</strong> Excluding the starter during the rest means the gluten develops without any acid influence. The final bread is milder, with a more open and irregular crumb structure — the hallmark of classic artisan sourdough.</p>
+        </div>
+    </div>
+
+    <div class="step-input">
+        <div class="flavour-cards-large">
+            <button class="flavour-card-large @(Value == FlavourGoal.MildOpenCrumb ? "selected" : "")"
+                    @onclick="@(() => ValueChanged.InvokeAsync(FlavourGoal.MildOpenCrumb))">
+                <div class="flavour-icon">🌬️</div>
+                <h4>Mild & Open Crumb</h4>
+                <p>Clean, wheaty flavour. Large, irregular holes. The classic bakery sourdough look. Choose autolyse for the cleanest gluten development.</p>
+            </button>
+            <button class="flavour-card-large @(Value == FlavourGoal.ComplexTangy ? "selected" : "")"
+                    @onclick="@(() => ValueChanged.InvokeAsync(FlavourGoal.ComplexTangy))">
+                <div class="flavour-icon">🍋</div>
+                <h4>Complex & Tangy</h4>
+                <p>Bold, sour notes. Rich, fermented depth. Think San Francisco sourdough. Fermentolyse gives the bacteria a head start on building those flavour compounds.</p>
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public FlavourGoal Value { get; set; } = FlavourGoal.MildOpenCrumb;
+    [Parameter] public EventCallback<FlavourGoal> ValueChanged { get; set; }
+}

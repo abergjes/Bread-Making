@@ -1,0 +1,58 @@
+@using BreadMaking.App.Models
+
+<div class="wizard-step">
+    <div class="step-explain">
+        <h3>🫙 Do you have a sourdough starter?</h3>
+        <div class="explain-box">
+            <p><strong>What is a sourdough starter?</strong> A starter is a live culture of wild yeast and lactic acid bacteria, kept alive by regular feeding (mixing in fresh flour and water). It's what makes sourdough bread rise and gives it that characteristic tangy flavour — no commercial yeast needed.</p>
+            <p><strong>Why peak activity matters:</strong> Fermentolyse relies on the starter being actively fermenting during the rest period. If it's freshly fed it hasn't woken up yet; if it's past peak it will introduce too much acidity and weaken the gluten. Only an <em>at-peak</em> starter is suitable for fermentolyse.</p>
+            <p><strong>How to spot peak activity:</strong> The starter has roughly doubled in size, looks bubbly and domed on top, and smells pleasantly tangy. The float test (drop a teaspoon in water — if it floats, it's ready) is a simple check.</p>
+        </div>
+    </div>
+
+    <div class="step-input">
+        <div class="starter-grid">
+            @foreach (var activity in Enum.GetValues<StarterActivity>())
+            {
+                <button class="starter-card-large @(Value == activity ? "selected" : "")"
+                        @onclick="@(() => ValueChanged.InvokeAsync(activity))">
+                    <div class="starter-icon-large">@Icon(activity)</div>
+                    <div class="starter-name">@Label(activity)</div>
+                    <div class="starter-desc">@Desc(activity)</div>
+                </button>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    [Parameter] public StarterActivity Value { get; set; } = StarterActivity.NotAvailable;
+    [Parameter] public EventCallback<StarterActivity> ValueChanged { get; set; }
+
+    private string Icon(StarterActivity a) => a switch
+    {
+        StarterActivity.NotAvailable => "❌",
+        StarterActivity.JustFed => "🌱",
+        StarterActivity.AtPeak => "🚀",
+        StarterActivity.PastPeak => "📉",
+        _ => "?"
+    };
+
+    private string Label(StarterActivity a) => a switch
+    {
+        StarterActivity.NotAvailable => "No starter available",
+        StarterActivity.JustFed => "Just fed (not ready yet)",
+        StarterActivity.AtPeak => "At peak activity",
+        StarterActivity.PastPeak => "Past peak (deflating)",
+        _ => a.ToString()
+    };
+
+    private string Desc(StarterActivity a) => a switch
+    {
+        StarterActivity.NotAvailable => "I'm using commercial (instant or active dry) yeast. Fermentolyse is not an option — but autolyse still helps.",
+        StarterActivity.JustFed => "Fed in the last hour or two. Not active enough for fermentolyse yet — check back when it has risen.",
+        StarterActivity.AtPeak => "Bubbly, domed, smells tangy. Perfect for fermentolyse or autolyse.",
+        StarterActivity.PastPeak => "Has risen and begun to fall. Too acidic for fermentolyse — use autolyse and keep the starter cool until your next feed.",
+        _ => ""
+    };
+}

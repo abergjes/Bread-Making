@@ -1,0 +1,193 @@
+@using BreadMaking.App.Models
+@using BreadMaking.App.Services
+
+<div class="two-panel-layout">
+    <!-- Left panel: inputs -->
+    <div class="input-panel">
+        <div class="panel-header">
+            <button class="back-btn" @onclick="OnBack">← Change experience level</button>
+            <h2>Your Bake Conditions</h2>
+        </div>
+
+        <!-- Temperature -->
+        <div class="input-group">
+            <label class="input-label">
+                Kitchen Temperature
+                <span class="temp-display">@Inputs.KitchenTemperatureC.ToString("F0")°C / @CelsiusToFahrenheit(Inputs.KitchenTemperatureC).ToString("F0")°F</span>
+            </label>
+            <input type="range" min="15" max="32" step="0.5"
+                   value="@Inputs.KitchenTemperatureC"
+                   @oninput="OnTempChange"
+                   class="bakery-slider" />
+            <div class="slider-labels">
+                <span>15°C Cool</span>
+                <span>32°C Hot</span>
+            </div>
+            <div class="temp-zone @TempZoneClass">@TempZoneLabel</div>
+        </div>
+
+        <!-- Flour type -->
+        <div class="input-group">
+            <label class="input-label">Flour Type</label>
+            <div class="flour-cards">
+                @foreach (var flour in Enum.GetValues<FlourType>())
+                {
+                    <button class="flour-card @(Inputs.FlourType == flour ? "selected" : "")"
+                            @onclick="@(() => { Inputs.FlourType = flour; UpdateRecommendation(); })">
+                        <span class="flour-icon">@FlourIcon(flour)</span>
+                        <span class="flour-name">@FlourLabel(flour)</span>
+                    </button>
+                }
+            </div>
+        </div>
+
+        <!-- Hydration -->
+        <div class="input-group">
+            <label class="input-label">
+                Dough Hydration
+                <span class="hydration-display">@Inputs.HydrationPercent%</span>
+            </label>
+            <input type="range" min="55" max="90" step="1"
+                   value="@Inputs.HydrationPercent"
+                   @oninput="OnHydrationChange"
+                   class="bakery-slider" />
+            <div class="slider-labels">
+                <span>55% Stiff</span>
+                <span>90% Very Wet</span>
+            </div>
+            <div class="hydration-zones">
+                <span class="hz @(Inputs.HydrationPercent < 65 ? "hz-active" : "")">Low &lt;65%</span>
+                <span class="hz @(Inputs.HydrationPercent >= 65 && Inputs.HydrationPercent < 75 ? "hz-active" : "")">Medium 65–74%</span>
+                <span class="hz @(Inputs.HydrationPercent >= 75 ? "hz-active" : "")">High ≥75%</span>
+            </div>
+        </div>
+
+        <!-- Starter -->
+        <div class="input-group">
+            <label class="input-label">Sourdough Starter</label>
+            <div class="starter-options">
+                @foreach (var activity in Enum.GetValues<StarterActivity>())
+                {
+                    <button class="starter-card @(Inputs.StarterActivity == activity ? "selected" : "")"
+                            @onclick="@(() => { Inputs.StarterActivity = activity; UpdateRecommendation(); })">
+                        <span class="starter-icon">@StarterIcon(activity)</span>
+                        <span class="starter-label">@StarterLabel(activity)</span>
+                    </button>
+                }
+            </div>
+        </div>
+
+        <!-- Flavour goal -->
+        <div class="input-group">
+            <label class="input-label">Flavour Goal</label>
+            <div class="flavour-cards">
+                <button class="flavour-card @(Inputs.FlavourGoal == FlavourGoal.MildOpenCrumb ? "selected" : "")"
+                        @onclick="@(() => { Inputs.FlavourGoal = FlavourGoal.MildOpenCrumb; UpdateRecommendation(); })">
+                    <span>🌬️</span>
+                    <div>
+                        <strong>Mild & Open Crumb</strong>
+                        <small>Clean flavour, large irregular holes</small>
+                    </div>
+                </button>
+                <button class="flavour-card @(Inputs.FlavourGoal == FlavourGoal.ComplexTangy ? "selected" : "")"
+                        @onclick="@(() => { Inputs.FlavourGoal = FlavourGoal.ComplexTangy; UpdateRecommendation(); })">
+                    <span>🍋</span>
+                    <div>
+                        <strong>Complex & Tangy</strong>
+                        <small>Sour notes, deep fermented flavour</small>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right panel: recommendation + timeline -->
+    <div class="result-panel">
+        <RecommendationPanel Recommendation="@_recommendation" />
+        <BakingTimeline Steps="@_recommendation?.Timeline" />
+    </div>
+</div>
+
+@code {
+    [Parameter] public EventCallback OnBack { get; set; }
+    [Inject] private BreadAdvisorService Advisor { get; set; } = default!;
+
+    private BreadInputs Inputs { get; set; } = new() { Experience = BakerExperience.Experienced };
+    private BreadRecommendation? _recommendation;
+
+    protected override void OnInitialized() => UpdateRecommendation();
+
+    private void OnTempChange(ChangeEventArgs e)
+    {
+        if (double.TryParse(e.Value?.ToString(), out var v))
+            Inputs.KitchenTemperatureC = v;
+        UpdateRecommendation();
+    }
+
+    private void OnHydrationChange(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var v))
+            Inputs.HydrationPercent = v;
+        UpdateRecommendation();
+    }
+
+    private void UpdateRecommendation() => _recommendation = Advisor.GetRecommendation(Inputs);
+
+    private double CelsiusToFahrenheit(double c) => c * 9.0 / 5.0 + 32;
+
+    private string TempZoneClass => Inputs.KitchenTemperatureC switch
+    {
+        < 18 => "zone-cold",
+        < 22 => "zone-cool",
+        < 25 => "zone-ideal",
+        < 28 => "zone-warm",
+        _ => "zone-hot"
+    };
+
+    private string TempZoneLabel => Inputs.KitchenTemperatureC switch
+    {
+        < 18 => "❄️ Very cool kitchen — extend rest times",
+        < 22 => "🌥️ Cool kitchen — ideal for fermentolyse",
+        < 25 => "✅ Ideal temperature range",
+        < 28 => "☀️ Warm kitchen — watch fermentolyse closely",
+        _ => "🔥 Hot kitchen — use autolyse or refrigerate dough"
+    };
+
+    private string FlourIcon(FlourType f) => f switch
+    {
+        FlourType.White => "🌾",
+        FlourType.WholeGrain => "🌿",
+        FlourType.Rye => "🍂",
+        FlourType.Spelt => "🌱",
+        FlourType.Enriched => "🧈",
+        _ => "🌾"
+    };
+
+    private string FlourLabel(FlourType f) => f switch
+    {
+        FlourType.White => "White",
+        FlourType.WholeGrain => "Whole Grain",
+        FlourType.Rye => "Rye",
+        FlourType.Spelt => "Spelt",
+        FlourType.Enriched => "Enriched",
+        _ => f.ToString()
+    };
+
+    private string StarterIcon(StarterActivity a) => a switch
+    {
+        StarterActivity.NotAvailable => "❌",
+        StarterActivity.JustFed => "🌱",
+        StarterActivity.AtPeak => "🚀",
+        StarterActivity.PastPeak => "📉",
+        _ => "?"
+    };
+
+    private string StarterLabel(StarterActivity a) => a switch
+    {
+        StarterActivity.NotAvailable => "No starter",
+        StarterActivity.JustFed => "Just fed",
+        StarterActivity.AtPeak => "At peak",
+        StarterActivity.PastPeak => "Past peak",
+        _ => a.ToString()
+    };
+}

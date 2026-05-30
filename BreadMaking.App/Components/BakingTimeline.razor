@@ -1,0 +1,50 @@
+@using BreadMaking.App.Models
+
+@if (Steps is { Count: > 0 })
+{
+    <div class="timeline-section">
+        <h3 class="timeline-title">Baking Timeline</h3>
+        <div class="timeline">
+            @foreach (var (step, index) in Steps.Select((s, i) => (s, i)))
+            {
+                <div class="timeline-step @(step.IsRestPhase ? "timeline-rest " + RestClass(step.RestMethod) : "") @(index == Steps.Count - 1 ? "timeline-last" : "")">
+                    <div class="timeline-connector">
+                        <div class="timeline-dot @(step.IsRestPhase ? "dot-rest" : "")"></div>
+                        @if (index < Steps.Count - 1)
+                        {
+                            <div class="timeline-line"></div>
+                        }
+                    </div>
+                    <div class="timeline-content">
+                        <div class="timeline-phase">
+                            @if (step.IsRestPhase)
+                            {
+                                <span class="rest-badge">@(step.RestMethod == RestMethod.Autolyse ? "AUTOLYSE" : "FERMENTOLYSE")</span>
+                            }
+                            @step.Phase
+                        </div>
+                        <div class="timeline-meta">
+                            <span class="timeline-duration">⏱ @step.DurationLabel</span>
+                            @if (!string.IsNullOrEmpty(step.TempLabel))
+                            {
+                                <span class="timeline-temp">🌡 @step.TempLabel</span>
+                            }
+                        </div>
+                        <div class="timeline-notes">@step.Notes</div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public List<TimelineStep>? Steps { get; set; }
+
+    private string RestClass(RestMethod? method) => method switch
+    {
+        RestMethod.Autolyse => "timeline-autolyse",
+        RestMethod.Fermentolyse => "timeline-fermentolyse",
+        _ => ""
+    };
+}

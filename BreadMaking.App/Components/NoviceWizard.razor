@@ -1,0 +1,115 @@
+@using BreadMaking.App.Models
+@using BreadMaking.App.Services
+@using BreadMaking.App.Components.wizard
+
+<div class="wizard-layout">
+    @if (!_showResult)
+    {
+        <!-- Progress bar -->
+        <div class="wizard-header">
+            <button class="back-btn" @onclick="OnBack">← Change experience level</button>
+            <div class="progress-bar-wrap">
+                <div class="progress-steps">
+                    @for (int i = 0; i < TotalSteps; i++)
+                    {
+                        var stepIndex = i;
+                        <div class="progress-step @(stepIndex < _currentStep ? "done" : stepIndex == _currentStep ? "active" : "")">
+                            <div class="progress-dot">@(stepIndex < _currentStep ? "✓" : (stepIndex + 1).ToString())</div>
+                            <div class="progress-label">@StepLabels[stepIndex]</div>
+                        </div>
+                        @if (stepIndex < TotalSteps - 1)
+                        {
+                            <div class="progress-connector @(stepIndex < _currentStep ? "done" : "")"></div>
+                        }
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="wizard-body">
+            @switch (_currentStep)
+            {
+                case 0:
+                    <Step_Temperature Value="@_inputs.KitchenTemperatureC"
+                                      ValueChanged="@(v => { _inputs.KitchenTemperatureC = v; })" />
+                    break;
+                case 1:
+                    <Step_FlourType Value="@_inputs.FlourType"
+                                    ValueChanged="@(v => { _inputs.FlourType = v; })" />
+                    break;
+                case 2:
+                    <Step_Hydration Value="@_inputs.HydrationPercent"
+                                    ValueChanged="@(v => { _inputs.HydrationPercent = v; })" />
+                    break;
+                case 3:
+                    <Step_Starter Value="@_inputs.StarterActivity"
+                                  ValueChanged="@(v => { _inputs.StarterActivity = v; })" />
+                    break;
+                case 4:
+                    <Step_FlavourGoal Value="@_inputs.FlavourGoal"
+                                      ValueChanged="@(v => { _inputs.FlavourGoal = v; })" />
+                    break;
+            }
+        </div>
+
+        <div class="wizard-nav">
+            @if (_currentStep > 0)
+            {
+                <button class="btn-secondary" @onclick="PrevStep">← Back</button>
+            }
+            else
+            {
+                <span></span>
+            }
+
+            @if (_currentStep < TotalSteps - 1)
+            {
+                <button class="btn-primary" @onclick="NextStep">Next →</button>
+            }
+            else
+            {
+                <button class="btn-primary btn-finish" @onclick="Finish">See my recommendation →</button>
+            }
+        </div>
+    }
+    else
+    {
+        <!-- Result screen — two columns -->
+        <div class="wizard-result-header">
+            <button class="back-btn" @onclick="BackToWizard">← Adjust my answers</button>
+            <h2>Your Bread Strategy</h2>
+        </div>
+        <div class="wizard-result-body">
+            <div class="result-col">
+                <RecommendationPanel Recommendation="@_recommendation" />
+            </div>
+            <div class="result-col">
+                <BakingTimeline Steps="@_recommendation?.Timeline" />
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public EventCallback OnBack { get; set; }
+    [Inject] private BreadAdvisorService Advisor { get; set; } = default!;
+
+    private BreadInputs _inputs = new() { Experience = BakerExperience.Novice };
+    private BreadRecommendation? _recommendation;
+    private int _currentStep = 0;
+    private bool _showResult = false;
+
+    private const int TotalSteps = 5;
+    private static readonly string[] StepLabels = ["Temperature", "Flour", "Hydration", "Starter", "Flavour"];
+
+    private void NextStep() { if (_currentStep < TotalSteps - 1) _currentStep++; }
+    private void PrevStep() { if (_currentStep > 0) _currentStep--; }
+
+    private void Finish()
+    {
+        _recommendation = Advisor.GetRecommendation(_inputs);
+        _showResult = true;
+    }
+
+    private void BackToWizard() => _showResult = false;
+}

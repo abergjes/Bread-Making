@@ -1,0 +1,66 @@
+@using BreadMaking.App.Models
+
+@if (Recommendation is null)
+{
+    <div class="recommendation-empty">
+        <div class="empty-icon">🌾</div>
+        <p>Fill in your conditions and your recommendation will appear here.</p>
+    </div>
+}
+else
+{
+    <div class="recommendation @MethodClass">
+        <div class="rec-badge">
+            <span class="rec-icon">@MethodIcon</span>
+            <div>
+                <div class="rec-headline">@Recommendation.Headline</div>
+                @if (Recommendation.Method != RestMethod.Skip)
+                {
+                    <div class="rec-duration">Rest for <strong>@Recommendation.RestDurationMin minutes</strong></div>
+                }
+            </div>
+        </div>
+
+        <p class="rec-reason">@Recommendation.Reason</p>
+
+        @if (Recommendation.Method != RestMethod.Skip && !string.IsNullOrEmpty(Recommendation.RiskLevel))
+        {
+            <div class="risk-badge risk-@Recommendation.RiskLevel.ToLower()">
+                Risk level: <strong>@Recommendation.RiskLevel</strong>
+            </div>
+        }
+
+        @if (Recommendation.Tips.Any())
+        {
+            <div class="rec-tips">
+                <h4>Key tips for this bake</h4>
+                <ul>
+                    @foreach (var tip in Recommendation.Tips)
+                    {
+                        <li>@tip</li>
+                    }
+                </ul>
+            </div>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public BreadRecommendation? Recommendation { get; set; }
+
+    private string MethodClass => Recommendation?.Method switch
+    {
+        RestMethod.Autolyse => "method-autolyse",
+        RestMethod.Fermentolyse => "method-fermentolyse",
+        RestMethod.Skip => "method-skip",
+        _ => ""
+    };
+
+    private string MethodIcon => Recommendation?.Method switch
+    {
+        RestMethod.Autolyse => "💧",
+        RestMethod.Fermentolyse => "🌡️",
+        RestMethod.Skip => "⏩",
+        _ => "🍞"
+    };
+}

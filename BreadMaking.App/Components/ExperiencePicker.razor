@@ -1,0 +1,39 @@
+@using BreadMaking.App.Models
+
+<div class="experience-picker">
+    <div class="picker-header">
+        <div class="bread-icon">🍞</div>
+        <h1 class="app-title">Bread Strategy Advisor</h1>
+        <p class="app-subtitle">Tell me about yourself and I'll guide you to the right rest technique for your bake.</p>
+    </div>
+
+    <div class="experience-cards">
+        <button class="experience-card" @onclick="@(() => OnSelect.InvokeAsync(BakerExperience.Novice))">
+            <div class="card-icon">🌱</div>
+            <h2>New to Baking</h2>
+            <p>I'm still learning the basics. Walk me through each choice with explanations.</p>
+            <ul class="card-features">
+                <li>Step-by-step guided wizard</li>
+                <li>Plain-language explanations</li>
+                <li>Why each ingredient matters</li>
+            </ul>
+            <span class="card-cta">Guide me →</span>
+        </button>
+
+        <button class="experience-card" @onclick="@(() => OnSelect.InvokeAsync(BakerExperience.Experienced))">
+            <div class="card-icon">👨‍🍳</div>
+            <h2>Experienced Baker</h2>
+            <p>I know my way around a dough. Show me all settings at once for a quick recommendation.</p>
+            <ul class="card-features">
+                <li>All inputs on one page</li>
+                <li>Live recommendation as you change settings</li>
+                <li>Full baking timeline</li>
+            </ul>
+            <span class="card-cta">Let's go →</span>
+        </button>
+    </div>
+</div>
+
+@code {
+    [Parameter] public EventCallback<BakerExperience> OnSelect { get; set; }
+}
