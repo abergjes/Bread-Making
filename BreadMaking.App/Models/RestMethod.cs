@@ -4,5 +4,6 @@ public enum RestMethod
 {
     Autolyse,
     Fermentolyse,
-    Skip
+    Skip,
+    Soaker
 }
