@@ -6,5 +6,10 @@ public enum FlourType
     WholeGrain,
     Rye,
     Spelt,
-    Enriched
+    Enriched,
+    Einkorn,
+    Emmer,
+    Kamut,
+    Teff,
+    Sorghum
 }

@@ -153,25 +153,8 @@
         _ => "🔥 Hot kitchen — use autolyse or refrigerate dough"
     };
 
-    private string FlourIcon(FlourType f) => f switch
-    {
-        FlourType.White => "🌾",
-        FlourType.WholeGrain => "🌿",
-        FlourType.Rye => "🍂",
-        FlourType.Spelt => "🌱",
-        FlourType.Enriched => "🧈",
-        _ => "🌾"
-    };
-
-    private string FlourLabel(FlourType f) => f switch
-    {
-        FlourType.White => "White",
-        FlourType.WholeGrain => "Whole Grain",
-        FlourType.Rye => "Rye",
-        FlourType.Spelt => "Spelt",
-        FlourType.Enriched => "Enriched",
-        _ => f.ToString()
-    };
+    private string FlourIcon(FlourType f) => GrainCatalogue.All[f].Icon;
+    private string FlourLabel(FlourType f) => GrainCatalogue.All[f].DisplayName;
 
     private string StarterIcon(StarterActivity a) => a switch
     {

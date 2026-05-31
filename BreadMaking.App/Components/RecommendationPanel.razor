@@ -14,7 +14,11 @@ else
             <span class="rec-icon">@MethodIcon</span>
             <div>
                 <div class="rec-headline">@Recommendation.Headline</div>
-                @if (Recommendation.Method != RestMethod.Skip)
+                @if (Recommendation.Method == RestMethod.Soaker)
+                {
+                    <div class="rec-duration">Soaker rest for <strong>@Recommendation.RestDurationMin minutes</strong></div>
+                }
+                else if (Recommendation.Method != RestMethod.Skip)
                 {
                     <div class="rec-duration">Rest for <strong>@Recommendation.RestDurationMin minutes</strong></div>
                 }
@@ -53,6 +57,7 @@ else
         RestMethod.Autolyse => "method-autolyse",
         RestMethod.Fermentolyse => "method-fermentolyse",
         RestMethod.Skip => "method-skip",
+        RestMethod.Soaker => "method-soaker",
         _ => ""
     };
 
@@ -61,6 +66,7 @@ else
         RestMethod.Autolyse => "💧",
         RestMethod.Fermentolyse => "🌡️",
         RestMethod.Skip => "⏩",
+        RestMethod.Soaker => "🫙",
         _ => "🍞"
     };
 }

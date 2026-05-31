@@ -4,33 +4,45 @@ namespace BreadMaking.App.Services;
 
 public class BreadAdvisorService
 {
-    // Sweet-spot rest durations from the document temperature tables
-    // Keys are temperature thresholds (°C), values are (autolyse minutes, fermentolyse minutes)
+    // Sweet-spot rest durations from the document v2 temperature tables (Section 7)
     private static readonly (double MaxTemp, int AutolyseSweetSpot, int FermentolyseSweetSpot)[] TempTable =
     [
-        (19, 75, 105),
-        (21, 60, 90),
-        (23, 50, 75),
-        (25, 37, 57),
-        (27, 30, 45),
-        (double.MaxValue, 25, 32)
+        (16, 70, 110),
+        (18, 60,  90),
+        (20, 50,  65),
+        (22, 45,  50),
+        (24, 35,  38),
+        (double.MaxValue, 30, 28)
     ];
 
-    private static readonly (double MaxTemp, string Risk)[] FermentolyseRisk =
+    private static readonly (double MaxTemp, string Risk)[] FermentolyseRiskTable =
     [
-        (21, "Low"),
-        (23, "Moderate"),
-        (25, "Moderate"),
+        (20, "Low"),
+        (22, "Moderate"),
         (double.MaxValue, "High")
     ];
 
     public BreadRecommendation GetRecommendation(BreadInputs inputs)
     {
+        var grain = GrainCatalogue.All[inputs.FlourType];
         var (autolyseMin, fermentolyseMin) = GetSweetSpots(inputs.KitchenTemperatureC);
 
+        // Gluten-free grains — autolyse concept does not apply; use a soaker
+        if (grain.IsGlutenFree)
+            return BuildSoaker(inputs, grain);
+
         // Enriched doughs — fat and eggs interfere with gluten formation
-        if (inputs.FlourType == FlourType.Enriched)
+        if (grain.IsEnriched)
             return BuildSkip(inputs, "Enriched doughs (brioche, milk bread) contain fat and eggs that interfere with gluten hydration. Neither method adds benefit here — proceed directly to mixing.");
+
+        // Low-gluten ancient wheats (Einkorn, Emmer) — long rest worsens slack dough
+        if (grain.IsLowGlutenAncient)
+        {
+            if (grain.MaxRestMinutes == 0)
+                return BuildSkip(inputs, $"{grain.DisplayName} has very fragile gluten that degrades quickly. Skip the rest entirely and proceed directly to gentle mixing.");
+            var shortRest = Math.Min(autolyseMin, grain.MaxRestMinutes);
+            return BuildAutolyse(inputs, shortRest, $"{grain.DisplayName} has very extensible but weak gluten — a long rest only worsens the slack, sticky dough. Keep the autolyse to {grain.MaxRestMinutes} minutes at most.");
+        }
 
         // Low-hydration commercial yeast — gluten forms easily without help
         if (!inputs.HasSourdoughStarter && inputs.HydrationPercent < 65)
@@ -39,33 +51,52 @@ public class BreadAdvisorService
         // No starter — must use autolyse or skip
         if (!inputs.HasSourdoughStarter)
         {
-            var duration = inputs.FlourType is FlourType.WholeGrain or FlourType.Rye or FlourType.Spelt
+            var duration = inputs.FlourType is FlourType.WholeGrain or FlourType.Rye
                 ? Math.Max(autolyseMin, 45)
-                : Math.Min(autolyseMin, 45);
+                : Math.Min(autolyseMin, grain.MaxRestMinutes);
             return BuildAutolyse(inputs, duration, "No sourdough starter is available, so fermentolyse is not an option. Autolyse gives you better extensibility and reduces kneading time with commercial yeast.");
         }
 
         // Starter past peak — too acidic for fermentolyse
         if (inputs.StarterActivity == StarterActivity.PastPeak)
-            return BuildAutolyse(inputs, autolyseMin, "Your starter is past peak. Using it in fermentolyse would introduce excessive acidity, risking over-weakened gluten. Use autolyse instead and add the starter after the rest.");
+        {
+            var dur = Math.Min(autolyseMin, grain.MaxRestMinutes);
+            return BuildAutolyse(inputs, dur, "Your starter is past peak. Using it in fermentolyse would introduce excessive acidity, risking over-weakened gluten. Use autolyse instead and add the starter after the rest.");
+        }
 
         // Starter just fed — not yet active enough for fermentolyse
         if (inputs.StarterActivity == StarterActivity.JustFed)
-            return BuildAutolyse(inputs, autolyseMin, "A freshly-fed starter hasn't reached peak activity yet. Fermentolyse relies on active fermentation — use autolyse now and wait until the starter peaks before your next bake.");
+        {
+            var dur = Math.Min(autolyseMin, grain.MaxRestMinutes);
+            return BuildAutolyse(inputs, dur, "A freshly-fed starter hasn't reached peak activity yet. Fermentolyse relies on active fermentation — use autolyse now and wait until the starter peaks before your next bake.");
+        }
 
         // Hot kitchen — over-fermentation risk too high
         if (inputs.KitchenTemperatureC > 24)
-            return BuildAutolyse(inputs, autolyseMin, $"At {inputs.KitchenTemperatureC:F0}°C your kitchen is warm enough that fermentolyse carries a high risk of over-fermentation, which can destroy the gluten network. Autolyse keeps things safe and predictable.");
+        {
+            var dur = Math.Min(autolyseMin, grain.MaxRestMinutes);
+            return BuildAutolyse(inputs, dur, $"At {inputs.KitchenTemperatureC:F0}°C your kitchen is warm enough that fermentolyse carries a high risk of over-fermentation. Autolyse keeps things safe and predictable.");
+        }
 
         // Novice baker — steer towards the safer method
         if (inputs.Experience == BakerExperience.Novice)
-            return BuildAutolyse(inputs, autolyseMin, "As a beginner baker, autolyse is the safer and more predictable choice. Fermentolyse requires experience reading dough feel and starter activity — master autolyse first.");
+        {
+            var dur = Math.Min(autolyseMin, grain.MaxRestMinutes);
+            return BuildAutolyse(inputs, dur, "As a beginner baker, autolyse is the safer and more predictable choice. Fermentolyse requires experience reading dough feel and starter activity — master autolyse first.");
+        }
+
+        // Spelt / Kamut sourdough — short autolyse (fragile or thirsty; fermentolyse OK for whole versions)
+        if (inputs.FlourType is FlourType.Spelt or FlourType.Kamut)
+        {
+            var dur = Math.Min(autolyseMin, grain.MaxRestMinutes);
+            return BuildAutolyse(inputs, dur, $"{grain.DisplayName} benefits from a controlled autolyse of up to {grain.MaxRestMinutes} minutes. The gluten is present but sensitive — keep the rest short and precise.");
+        }
 
         // Rye-heavy or whole wheat — acids help manage bran
         if (inputs.FlourType is FlourType.Rye or FlourType.WholeGrain)
         {
             var dur = Math.Max(fermentolyseMin, 60);
-            return BuildFermentolyse(inputs, dur, "Whole grain and rye flours contain bran that cuts through gluten strands. The organic acids produced during fermentolyse help condition the dough and counteract some of that weakening effect, giving you better structure.");
+            return BuildFermentolyse(inputs, dur, "Whole grain and rye flours contain bran that cuts through gluten strands. The organic acids produced during fermentolyse help condition the dough and counteract some of that weakening effect.");
         }
 
         // Cool kitchen — fermentolyse is safer and gives flavour benefit
@@ -78,10 +109,14 @@ public class BreadAdvisorService
 
         // High hydration — both work, but autolyse gives cleaner gluten
         if (inputs.HydrationPercent >= 75 && inputs.FlavourGoal == FlavourGoal.MildOpenCrumb)
-            return BuildAutolyse(inputs, autolyseMin, "For a mild, open crumb at high hydration, autolyse delivers the cleanest gluten development. The passive rest hydrates the flour fully and builds extensibility without the unpredictability of early fermentation.");
+        {
+            var dur = Math.Min(autolyseMin, grain.MaxRestMinutes);
+            return BuildAutolyse(inputs, dur, "For a mild, open crumb at high hydration, autolyse delivers the cleanest gluten development. The passive rest hydrates the flour fully and builds extensibility without the unpredictability of early fermentation.");
+        }
 
-        // Default moderate conditions — recommend fermentolyse for sourdough with peak starter
-        return BuildFermentolyse(inputs, fermentolyseMin, "Your conditions are well-suited to fermentolyse. With a peak-activity starter, moderate temperature, and sourdough flour, you'll gain earlier flavour development and slightly shorter bulk fermentation time.");
+        // Default moderate conditions — fermentolyse for sourdough with peak starter
+        return BuildFermentolyse(inputs, Math.Min(fermentolyseMin, grain.MaxRestMinutes),
+            "Your conditions are well-suited to fermentolyse. With a peak-activity starter, moderate temperature, and well-suited flour, you'll gain earlier flavour development and slightly shorter bulk fermentation time.");
     }
 
     private (int Autolyse, int Fermentolyse) GetSweetSpots(double tempC)
@@ -94,7 +129,7 @@ public class BreadAdvisorService
 
     private string GetFermentolyseRisk(double tempC)
     {
-        foreach (var row in FermentolyseRisk)
+        foreach (var row in FermentolyseRiskTable)
             if (tempC <= row.MaxTemp)
                 return row.Risk;
         return "High";
@@ -142,8 +177,23 @@ public class BreadAdvisorService
         };
     }
 
+    private BreadRecommendation BuildSoaker(BreadInputs inputs, GrainProfile grain)
+    {
+        return new BreadRecommendation
+        {
+            Method = RestMethod.Soaker,
+            RestDurationMin = grain.SoakerMinutes,
+            Headline = "Use a Soaker",
+            Reason = $"{grain.DisplayName} is gluten-free — the autolyse and fermentolyse techniques rely on gluten development, which this grain cannot provide. Instead, use a soaker: rest the flour in its liquid for {grain.SoakerMinutes} minutes to fully hydrate the starch, reduce grittiness, and improve crumb texture.",
+            RiskLevel = "Low",
+            Tips = SoakerTips(inputs, grain),
+            Timeline = BuildTimeline(inputs, RestMethod.Soaker, grain.SoakerMinutes)
+        };
+    }
+
     private List<string> AutolyseTips(BreadInputs inputs)
     {
+        var grain = GrainCatalogue.All[inputs.FlourType];
         var tips = new List<string>
         {
             "Mix only flour and water — no salt, no yeast, no starter yet.",
@@ -154,11 +204,16 @@ public class BreadAdvisorService
             tips.Add("Your kitchen is warm — use cold water to help keep dough temperature under control.");
         if (inputs.FlourType is FlourType.WholeGrain or FlourType.Rye)
             tips.Add("Bran-heavy flours need longer hydration — don't rush the rest.");
+        if (grain.IsLowGlutenAncient)
+            tips.Add($"Handle {grain.DisplayName} gently — folds only, no aggressive kneading. The gluten is fragile.");
+        if (!string.IsNullOrEmpty(grain.HydrationNote))
+            tips.Add(grain.HydrationNote);
         return tips;
     }
 
     private List<string> FermentolyseTips(BreadInputs inputs)
     {
+        var grain = GrainCatalogue.All[inputs.FlourType];
         var tips = new List<string>
         {
             "Include flour, water, and your starter — no salt.",
@@ -168,16 +223,34 @@ public class BreadAdvisorService
         };
         if (inputs.KitchenTemperatureC >= 22)
             tips.Add("Keep the rest on the shorter end of the range at your kitchen temperature.");
+        if (!string.IsNullOrEmpty(grain.MixingNote))
+            tips.Add(grain.MixingNote);
         return tips;
     }
 
     private List<string> SkipTips(BreadInputs inputs)
     {
-        return
-        [
+        var grain = GrainCatalogue.All[inputs.FlourType];
+        var tips = new List<string>
+        {
             "Proceed directly to mixing all ingredients together.",
             "Ensure you knead thoroughly to develop gluten.",
             "Use the windowpane test to confirm gluten development before bulk fermentation."
+        };
+        if (grain.IsLowGlutenAncient)
+            tips.Add($"{grain.DisplayName} dough is sticky and slack — use gentle folds instead of kneading and handle minimally.");
+        return tips;
+    }
+
+    private List<string> SoakerTips(BreadInputs inputs, GrainProfile grain)
+    {
+        return
+        [
+            $"Rest {grain.DisplayName} flour in all its liquid for {grain.SoakerMinutes} minutes before mixing.",
+            "A binder is essential — add psyllium husk, xanthan gum, or egg to replace gluten structure.",
+            grain.MixingNote,
+            "Bake in a tin for loaves, or pour thin onto a hot griddle for flatbreads.",
+            "Bake to a higher internal temperature (96–98°C) to ensure the crumb is fully set."
         ];
     }
 
@@ -185,6 +258,26 @@ public class BreadAdvisorService
     {
         bool isSourdough = inputs.HasSourdoughStarter;
         var steps = new List<TimelineStep>();
+
+        if (method == RestMethod.Soaker)
+        {
+            steps.Add(new TimelineStep { Phase = "Whisk batter", DurationLabel = "5 min", TempLabel = "Ambient", Notes = "Combine flour, liquid, and binder (psyllium/xanthan/egg). No kneading." });
+            steps.Add(new TimelineStep
+            {
+                Phase = "Soaker rest",
+                DurationLabel = $"{restMinutes} min",
+                TempLabel = "Ambient",
+                Notes = "Cover and rest. Starch fully absorbs liquid — reduces grittiness and improves crumb texture.",
+                IsRestPhase = true,
+                RestMethod = method
+            });
+            steps.Add(new TimelineStep { Phase = "Add remaining ingredients", DurationLabel = "5 min", TempLabel = "Ambient", Notes = "Fold in salt, any sweetener, and fat. For sourdough add starter now." });
+            steps.Add(new TimelineStep { Phase = "Ferment / proof", DurationLabel = "1–3 hours", TempLabel = "24–26°C", Notes = "Gluten-free batter rises more quickly and less dramatically than wheat dough — watch for bubbles." });
+            steps.Add(new TimelineStep { Phase = "Bake in tin (covered)", DurationLabel = "20 min", TempLabel = "220°C / 430°F", Notes = "Cover with foil or a lid to trap steam and prevent over-crust early." });
+            steps.Add(new TimelineStep { Phase = "Bake uncovered", DurationLabel = "25–35 min", TempLabel = "200°C / 390°F", Notes = "Until crust is set and internal temperature reaches 96–98°C." });
+            steps.Add(new TimelineStep { Phase = "Cool on wire rack", DurationLabel = "1–2 hours", TempLabel = "Room temp", Notes = "Gluten-free crumb continues setting during cooling — do not cut early." });
+            return steps;
+        }
 
         if (method == RestMethod.Skip)
         {
