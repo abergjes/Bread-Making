@@ -4,28 +4,28 @@ namespace BreadMaking.App.Services;
 
 public class BreadAdvisorService
 {
-    // Sweet-spot rest durations from the document v2 temperature tables (Section 7)
-    private static readonly (double MaxTemp, int AutolyseSweetSpot, int FermentolyseSweetSpot)[] TempTable =
-    [
-        (16, 70, 110),
-        (18, 60,  90),
-        (20, 50,  65),
-        (22, 45,  50),
-        (24, 35,  38),
-        (double.MaxValue, 30, 28)
-    ];
+    private record TempBand(
+        double MaxTemp,
+        int AutoMin, int AutoSweet, int AutoMax,
+        int FerroMin, int FerroSweet, int FerroMax,
+        string FerroRisk
+    );
 
-    private static readonly (double MaxTemp, string Risk)[] FermentolyseRiskTable =
+    // Rest duration ranges from document v3 Tables 7.1 and 7.2
+    private static readonly TempBand[] TempBands =
     [
-        (20, "Low"),
-        (22, "Moderate"),
-        (double.MaxValue, "High")
+        new(18, 60, 75, 90,  90, 105, 120, "Low"),
+        new(20, 45, 60, 75,  75,  90, 105, "Low"),
+        new(22, 40, 50, 60,  60,  75,  90, "Moderate"),
+        new(24, 30, 37, 45,  45,  57,  70, "Moderate"),
+        new(26, 25, 30, 35,  35,  45,  55, "High"),
+        new(double.MaxValue, 20, 25, 30, 25, 32, 40, "Very High")
     ];
 
     public BreadRecommendation GetRecommendation(BreadInputs inputs)
     {
         var grain = GrainCatalogue.All[inputs.FlourType];
-        var (autolyseMin, fermentolyseMin) = GetSweetSpots(inputs.KitchenTemperatureC);
+        var band = GetTempBand(inputs.KitchenTemperatureC);
 
         // Gluten-free grains — autolyse concept does not apply; use a soaker
         if (grain.IsGlutenFree)
@@ -40,126 +40,139 @@ public class BreadAdvisorService
         {
             if (grain.MaxRestMinutes == 0)
                 return BuildSkip(inputs, $"{grain.DisplayName} has very fragile gluten that degrades quickly. Skip the rest entirely and proceed directly to gentle mixing.");
-            var shortRest = Math.Min(autolyseMin, grain.MaxRestMinutes);
-            return BuildAutolyse(inputs, shortRest, $"{grain.DisplayName} has very extensible but weak gluten — a long rest only worsens the slack, sticky dough. Keep the autolyse to {grain.MaxRestMinutes} minutes at most.");
+            var (rMin, rSweet, rMax) = CapToGrain(band.AutoMin, band.AutoSweet, band.AutoMax, grain.MaxRestMinutes);
+            return BuildAutolyse(inputs, rMin, rSweet, rMax, $"{grain.DisplayName} has very extensible but weak gluten — a long rest only worsens the slack, sticky dough. Keep the autolyse to {grain.MaxRestMinutes} minutes at most.");
         }
 
         // Low-hydration commercial yeast — gluten forms easily without help
         if (!inputs.HasSourdoughStarter && inputs.HydrationPercent < 65)
             return BuildSkip(inputs, "Low-hydration doughs (under 65%) with commercial yeast form gluten readily during kneading. A rest phase adds time without meaningful benefit.");
 
-        // No starter — must use autolyse or skip
+        // No starter — must use autolyse
         if (!inputs.HasSourdoughStarter)
         {
-            var duration = inputs.FlourType is FlourType.WholeGrain or FlourType.Rye
-                ? Math.Max(autolyseMin, 45)
-                : Math.Min(autolyseMin, grain.MaxRestMinutes);
-            return BuildAutolyse(inputs, duration, "No sourdough starter is available, so fermentolyse is not an option. Autolyse gives you better extensibility and reduces kneading time with commercial yeast.");
+            if (inputs.FlourType is FlourType.WholeGrain or FlourType.Rye)
+            {
+                var minDur = Math.Max(band.AutoSweet, 45);
+                return BuildAutolyse(inputs, minDur, minDur, Math.Max(band.AutoMax, minDur), "No sourdough starter is available, so fermentolyse is not an option. Whole grain and rye flours need at least 45 minutes to fully hydrate the bran.");
+            }
+            var (aMin, aSweet, aMax) = CapToGrain(band.AutoMin, band.AutoSweet, band.AutoMax, grain.MaxRestMinutes);
+            return BuildAutolyse(inputs, aMin, aSweet, aMax, "No sourdough starter is available, so fermentolyse is not an option. Autolyse gives you better extensibility and reduces kneading time with commercial yeast.");
         }
 
         // Starter past peak — too acidic for fermentolyse
         if (inputs.StarterActivity == StarterActivity.PastPeak)
         {
-            var dur = Math.Min(autolyseMin, grain.MaxRestMinutes);
-            return BuildAutolyse(inputs, dur, "Your starter is past peak. Using it in fermentolyse would introduce excessive acidity, risking over-weakened gluten. Use autolyse instead and add the starter after the rest.");
+            var (aMin, aSweet, aMax) = CapToGrain(band.AutoMin, band.AutoSweet, band.AutoMax, grain.MaxRestMinutes);
+            return BuildAutolyse(inputs, aMin, aSweet, aMax, "Your starter is past peak. Using it in fermentolyse would introduce excessive acidity, risking over-weakened gluten. Use autolyse instead and add the starter after the rest.");
         }
 
         // Starter just fed — not yet active enough for fermentolyse
         if (inputs.StarterActivity == StarterActivity.JustFed)
         {
-            var dur = Math.Min(autolyseMin, grain.MaxRestMinutes);
-            return BuildAutolyse(inputs, dur, "A freshly-fed starter hasn't reached peak activity yet. Fermentolyse relies on active fermentation — use autolyse now and wait until the starter peaks before your next bake.");
+            var (aMin, aSweet, aMax) = CapToGrain(band.AutoMin, band.AutoSweet, band.AutoMax, grain.MaxRestMinutes);
+            return BuildAutolyse(inputs, aMin, aSweet, aMax, "A freshly-fed starter hasn't reached peak activity yet. Fermentolyse relies on active fermentation — use autolyse now and wait until the starter peaks before your next bake.");
         }
 
         // Hot kitchen — over-fermentation risk too high
         if (inputs.KitchenTemperatureC > 24)
         {
-            var dur = Math.Min(autolyseMin, grain.MaxRestMinutes);
-            return BuildAutolyse(inputs, dur, $"At {inputs.KitchenTemperatureC:F0}°C your kitchen is warm enough that fermentolyse carries a high risk of over-fermentation. Autolyse keeps things safe and predictable.");
+            var (aMin, aSweet, aMax) = CapToGrain(band.AutoMin, band.AutoSweet, band.AutoMax, grain.MaxRestMinutes);
+            return BuildAutolyse(inputs, aMin, aSweet, aMax, $"At {inputs.KitchenTemperatureC:F0}°C your kitchen is warm enough that fermentolyse carries a high risk of over-fermentation. Autolyse keeps things safe and predictable.");
+        }
+
+        // Stiff sourdough — fermentolyse risk higher at low hydration
+        if (inputs.HydrationPercent <= 68)
+        {
+            var (aMin, aSweet, aMax) = CapToGrain(band.AutoMin, band.AutoSweet, band.AutoMax, grain.MaxRestMinutes);
+            return BuildAutolyse(inputs, aMin, aSweet, aMax, "Stiff doughs (≤68% hydration) carry elevated fermentolyse risk — reduced water concentrates organic acids and can over-weaken the gluten. Autolyse gives you full control.");
         }
 
         // Novice baker — steer towards the safer method
         if (inputs.Experience == BakerExperience.Novice)
         {
-            var dur = Math.Min(autolyseMin, grain.MaxRestMinutes);
-            return BuildAutolyse(inputs, dur, "As a beginner baker, autolyse is the safer and more predictable choice. Fermentolyse requires experience reading dough feel and starter activity — master autolyse first.");
+            var (aMin, aSweet, aMax) = CapToGrain(band.AutoMin, band.AutoSweet, band.AutoMax, grain.MaxRestMinutes);
+            return BuildAutolyse(inputs, aMin, aSweet, aMax, "As a beginner baker, autolyse is the safer and more predictable choice. Fermentolyse requires experience reading dough feel and starter activity — master autolyse first.");
         }
 
-        // Spelt / Kamut sourdough — short autolyse (fragile or thirsty; fermentolyse OK for whole versions)
+        // Spelt / Kamut sourdough — short autolyse (fragile or thirsty; fermentolyse risk too high)
         if (inputs.FlourType is FlourType.Spelt or FlourType.Kamut)
         {
-            var dur = Math.Min(autolyseMin, grain.MaxRestMinutes);
-            return BuildAutolyse(inputs, dur, $"{grain.DisplayName} benefits from a controlled autolyse of up to {grain.MaxRestMinutes} minutes. The gluten is present but sensitive — keep the rest short and precise.");
+            var (aMin, aSweet, aMax) = CapToGrain(band.AutoMin, band.AutoSweet, band.AutoMax, grain.MaxRestMinutes);
+            return BuildAutolyse(inputs, aMin, aSweet, aMax, $"{grain.DisplayName} benefits from a controlled autolyse of up to {grain.MaxRestMinutes} minutes. The gluten is present but sensitive — keep the rest short and precise.");
         }
 
         // Rye-heavy or whole wheat — acids help manage bran
         if (inputs.FlourType is FlourType.Rye or FlourType.WholeGrain)
         {
-            var dur = Math.Max(fermentolyseMin, 60);
-            return BuildFermentolyse(inputs, dur, "Whole grain and rye flours contain bran that cuts through gluten strands. The organic acids produced during fermentolyse help condition the dough and counteract some of that weakening effect.");
+            var fSweet = Math.Max(band.FerroSweet, 60);
+            return BuildFermentolyse(inputs, band.FerroMin, fSweet, band.FerroMax, "Whole grain and rye flours contain bran that cuts through gluten strands. The organic acids produced during fermentolyse help condition the dough and counteract some of that weakening effect.");
         }
 
         // Cool kitchen — fermentolyse is safer and gives flavour benefit
         if (inputs.KitchenTemperatureC < 20)
-            return BuildFermentolyse(inputs, fermentolyseMin, $"At {inputs.KitchenTemperatureC:F0}°C your kitchen is cool, keeping fermentation slow and controlled. This is an ideal temperature for fermentolyse — you get the flavour benefit with very low over-fermentation risk.");
+            return BuildFermentolyse(inputs, band.FerroMin, band.FerroSweet, band.FerroMax, $"At {inputs.KitchenTemperatureC:F0}°C your kitchen is cool, keeping fermentation slow and controlled. This is an ideal temperature for fermentolyse — you get the flavour benefit with very low over-fermentation risk.");
 
         // Complex tangy flavour goal — fermentolyse wins
         if (inputs.FlavourGoal == FlavourGoal.ComplexTangy)
-            return BuildFermentolyse(inputs, fermentolyseMin, "For a complex, tangy sourdough profile, fermentolyse gives you a head start: lactic acid bacteria begin producing organic acids during the rest itself, compressing total fermentation time and deepening flavour complexity.");
+            return BuildFermentolyse(inputs, band.FerroMin, band.FerroSweet, band.FerroMax, "For a complex, tangy sourdough profile, fermentolyse gives you a head start: lactic acid bacteria begin producing organic acids during the rest itself, compressing total fermentation time and deepening flavour complexity.");
 
-        // High hydration — both work, but autolyse gives cleaner gluten
+        // High hydration + mild crumb — autolyse gives cleaner gluten
         if (inputs.HydrationPercent >= 75 && inputs.FlavourGoal == FlavourGoal.MildOpenCrumb)
         {
-            var dur = Math.Min(autolyseMin, grain.MaxRestMinutes);
-            return BuildAutolyse(inputs, dur, "For a mild, open crumb at high hydration, autolyse delivers the cleanest gluten development. The passive rest hydrates the flour fully and builds extensibility without the unpredictability of early fermentation.");
+            var (aMin, aSweet, aMax) = CapToGrain(band.AutoMin, band.AutoSweet, band.AutoMax, grain.MaxRestMinutes);
+            return BuildAutolyse(inputs, aMin, aSweet, aMax, "For a mild, open crumb at high hydration, autolyse delivers the cleanest gluten development. The passive rest hydrates the flour fully and builds extensibility without the unpredictability of early fermentation.");
         }
 
-        // Default moderate conditions — fermentolyse for sourdough with peak starter
-        return BuildFermentolyse(inputs, Math.Min(fermentolyseMin, grain.MaxRestMinutes),
+        // Default — moderate conditions with peak starter
+        return BuildFermentolyse(inputs, band.FerroMin, band.FerroSweet, band.FerroMax,
             "Your conditions are well-suited to fermentolyse. With a peak-activity starter, moderate temperature, and well-suited flour, you'll gain earlier flavour development and slightly shorter bulk fermentation time.");
     }
 
-    private (int Autolyse, int Fermentolyse) GetSweetSpots(double tempC)
+    private static TempBand GetTempBand(double tempC)
     {
-        foreach (var row in TempTable)
-            if (tempC <= row.MaxTemp)
-                return (row.AutolyseSweetSpot, row.FermentolyseSweetSpot);
-        return (25, 32);
+        foreach (var b in TempBands)
+            if (tempC <= b.MaxTemp)
+                return b;
+        return TempBands[^1];
     }
 
-    private string GetFermentolyseRisk(double tempC)
-    {
-        foreach (var row in FermentolyseRiskTable)
-            if (tempC <= row.MaxTemp)
-                return row.Risk;
-        return "High";
-    }
+    private static (int Min, int Sweet, int Max) CapToGrain(int min, int sweet, int max, int grainMax)
+        => (Math.Min(min, grainMax), Math.Min(sweet, grainMax), Math.Min(max, grainMax));
 
-    private BreadRecommendation BuildAutolyse(BreadInputs inputs, int minutes, string reason)
+    private BreadRecommendation BuildAutolyse(BreadInputs inputs, int restMin, int restSweet, int restMax, string reason)
     {
         return new BreadRecommendation
         {
             Method = RestMethod.Autolyse,
-            RestDurationMin = minutes,
+            RestDurationMin = restMin,
+            RestDurationSweetSpot = restSweet,
+            RestDurationMax = restMax,
             Headline = "Use Autolyse",
             Reason = reason,
             RiskLevel = "Low",
+            Pros = AutolysePros(inputs),
+            Cons = AutolyseCons(inputs),
             Tips = AutolyseTips(inputs),
-            Timeline = BuildTimeline(inputs, RestMethod.Autolyse, minutes)
+            Timeline = BuildTimeline(inputs, RestMethod.Autolyse, restSweet)
         };
     }
 
-    private BreadRecommendation BuildFermentolyse(BreadInputs inputs, int minutes, string reason)
+    private BreadRecommendation BuildFermentolyse(BreadInputs inputs, int restMin, int restSweet, int restMax, string reason)
     {
         return new BreadRecommendation
         {
             Method = RestMethod.Fermentolyse,
-            RestDurationMin = minutes,
+            RestDurationMin = restMin,
+            RestDurationSweetSpot = restSweet,
+            RestDurationMax = restMax,
             Headline = "Use Fermentolyse",
             Reason = reason,
-            RiskLevel = GetFermentolyseRisk(inputs.KitchenTemperatureC),
+            RiskLevel = GetTempBand(inputs.KitchenTemperatureC).FerroRisk,
+            Pros = FermentolysePros(inputs),
+            Cons = FermentolyseCons(inputs),
             Tips = FermentolyseTips(inputs),
-            Timeline = BuildTimeline(inputs, RestMethod.Fermentolyse, minutes)
+            Timeline = BuildTimeline(inputs, RestMethod.Fermentolyse, restSweet)
         };
     }
 
@@ -169,6 +182,8 @@ public class BreadAdvisorService
         {
             Method = RestMethod.Skip,
             RestDurationMin = 0,
+            RestDurationSweetSpot = 0,
+            RestDurationMax = 0,
             Headline = "Skip the Rest Phase",
             Reason = reason,
             RiskLevel = "None",
@@ -183,12 +198,57 @@ public class BreadAdvisorService
         {
             Method = RestMethod.Soaker,
             RestDurationMin = grain.SoakerMinutes,
+            RestDurationSweetSpot = grain.SoakerMinutes,
+            RestDurationMax = grain.SoakerMinutes,
             Headline = "Use a Soaker",
             Reason = $"{grain.DisplayName} is gluten-free — the autolyse and fermentolyse techniques rely on gluten development, which this grain cannot provide. Instead, use a soaker: rest the flour in its liquid for {grain.SoakerMinutes} minutes to fully hydrate the starch, reduce grittiness, and improve crumb texture.",
             RiskLevel = "Low",
             Tips = SoakerTips(inputs, grain),
             Timeline = BuildTimeline(inputs, RestMethod.Soaker, grain.SoakerMinutes)
         };
+    }
+
+    private List<string> AutolysePros(BreadInputs inputs)
+    {
+        var pros = new List<string>
+        {
+            "Safe and predictable — zero fermentation risk.",
+            "Reduces mixing and kneading time by 30–50%."
+        };
+        if (inputs.HydrationPercent >= 75)
+            pros.Add("Delivers the cleanest gluten development at high hydration for an open crumb.");
+        return pros;
+    }
+
+    private List<string> AutolyseCons(BreadInputs inputs)
+    {
+        var cons = new List<string>();
+        if (inputs.FlavourGoal == FlavourGoal.ComplexTangy)
+            cons.Add("No acid development during the rest — won't contribute to a tangy flavour profile.");
+        if (inputs.HasSourdoughStarter)
+            cons.Add("Starter must be incorporated separately after the rest, not during.");
+        return cons;
+    }
+
+    private List<string> FermentolysePros(BreadInputs inputs)
+    {
+        var pros = new List<string>
+        {
+            "Jumpstarts flavour — lactic acids begin building during the rest itself.",
+            "Slightly shortens total bulk fermentation time."
+        };
+        if (inputs.KitchenTemperatureC < 20)
+            pros.Add("Cool kitchen keeps fermentation slow and controlled — ideal conditions for this method.");
+        return pros;
+    }
+
+    private List<string> FermentolyseCons(BreadInputs inputs)
+    {
+        var cons = new List<string>();
+        if (inputs.KitchenTemperatureC >= 22)
+            cons.Add("Over-fermentation risk rises with kitchen temperature — watch the dough closely.");
+        cons.Add("Requires a well-fed starter at peak activity — sluggish starters won't benefit.");
+        return cons;
     }
 
     private List<string> AutolyseTips(BreadInputs inputs)
