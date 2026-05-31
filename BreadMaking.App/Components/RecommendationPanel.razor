@@ -16,11 +16,21 @@ else
                 <div class="rec-headline">@Recommendation.Headline</div>
                 @if (Recommendation.Method == RestMethod.Soaker)
                 {
-                    <div class="rec-duration">Soaker rest for <strong>@Recommendation.RestDurationMin minutes</strong></div>
+                    <div class="rec-duration">Soaker rest for <strong>@Recommendation.RestDurationSweetSpot minutes</strong></div>
                 }
                 else if (Recommendation.Method != RestMethod.Skip)
                 {
-                    <div class="rec-duration">Rest for <strong>@Recommendation.RestDurationMin minutes</strong></div>
+                    @if (Recommendation.RestDurationMin < Recommendation.RestDurationMax)
+                    {
+                        <div class="rec-duration">
+                            Rest: <strong>@Recommendation.RestDurationMin–@Recommendation.RestDurationMax min</strong>
+                            <span class="rec-sweet-spot">(aim for ~@Recommendation.RestDurationSweetSpot min)</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="rec-duration">Rest for <strong>@Recommendation.RestDurationSweetSpot minutes</strong></div>
+                    }
                 }
             </div>
         </div>
@@ -29,8 +39,38 @@ else
 
         @if (Recommendation.Method != RestMethod.Skip && !string.IsNullOrEmpty(Recommendation.RiskLevel))
         {
-            <div class="risk-badge risk-@Recommendation.RiskLevel.ToLower()">
+            <div class="risk-badge risk-@RiskClass">
                 Risk level: <strong>@Recommendation.RiskLevel</strong>
+            </div>
+        }
+
+        @if (Recommendation.Pros.Any() || Recommendation.Cons.Any())
+        {
+            <div class="rec-pros-cons">
+                @if (Recommendation.Pros.Any())
+                {
+                    <div class="pros-col">
+                        <h4>Pros</h4>
+                        <ul>
+                            @foreach (var pro in Recommendation.Pros)
+                            {
+                                <li class="pro-item">@pro</li>
+                            }
+                        </ul>
+                    </div>
+                }
+                @if (Recommendation.Cons.Any())
+                {
+                    <div class="cons-col">
+                        <h4>Cons</h4>
+                        <ul>
+                            @foreach (var con in Recommendation.Cons)
+                            {
+                                <li class="con-item">@con</li>
+                            }
+                        </ul>
+                    </div>
+                }
             </div>
         }
 
@@ -69,4 +109,6 @@ else
         RestMethod.Soaker => "🫙",
         _ => "🍞"
     };
+
+    private string RiskClass => Recommendation?.RiskLevel?.ToLower().Replace(" ", "-") ?? "";
 }
