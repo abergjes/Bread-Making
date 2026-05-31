@@ -1,0 +1,132 @@
+@using BreadMaking.App.Models
+
+<div class="blend-selector">
+
+    <!-- Primary grain -->
+    <div class="blend-section-label">@(IsCompact ? "Flour type" : "🌾 Primary flour")</div>
+    <div class="@(IsCompact ? "flour-cards" : "flour-grid")">
+        @foreach (var flour in Enum.GetValues<FlourType>())
+        {
+            var profile = GrainCatalogue.All[flour];
+            @if (IsCompact)
+            {
+                <button class="flour-card @(PrimaryFlour == flour ? "selected" : "")"
+                        @onclick="@(() => SetPrimary(flour))">
+                    <span class="flour-icon">@profile.Icon</span>
+                    <span class="flour-name">@profile.DisplayName</span>
+                </button>
+            }
+            else
+            {
+                <button class="flour-card-large @(PrimaryFlour == flour ? "selected" : "")"
+                        @onclick="@(() => SetPrimary(flour))">
+                    <div class="flour-icon-large">@profile.Icon</div>
+                    <div class="flour-name-large">@profile.DisplayName</div>
+                    <div class="flour-desc">@profile.Description</div>
+                </button>
+            }
+        }
+    </div>
+
+    <!-- Blend toggle -->
+    <label class="blend-toggle-row">
+        <input type="checkbox" class="blend-checkbox"
+               checked="@SecondaryFlour.HasValue"
+               @onchange="OnBlendToggle" />
+        <span>Blend with a second grain</span>
+        @if (SecondaryFlour.HasValue)
+        {
+            <span class="blend-ratio-pill">
+                @PrimaryPercent% @GrainCatalogue.All[PrimaryFlour].DisplayName
+                &nbsp;/&nbsp;
+                @(100 - PrimaryPercent)% @GrainCatalogue.All[SecondaryFlour.Value].DisplayName
+            </span>
+        }
+    </label>
+
+    @if (SecondaryFlour.HasValue)
+    {
+        <!-- Percentage slider -->
+        <div class="blend-split-wrap">
+            <div class="blend-split-ends">
+                <span>@GrainCatalogue.All[PrimaryFlour].Icon @GrainCatalogue.All[PrimaryFlour].DisplayName</span>
+                <span>@GrainCatalogue.All[SecondaryFlour.Value].Icon @GrainCatalogue.All[SecondaryFlour.Value].DisplayName</span>
+            </div>
+            <input type="range" min="10" max="90" step="5"
+                   value="@PrimaryPercent"
+                   @oninput="OnPercentChange"
+                   class="bakery-slider blend-slider" />
+            <div class="blend-split-pct">
+                <span class="blend-pct-left">@PrimaryPercent%</span>
+                <span class="blend-pct-right">@(100 - PrimaryPercent)%</span>
+            </div>
+        </div>
+
+        <!-- Secondary grain -->
+        <div class="blend-section-label">@(IsCompact ? "Second grain" : "🌾 Second flour")</div>
+        <div class="@(IsCompact ? "flour-cards" : "flour-grid")">
+            @foreach (var flour in Enum.GetValues<FlourType>().Where(f => f != PrimaryFlour))
+            {
+                var profile = GrainCatalogue.All[flour];
+                @if (IsCompact)
+                {
+                    <button class="flour-card @(SecondaryFlour == flour ? "selected" : "")"
+                            @onclick="@(() => SetSecondary(flour))">
+                        <span class="flour-icon">@profile.Icon</span>
+                        <span class="flour-name">@profile.DisplayName</span>
+                    </button>
+                }
+                else
+                {
+                    <button class="flour-card-large @(SecondaryFlour == flour ? "selected" : "")"
+                            @onclick="@(() => SetSecondary(flour))">
+                        <div class="flour-icon-large">@profile.Icon</div>
+                        <div class="flour-name-large">@profile.DisplayName</div>
+                        <div class="flour-desc">@profile.Description</div>
+                    </button>
+                }
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public FlourType PrimaryFlour { get; set; } = FlourType.White;
+    [Parameter] public EventCallback<FlourType> PrimaryFlourChanged { get; set; }
+    [Parameter] public FlourType? SecondaryFlour { get; set; }
+    [Parameter] public EventCallback<FlourType?> SecondaryFlourChanged { get; set; }
+    [Parameter] public int PrimaryPercent { get; set; } = 100;
+    [Parameter] public EventCallback<int> PrimaryPercentChanged { get; set; }
+    [Parameter] public bool IsCompact { get; set; }
+
+    private async Task SetPrimary(FlourType flour)
+    {
+        if (flour == SecondaryFlour)
+            await SecondaryFlourChanged.InvokeAsync(null);
+        await PrimaryFlourChanged.InvokeAsync(flour);
+    }
+
+    private Task SetSecondary(FlourType flour) => SecondaryFlourChanged.InvokeAsync(flour);
+
+    private async Task OnBlendToggle(ChangeEventArgs e)
+    {
+        bool enabled = (bool)(e.Value ?? false);
+        if (enabled)
+        {
+            var first = Enum.GetValues<FlourType>().First(f => f != PrimaryFlour);
+            await PrimaryPercentChanged.InvokeAsync(60);
+            await SecondaryFlourChanged.InvokeAsync(first);
+        }
+        else
+        {
+            await PrimaryPercentChanged.InvokeAsync(100);
+            await SecondaryFlourChanged.InvokeAsync(null);
+        }
+    }
+
+    private async Task OnPercentChange(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var v))
+            await PrimaryPercentChanged.InvokeAsync(v);
+    }
+}

@@ -1,0 +1,43 @@
+@using BreadMaking.App.Models
+@using BreadMaking.App.Content
+
+@if (!string.IsNullOrEmpty(BlendNote))
+{
+    <div class="blending-guide">
+        <div class="blend-analysis">
+            <div class="blend-analysis-title">🧬 Blend Analysis</div>
+            <p class="blend-analysis-text">@BlendNote</p>
+        </div>
+
+        <div class="blend-guide-sections">
+            <div class="blend-guide-item">
+                <div class="blend-guide-heading">The Gluten Budget</div>
+                <p>Every blend has a gluten budget. Strong modern wheat deposits into it; low-gluten ancient grains and gluten-free flours draw it down. Once the fragile fraction exceeds roughly 40%, switch from kneading to gentle folds, use a banneton or tin for support, shorten the rest, and accept a denser crumb.</p>
+            </div>
+            <div class="blend-guide-item">
+                <div class="blend-guide-heading">The 60/40 Sweet Spot</div>
+                <p>60% ancient or specialty grain + 40% strong white wheat is the classic starting point. The 40% high-protein wheat supplies just enough glutenin backbone for a buoyant, sliceable loaf while 60% specialty flour leads on flavour, colour, and aroma.</p>
+            </div>
+            <div class="blend-guide-item">
+                <div class="blend-guide-heading">Process Adjustments</div>
+                <p>Blends ferment faster than white dough (bran feeds the yeast). Reduce dough temperature, watch the dough not the clock, and err on the side of under-proofing. Expect a faster-browning crust from carotenoid-rich ancient grains — tent with foil if needed.</p>
+            </div>
+        </div>
+
+        <div class="blend-doc-section">
+            <button class="blend-doc-toggle" @onclick="() => _showDocText = !_showDocText">
+                📄 @(_showDocText ? "Hide" : "Show") Chapter 10 — as written in the document
+            </button>
+            @if (_showDocText)
+            {
+                <pre class="blend-doc-text">@BlendingContent.Chapter10Text</pre>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public string BlendNote { get; set; } = "";
+
+    private bool _showDocText;
+}

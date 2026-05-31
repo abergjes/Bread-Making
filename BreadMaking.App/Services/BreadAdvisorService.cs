@@ -24,18 +24,115 @@ public class BreadAdvisorService
 
     public BreadRecommendation GetRecommendation(BreadInputs inputs)
     {
-        var grain = GrainCatalogue.All[inputs.FlourType];
+        var (grain, blendNote) = ResolveGrain(inputs);
+        var rec = GetRecommendationCore(inputs, grain);
+        rec.BlendNote = blendNote;
+        return rec;
+    }
+
+    // ── Blend resolution ─────────────────────────────────────────────────────
+
+    private static (GrainProfile Grain, string BlendNote) ResolveGrain(BreadInputs inputs)
+    {
+        var primary = GrainCatalogue.All[inputs.FlourType];
+        if (!inputs.IsBlend)
+            return (primary, "");
+
+        var secondary = GrainCatalogue.All[inputs.SecondaryFlourType!.Value];
+        int pPct = inputs.PrimaryFlourPercent;
+        int sPct = inputs.SecondaryFlourPercent;
+
+        bool pWeak  = IsFragileGrain(inputs.FlourType, primary);
+        bool sWeak  = IsFragileGrain(inputs.SecondaryFlourType.Value, secondary);
+        int weakPct = (pWeak ? pPct : 0) + (sWeak ? sPct : 0);
+        int gfPct   = (primary.IsGlutenFree ? pPct : 0) + (secondary.IsGlutenFree ? sPct : 0);
+
+        bool effectiveGF       = gfPct > 75;
+        bool effectiveEnriched = primary.IsEnriched && pPct >= 50;
+        bool effectiveAncient  = weakPct >= 40 && (primary.IsLowGlutenAncient || secondary.IsLowGlutenAncient);
+
+        // Max rest from Table 10.4 (fragile/low-gluten fraction)
+        int tableMax     = weakPct switch { <= 20 => 45, <= 40 => 40, <= 60 => 30, <= 80 => 20, _ => 15 };
+        int weightedMax  = (pPct * primary.MaxRestMinutes + sPct * secondary.MaxRestMinutes) / 100;
+        int effectiveMax = effectiveGF ? 0 : Math.Min(tableMax, Math.Max(weightedMax, tableMax - 10));
+        int soakerMins   = effectiveGF ? Math.Max(primary.SoakerMinutes, secondary.SoakerMinutes) : 0;
+
+        string hydAdj  = weakPct switch { <= 20 => "+0–3%", <= 40 => "+3–6%", <= 60 => "+5–10%", <= 80 => "+8–15%", _ => "grain-specific" };
+        string hydNote = $"With {weakPct}% fragile-gluten flour in the blend, target approximately {hydAdj} hydration vs. your usual recipe.";
+        string mixNote = weakPct > 40
+            ? "Stretch-and-folds only — aggressive kneading tears the weak gluten network."
+            : primary.MixingNote;
+
+        var blendedGrain = new GrainProfile(
+            DisplayName:        $"{pPct}% {primary.DisplayName} / {sPct}% {secondary.DisplayName}",
+            Icon:               primary.Icon,
+            Description:        "",
+            IsGlutenFree:       effectiveGF,
+            IsEnriched:         effectiveEnriched,
+            IsLowGlutenAncient: effectiveAncient,
+            MaxRestMinutes:     effectiveMax,
+            SoakerMinutes:      soakerMins,
+            HydrationNote:      hydNote,
+            MixingNote:         mixNote
+        );
+
+        string blendNote = BuildBlendNote(primary, secondary, pPct, sPct, weakPct, gfPct, hydAdj, effectiveMax, effectiveGF);
+        return (blendedGrain, blendNote);
+    }
+
+    // A grain is "fragile" (draws down the gluten budget) if it's an ancient low-gluten wheat,
+    // Spelt, or gluten-free. Standard wholegrain/rye carry decent structure and are treated separately.
+    private static bool IsFragileGrain(FlourType type, GrainProfile profile)
+        => profile.IsLowGlutenAncient || profile.IsGlutenFree || type == FlourType.Spelt;
+
+    private static string BuildBlendNote(
+        GrainProfile p, GrainProfile s,
+        int pPct, int sPct, int weakPct, int gfPct,
+        string hydAdj, int maxRest, bool isGF)
+    {
+        string family;
+        if (isGF)                                            family = "gluten-free blend — treat as a batter, no kneading";
+        else if (gfPct > 0)                                  family = $"wheat blend with {gfPct}% gluten-free flour";
+        else if (p.IsLowGlutenAncient && s.IsLowGlutenAncient) family = "ancient + ancient blend — no strong-wheat backbone";
+        else if (p.IsLowGlutenAncient || s.IsLowGlutenAncient) family = "ancient grain + strong wheat";
+        else                                                 family = "wholegrain / specialty blend";
+
+        var parts = new List<string> { $"{pPct}% {p.DisplayName} + {sPct}% {s.DisplayName} — {family}." };
+
+        if (!isGF)
+        {
+            parts.Add(weakPct switch
+            {
+                <= 20 => $"At {weakPct}% fragile-gluten flour the dough behaves close to a standard wheat bake.",
+                <= 40 => $"At {weakPct}% you're in the classic sweet-spot: solid structure with meaningful flavour from the specialty grain.",
+                <= 60 => $"At {weakPct}% fragile-gluten flour expect a moderately open crumb and stickier dough — shape with care.",
+                _     => $"At {weakPct}% fragile-gluten flour the dough will be slack and sticky. Use a banneton or tin for support."
+            });
+            parts.Add($"Hydration: approximately {hydAdj} vs. your usual recipe.");
+            parts.Add(maxRest > 0
+                ? $"Rest: keep the autolyse to {maxRest} min or less for this flour ratio."
+                : "Rest: skip the autolyse — the gluten is too fragile to benefit.");
+        }
+        else
+        {
+            parts.Add("Add a binder (psyllium husk, xanthan gum, or egg) to replace gluten structure. Use a soaker rather than an autolyse.");
+        }
+
+        return string.Join(" ", parts);
+    }
+
+    // ── Core recommendation logic ─────────────────────────────────────────────
+
+    private BreadRecommendation GetRecommendationCore(BreadInputs inputs, GrainProfile grain)
+    {
         var band = GetTempBand(inputs.KitchenTemperatureC);
 
-        // Gluten-free grains — autolyse concept does not apply; use a soaker
         if (grain.IsGlutenFree)
             return BuildSoaker(inputs, grain);
 
-        // Enriched doughs — fat and eggs interfere with gluten formation
         if (grain.IsEnriched)
             return BuildSkip(inputs, "Enriched doughs (brioche, milk bread) contain fat and eggs that interfere with gluten hydration. Neither method adds benefit here — proceed directly to mixing.");
 
-        // Low-gluten ancient wheats (Einkorn, Emmer) — long rest worsens slack dough
         if (grain.IsLowGlutenAncient)
         {
             if (grain.MaxRestMinutes == 0)
@@ -44,14 +141,12 @@ public class BreadAdvisorService
             return BuildAutolyse(inputs, rMin, rSweet, rMax, $"{grain.DisplayName} has very extensible but weak gluten — a long rest only worsens the slack, sticky dough. Keep the autolyse to {grain.MaxRestMinutes} minutes at most.");
         }
 
-        // Low-hydration commercial yeast — gluten forms easily without help
         if (!inputs.HasSourdoughStarter && inputs.HydrationPercent < 65)
             return BuildSkip(inputs, "Low-hydration doughs (under 65%) with commercial yeast form gluten readily during kneading. A rest phase adds time without meaningful benefit.");
 
-        // No starter — must use autolyse
         if (!inputs.HasSourdoughStarter)
         {
-            if (inputs.FlourType is FlourType.WholeGrain or FlourType.Rye)
+            if (inputs.HasMeaningfulBranContent)
             {
                 var minDur = Math.Max(band.AutoSweet, 45);
                 return BuildAutolyse(inputs, minDur, minDur, Math.Max(band.AutoMax, minDur), "No sourdough starter is available, so fermentolyse is not an option. Whole grain and rye flours need at least 45 minutes to fully hydrate the bran.");
@@ -60,74 +155,65 @@ public class BreadAdvisorService
             return BuildAutolyse(inputs, aMin, aSweet, aMax, "No sourdough starter is available, so fermentolyse is not an option. Autolyse gives you better extensibility and reduces kneading time with commercial yeast.");
         }
 
-        // Starter past peak — too acidic for fermentolyse
         if (inputs.StarterActivity == StarterActivity.PastPeak)
         {
             var (aMin, aSweet, aMax) = CapToGrain(band.AutoMin, band.AutoSweet, band.AutoMax, grain.MaxRestMinutes);
             return BuildAutolyse(inputs, aMin, aSweet, aMax, "Your starter is past peak. Using it in fermentolyse would introduce excessive acidity, risking over-weakened gluten. Use autolyse instead and add the starter after the rest.");
         }
 
-        // Starter just fed — not yet active enough for fermentolyse
         if (inputs.StarterActivity == StarterActivity.JustFed)
         {
             var (aMin, aSweet, aMax) = CapToGrain(band.AutoMin, band.AutoSweet, band.AutoMax, grain.MaxRestMinutes);
             return BuildAutolyse(inputs, aMin, aSweet, aMax, "A freshly-fed starter hasn't reached peak activity yet. Fermentolyse relies on active fermentation — use autolyse now and wait until the starter peaks before your next bake.");
         }
 
-        // Hot kitchen — over-fermentation risk too high
         if (inputs.KitchenTemperatureC > 24)
         {
             var (aMin, aSweet, aMax) = CapToGrain(band.AutoMin, band.AutoSweet, band.AutoMax, grain.MaxRestMinutes);
             return BuildAutolyse(inputs, aMin, aSweet, aMax, $"At {inputs.KitchenTemperatureC:F0}°C your kitchen is warm enough that fermentolyse carries a high risk of over-fermentation. Autolyse keeps things safe and predictable.");
         }
 
-        // Stiff sourdough — fermentolyse risk higher at low hydration
         if (inputs.HydrationPercent <= 68)
         {
             var (aMin, aSweet, aMax) = CapToGrain(band.AutoMin, band.AutoSweet, band.AutoMax, grain.MaxRestMinutes);
             return BuildAutolyse(inputs, aMin, aSweet, aMax, "Stiff doughs (≤68% hydration) carry elevated fermentolyse risk — reduced water concentrates organic acids and can over-weaken the gluten. Autolyse gives you full control.");
         }
 
-        // Novice baker — steer towards the safer method
         if (inputs.Experience == BakerExperience.Novice)
         {
             var (aMin, aSweet, aMax) = CapToGrain(band.AutoMin, band.AutoSweet, band.AutoMax, grain.MaxRestMinutes);
             return BuildAutolyse(inputs, aMin, aSweet, aMax, "As a beginner baker, autolyse is the safer and more predictable choice. Fermentolyse requires experience reading dough feel and starter activity — master autolyse first.");
         }
 
-        // Spelt / Kamut sourdough — short autolyse (fragile or thirsty; fermentolyse risk too high)
-        if (inputs.FlourType is FlourType.Spelt or FlourType.Kamut)
+        if (inputs.DominantFlourType is FlourType.Spelt or FlourType.Kamut)
         {
             var (aMin, aSweet, aMax) = CapToGrain(band.AutoMin, band.AutoSweet, band.AutoMax, grain.MaxRestMinutes);
             return BuildAutolyse(inputs, aMin, aSweet, aMax, $"{grain.DisplayName} benefits from a controlled autolyse of up to {grain.MaxRestMinutes} minutes. The gluten is present but sensitive — keep the rest short and precise.");
         }
 
-        // Rye-heavy or whole wheat — acids help manage bran
-        if (inputs.FlourType is FlourType.Rye or FlourType.WholeGrain)
+        if (inputs.HasMeaningfulBranContent)
         {
             var fSweet = Math.Max(band.FerroSweet, 60);
             return BuildFermentolyse(inputs, band.FerroMin, fSweet, band.FerroMax, "Whole grain and rye flours contain bran that cuts through gluten strands. The organic acids produced during fermentolyse help condition the dough and counteract some of that weakening effect.");
         }
 
-        // Cool kitchen — fermentolyse is safer and gives flavour benefit
         if (inputs.KitchenTemperatureC < 20)
             return BuildFermentolyse(inputs, band.FerroMin, band.FerroSweet, band.FerroMax, $"At {inputs.KitchenTemperatureC:F0}°C your kitchen is cool, keeping fermentation slow and controlled. This is an ideal temperature for fermentolyse — you get the flavour benefit with very low over-fermentation risk.");
 
-        // Complex tangy flavour goal — fermentolyse wins
         if (inputs.FlavourGoal == FlavourGoal.ComplexTangy)
             return BuildFermentolyse(inputs, band.FerroMin, band.FerroSweet, band.FerroMax, "For a complex, tangy sourdough profile, fermentolyse gives you a head start: lactic acid bacteria begin producing organic acids during the rest itself, compressing total fermentation time and deepening flavour complexity.");
 
-        // High hydration + mild crumb — autolyse gives cleaner gluten
         if (inputs.HydrationPercent >= 75 && inputs.FlavourGoal == FlavourGoal.MildOpenCrumb)
         {
             var (aMin, aSweet, aMax) = CapToGrain(band.AutoMin, band.AutoSweet, band.AutoMax, grain.MaxRestMinutes);
             return BuildAutolyse(inputs, aMin, aSweet, aMax, "For a mild, open crumb at high hydration, autolyse delivers the cleanest gluten development. The passive rest hydrates the flour fully and builds extensibility without the unpredictability of early fermentation.");
         }
 
-        // Default — moderate conditions with peak starter
         return BuildFermentolyse(inputs, band.FerroMin, band.FerroSweet, band.FerroMax,
             "Your conditions are well-suited to fermentolyse. With a peak-activity starter, moderate temperature, and well-suited flour, you'll gain earlier flavour development and slightly shorter bulk fermentation time.");
     }
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
 
     private static TempBand GetTempBand(double tempC)
     {
@@ -139,6 +225,8 @@ public class BreadAdvisorService
 
     private static (int Min, int Sweet, int Max) CapToGrain(int min, int sweet, int max, int grainMax)
         => (Math.Min(min, grainMax), Math.Min(sweet, grainMax), Math.Min(max, grainMax));
+
+    // ── Builders ─────────────────────────────────────────────────────────────
 
     private BreadRecommendation BuildAutolyse(BreadInputs inputs, int restMin, int restSweet, int restMax, string reason)
     {
@@ -208,6 +296,8 @@ public class BreadAdvisorService
         };
     }
 
+    // ── Pros / Cons ───────────────────────────────────────────────────────────
+
     private List<string> AutolysePros(BreadInputs inputs)
     {
         var pros = new List<string>
@@ -251,6 +341,8 @@ public class BreadAdvisorService
         return cons;
     }
 
+    // ── Tips ─────────────────────────────────────────────────────────────────
+
     private List<string> AutolyseTips(BreadInputs inputs)
     {
         var grain = GrainCatalogue.All[inputs.FlourType];
@@ -262,10 +354,12 @@ public class BreadAdvisorService
         };
         if (inputs.KitchenTemperatureC > 25)
             tips.Add("Your kitchen is warm — use cold water to help keep dough temperature under control.");
-        if (inputs.FlourType is FlourType.WholeGrain or FlourType.Rye)
+        if (inputs.HasMeaningfulBranContent)
             tips.Add("Bran-heavy flours need longer hydration — don't rush the rest.");
         if (grain.IsLowGlutenAncient)
             tips.Add($"Handle {grain.DisplayName} gently — folds only, no aggressive kneading. The gluten is fragile.");
+        if (inputs.IsBlend)
+            tips.Add("For a blend, mix both flours together before adding water so they hydrate evenly.");
         if (!string.IsNullOrEmpty(grain.HydrationNote))
             tips.Add(grain.HydrationNote);
         return tips;
@@ -283,6 +377,8 @@ public class BreadAdvisorService
         };
         if (inputs.KitchenTemperatureC >= 22)
             tips.Add("Keep the rest on the shorter end of the range at your kitchen temperature.");
+        if (inputs.IsBlend)
+            tips.Add("In a blend, mix all flours together with the water before adding starter for even hydration.");
         if (!string.IsNullOrEmpty(grain.MixingNote))
             tips.Add(grain.MixingNote);
         return tips;
@@ -314,6 +410,8 @@ public class BreadAdvisorService
         ];
     }
 
+    // ── Timeline ─────────────────────────────────────────────────────────────
+
     private List<TimelineStep> BuildTimeline(BreadInputs inputs, RestMethod method, int restMinutes)
     {
         bool isSourdough = inputs.HasSourdoughStarter;
@@ -322,15 +420,7 @@ public class BreadAdvisorService
         if (method == RestMethod.Soaker)
         {
             steps.Add(new TimelineStep { Phase = "Whisk batter", DurationLabel = "5 min", TempLabel = "Ambient", Notes = "Combine flour, liquid, and binder (psyllium/xanthan/egg). No kneading." });
-            steps.Add(new TimelineStep
-            {
-                Phase = "Soaker rest",
-                DurationLabel = $"{restMinutes} min",
-                TempLabel = "Ambient",
-                Notes = "Cover and rest. Starch fully absorbs liquid — reduces grittiness and improves crumb texture.",
-                IsRestPhase = true,
-                RestMethod = method
-            });
+            steps.Add(new TimelineStep { Phase = "Soaker rest", DurationLabel = $"{restMinutes} min", TempLabel = "Ambient", Notes = "Cover and rest. Starch fully absorbs liquid — reduces grittiness and improves crumb texture.", IsRestPhase = true, RestMethod = method });
             steps.Add(new TimelineStep { Phase = "Add remaining ingredients", DurationLabel = "5 min", TempLabel = "Ambient", Notes = "Fold in salt, any sweetener, and fat. For sourdough add starter now." });
             steps.Add(new TimelineStep { Phase = "Ferment / proof", DurationLabel = "1–3 hours", TempLabel = "24–26°C", Notes = "Gluten-free batter rises more quickly and less dramatically than wheat dough — watch for bubbles." });
             steps.Add(new TimelineStep { Phase = "Bake in tin (covered)", DurationLabel = "20 min", TempLabel = "220°C / 430°F", Notes = "Cover with foil or a lid to trap steam and prevent over-crust early." });
@@ -350,7 +440,6 @@ public class BreadAdvisorService
                 ? "Rough mix of flour, water, and starter — no salt yet."
                 : "Rough mix of flour and water only — no salt, no yeast.";
             steps.Add(new TimelineStep { Phase = "Mix flour + water" + (method == RestMethod.Fermentolyse ? " + starter" : ""), DurationLabel = "10–15 min", TempLabel = "20–24°C", Notes = mixNote });
-
             steps.Add(new TimelineStep
             {
                 Phase = method == RestMethod.Autolyse ? "Autolyse rest" : "Fermentolyse rest",
@@ -362,7 +451,6 @@ public class BreadAdvisorService
                 IsRestPhase = true,
                 RestMethod = method
             });
-
             steps.Add(new TimelineStep { Phase = "Add salt" + (isSourdough && method == RestMethod.Autolyse ? " + starter" : ""), DurationLabel = "5–10 min", TempLabel = "Ambient", Notes = "Dimple salt into the dough and fold to incorporate. Add starter now if using autolyse." });
         }
 
@@ -388,7 +476,6 @@ public class BreadAdvisorService
         }
 
         steps.Add(new TimelineStep { Phase = "Cool on wire rack", DurationLabel = isSourdough ? "1–2 hours" : "30–60 min", TempLabel = "Room temp", Notes = "Do not cut early — the crumb is still setting during cooling." });
-
         return steps;
     }
 }

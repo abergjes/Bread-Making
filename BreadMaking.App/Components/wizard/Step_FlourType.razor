@@ -6,26 +6,27 @@
         <div class="explain-box">
             <p><strong>Why it matters:</strong> Different flours absorb water at different rates and have very different protein structures. Whole grain and rye flours contain bran that cuts through gluten and need a longer rest. Enriched doughs (fat, eggs) skip the rest entirely.</p>
             <p><strong>Ancient grains</strong> — Einkorn, Emmer, Spelt, and Kamut — each behave differently from modern wheat. Teff and Sorghum are gluten-free grasses that use a soaker instead of autolyse.</p>
+            <p><strong>Blending two grains</strong> — tick "Blend with a second grain" to mix two flour types. The 60/40 classic (60% specialty + 40% strong white) gives the best balance of flavour and structure.</p>
         </div>
     </div>
 
     <div class="step-input">
-        <div class="flour-grid">
-            @foreach (var flour in Enum.GetValues<FlourType>())
-            {
-                var profile = GrainCatalogue.All[flour];
-                <button class="flour-card-large @(Value == flour ? "selected" : "")"
-                        @onclick="@(() => ValueChanged.InvokeAsync(flour))">
-                    <div class="flour-icon-large">@profile.Icon</div>
-                    <div class="flour-name-large">@profile.DisplayName</div>
-                    <div class="flour-desc">@profile.Description</div>
-                </button>
-            }
-        </div>
+        <GrainBlendSelector
+            PrimaryFlour="@Value"
+            PrimaryFlourChanged="@(v => { ValueChanged.InvokeAsync(v); })"
+            SecondaryFlour="@SecondaryValue"
+            SecondaryFlourChanged="@(v => { SecondaryValueChanged.InvokeAsync(v); })"
+            PrimaryPercent="@PrimaryPercent"
+            PrimaryPercentChanged="@(v => { PrimaryPercentChanged.InvokeAsync(v); })"
+            IsCompact="false" />
     </div>
 </div>
 
 @code {
     [Parameter] public FlourType Value { get; set; } = FlourType.White;
     [Parameter] public EventCallback<FlourType> ValueChanged { get; set; }
+    [Parameter] public FlourType? SecondaryValue { get; set; }
+    [Parameter] public EventCallback<FlourType?> SecondaryValueChanged { get; set; }
+    [Parameter] public int PrimaryPercent { get; set; } = 100;
+    [Parameter] public EventCallback<int> PrimaryPercentChanged { get; set; }
 }

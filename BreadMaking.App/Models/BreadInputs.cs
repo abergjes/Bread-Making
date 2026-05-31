@@ -9,5 +9,22 @@ public class BreadInputs
     public FlavourGoal FlavourGoal { get; set; } = FlavourGoal.MildOpenCrumb;
     public BakerExperience Experience { get; set; } = BakerExperience.Experienced;
 
+    // Grain blend support
+    public FlourType? SecondaryFlourType { get; set; }
+    public int PrimaryFlourPercent { get; set; } = 100;
+    public int SecondaryFlourPercent => 100 - PrimaryFlourPercent;
+    public bool IsBlend => SecondaryFlourType.HasValue;
+
+    // The flour with the higher share; used for flour-specific decision branches
+    public FlourType DominantFlourType =>
+        IsBlend && SecondaryFlourPercent > PrimaryFlourPercent
+            ? SecondaryFlourType!.Value
+            : FlourType;
+
+    // True when either grain is bran-heavy with a meaningful share (≥30%)
+    public bool HasMeaningfulBranContent =>
+        (FlourType is FlourType.Rye or FlourType.WholeGrain && PrimaryFlourPercent >= 30)
+        || (IsBlend && SecondaryFlourType is FlourType.Rye or FlourType.WholeGrain && SecondaryFlourPercent >= 30);
+
     public bool HasSourdoughStarter => StarterActivity != StarterActivity.NotAvailable;
 }

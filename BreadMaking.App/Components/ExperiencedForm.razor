@@ -26,19 +26,16 @@
             <div class="temp-zone @TempZoneClass">@TempZoneLabel</div>
         </div>
 
-        <!-- Flour type -->
+        <!-- Flour / blend -->
         <div class="input-group">
-            <label class="input-label">Flour Type</label>
-            <div class="flour-cards">
-                @foreach (var flour in Enum.GetValues<FlourType>())
-                {
-                    <button class="flour-card @(Inputs.FlourType == flour ? "selected" : "")"
-                            @onclick="@(() => { Inputs.FlourType = flour; UpdateRecommendation(); })">
-                        <span class="flour-icon">@FlourIcon(flour)</span>
-                        <span class="flour-name">@FlourLabel(flour)</span>
-                    </button>
-                }
-            </div>
+            <GrainBlendSelector
+                PrimaryFlour="@Inputs.FlourType"
+                PrimaryFlourChanged="@(v => { Inputs.FlourType = v; UpdateRecommendation(); })"
+                SecondaryFlour="@Inputs.SecondaryFlourType"
+                SecondaryFlourChanged="@(v => { Inputs.SecondaryFlourType = v; UpdateRecommendation(); })"
+                PrimaryPercent="@Inputs.PrimaryFlourPercent"
+                PrimaryPercentChanged="@(v => { Inputs.PrimaryFlourPercent = v; UpdateRecommendation(); })"
+                IsCompact="true" />
         </div>
 
         <!-- Hydration -->
@@ -101,10 +98,11 @@
         </div>
     </div>
 
-    <!-- Right panel: recommendation + timeline -->
+    <!-- Right panel: recommendation + timeline + blend guide -->
     <div class="result-panel">
         <RecommendationPanel Recommendation="@_recommendation" />
         <BakingTimeline Steps="@_recommendation?.Timeline" />
+        <BlendingGuide BlendNote="@(_recommendation?.BlendNote ?? "")" />
     </div>
 </div>
 
@@ -152,9 +150,6 @@
         < 28 => "☀️ Warm kitchen — watch fermentolyse closely",
         _ => "🔥 Hot kitchen — use autolyse or refrigerate dough"
     };
-
-    private string FlourIcon(FlourType f) => GrainCatalogue.All[f].Icon;
-    private string FlourLabel(FlourType f) => GrainCatalogue.All[f].DisplayName;
 
     private string StarterIcon(StarterActivity a) => a switch
     {

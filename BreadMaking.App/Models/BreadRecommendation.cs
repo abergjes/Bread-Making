@@ -11,6 +11,7 @@ public class BreadRecommendation
     public string RiskLevel { get; set; } = "";
     public List<string> Pros { get; set; } = new();
     public List<string> Cons { get; set; } = new();
+    public string BlendNote { get; set; } = "";
     public List<string> Tips { get; set; } = new();
     public List<TimelineStep> Timeline { get; set; } = new();
 }

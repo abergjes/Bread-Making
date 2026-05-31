@@ -35,7 +35,11 @@
                     break;
                 case 1:
                     <Step_FlourType Value="@_inputs.FlourType"
-                                    ValueChanged="@(v => { _inputs.FlourType = v; })" />
+                                    ValueChanged="@(v => { _inputs.FlourType = v; })"
+                                    SecondaryValue="@_inputs.SecondaryFlourType"
+                                    SecondaryValueChanged="@(v => { _inputs.SecondaryFlourType = v; })"
+                                    PrimaryPercent="@_inputs.PrimaryFlourPercent"
+                                    PrimaryPercentChanged="@(v => { _inputs.PrimaryFlourPercent = v; })" />
                     break;
                 case 2:
                     <Step_Hydration Value="@_inputs.HydrationPercent"
@@ -87,6 +91,7 @@
                 <BakingTimeline Steps="@_recommendation?.Timeline" />
             </div>
         </div>
+        <BlendingGuide BlendNote="@(_recommendation?.BlendNote ?? "")" />
     }
 </div>
 
