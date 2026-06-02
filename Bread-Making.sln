@@ -14,6 +14,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentat
 		Documentation\Baking-Process-Measurements-20260601\09_timer_state_machine.png = Documentation\Baking-Process-Measurements-20260601\09_timer_state_machine.png
 		Documentation\Baking-Process-Measurements-20260601\10_gui_measurement_entry.png = Documentation\Baking-Process-Measurements-20260601\10_gui_measurement_entry.png
 		Documentation\Baking-Process-Measurements-20260601\Baking_Measurement_Research_and_Dev_Plan_2026-06-01.md = Documentation\Baking-Process-Measurements-20260601\Baking_Measurement_Research_and_Dev_Plan_2026-06-01.md
+		Documentation\2026-06-02_16-49-58.png = Documentation\2026-06-02_16-49-58.png
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BreadMaking.App", "BreadMaking.App\BreadMaking.App.csproj", "{0DB7EDC8-62B1-4DEB-8C92-615517667CD8}"
