@@ -1,8 +1,8 @@
 # Bread-Making App — Roadmap
 
-## Current state (v3, June 2026)
+## Current state (v4, June 2026)
 
-The app is a pure Blazor WebAssembly SPA running entirely in the browser. There is no server and no persistence. The advisor recommends a method (autolyse / fermentolyse), a rest duration, and a static baking timeline based on grain selection and kitchen temperature. All state is ephemeral — closing or refreshing the tab loses it.
+All milestones M0–M7 are complete. The app is a hosted Blazor WASM solution with a full ASP.NET Core backend, EF Core + SQLite persistence, live bake execution, measurements, visualisations, history, and SignalR notifications. The original advisor flow is preserved unchanged.
 
 ## Vision
 
@@ -20,16 +20,16 @@ Before any milestone work begins, the solution is converted from a standalone WA
 
 ## Milestones
 
-| # | Name | Core scope | Unlocks |
-|---|------|-----------|---------|
-| M0 | Architecture lift | Add server + shared projects; hosted WASM; existing app still works | All |
-| M1 | Data model | EF Core entities, SQLite, migration, seeded step defaults and measurement types | M2, M4 |
-| M2 | Timer core | TimerService, API endpoints, state machine, server-derived elapsed | M3 |
-| M3 | Live bake UI | `/bake/{id}` page, step cards, timer readout, ± steppers, Pause / Done | M4, M5 |
-| M4 | Measurements | MeasurementService, entry sheet, chips on step card, range validation | M5, M6 |
-| M5 | Visualisations | Live rise curve, planning Gantt, history run chart via ApexCharts.Blazor | M6 |
-| M6 | History & comparison | Outcome capture, `/history` list, grain comparison view, CSV/JSON export | — |
-| M7 | Notifications (optional) | SignalR reminders, cross-device step alerts | — |
+| # | Name | Core scope | Unlocks | Status |
+|---|------|-----------|---------|--------|
+| M0 | Architecture lift | Add server + shared projects; hosted WASM; existing app still works | All | ✅ Complete |
+| M1 | Data model | EF Core entities, SQLite, migration, seeded step defaults and measurement types | M2, M4 | ✅ Complete |
+| M2 | Timer core | TimerService, API endpoints, state machine, server-derived elapsed | M3 | ✅ Complete |
+| M3 | Live bake UI | `/bake/{id}` page, step cards, timer readout, ± steppers, Pause / Done | M4, M5 | ✅ Complete |
+| M4 | Measurements | MeasurementService, entry sheet, chips on step card, range validation | M5, M6 | ✅ Complete |
+| M5 | Visualisations | Live rise curve, planning Gantt, history run chart, grain comparison via ApexCharts.Blazor | M6 | ✅ Complete |
+| M6 | History & comparison | `/history` list, grain comparison view, CSV/JSON export, clone-bake | — | ✅ Complete |
+| M7 | Notifications (optional) | SignalR hub, 30-min fold reminders, bulk-50% push, cross-device alerts | — | ✅ Complete |
 
 ---
 
