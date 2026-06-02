@@ -5,14 +5,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BreadMaking.App.Server.Services;
 
-public class MeasurementService(AppDbContext db) : IMeasurementService
+public class MeasurementService(AppDbContext db, INotificationService notifications) : IMeasurementService
 {
     public async Task<MeasurementDto> AddAsync(int bakeStepLogId, AddMeasurementRequest request)
     {
-        // Verify the step log exists
-        var logExists = await db.BakeStepLogs.AnyAsync(l => l.Id == bakeStepLogId);
-        if (!logExists)
-            throw new KeyNotFoundException($"BakeStepLog {bakeStepLogId} not found.");
+        var stepLog = await db.BakeStepLogs.FirstOrDefaultAsync(l => l.Id == bakeStepLogId)
+            ?? throw new KeyNotFoundException($"BakeStepLog {bakeStepLogId} not found.");
 
         var type = await db.MeasurementTypes.FindAsync(request.MeasurementTypeId)
             ?? throw new KeyNotFoundException($"MeasurementType {request.MeasurementTypeId} not found.");
@@ -25,6 +23,14 @@ public class MeasurementService(AppDbContext db) : IMeasurementService
             throw new ValidationException(
                 $"{type.Name} must be ≤ {type.MaxValid} {type.Unit}. Got {request.Value}.");
 
+        // Check first Bulk-50 crossing before saving so we can detect it accurately.
+        bool firstBulk50 = type.Name == "Aliquot rise"
+            && request.Value >= 50
+            && !await db.Measurements
+                .AnyAsync(m => m.BakeStepLogId == bakeStepLogId
+                             && m.MeasurementTypeId == request.MeasurementTypeId
+                             && m.Value >= 50);
+
         var measurement = new Measurement
         {
             BakeStepLogId     = bakeStepLogId,
@@ -36,6 +42,9 @@ public class MeasurementService(AppDbContext db) : IMeasurementService
 
         db.Measurements.Add(measurement);
         await db.SaveChangesAsync();
+
+        if (firstBulk50)
+            await notifications.SendBulk50CrossedAsync(stepLog.BakeId);
 
         return new MeasurementDto
         {

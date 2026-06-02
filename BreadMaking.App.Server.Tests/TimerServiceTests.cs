@@ -59,7 +59,7 @@ public class TimerServiceTests : IDisposable
     [Fact]
     public async Task Start_SetsStatus_Running()
     {
-        var svc = new TimerService(_db);
+        var svc = new TimerService(_db, new NullNotificationService());
         var dto = await svc.StartAsync(_logId);
         Assert.Equal(StepStatus.Running, dto.Status);
     }
@@ -67,7 +67,7 @@ public class TimerServiceTests : IDisposable
     [Fact]
     public async Task Start_SetsStartedAt_NotNull()
     {
-        var svc = new TimerService(_db);
+        var svc = new TimerService(_db, new NullNotificationService());
         var dto = await svc.StartAsync(_logId);
         Assert.NotNull(dto.StartedAt);
     }
@@ -81,7 +81,7 @@ public class TimerServiceTests : IDisposable
         await _db.SaveChangesAsync();
         _db.ChangeTracker.Clear();
 
-        var svc = new TimerService(_db);
+        var svc = new TimerService(_db, new NullNotificationService());
         var dto = await svc.StartAsync(_logId);
         Assert.Null(dto.EndedAt);
     }
@@ -91,7 +91,7 @@ public class TimerServiceTests : IDisposable
     [Fact]
     public async Task Pause_SetsStatus_Paused()
     {
-        var svc = new TimerService(_db);
+        var svc = new TimerService(_db, new NullNotificationService());
         await svc.StartAsync(_logId);
         var dto = await svc.PauseAsync(_logId);
         Assert.Equal(StepStatus.Paused, dto.Status);
@@ -100,7 +100,7 @@ public class TimerServiceTests : IDisposable
     [Fact]
     public async Task Pause_SetsEndedAt_NotNull()
     {
-        var svc = new TimerService(_db);
+        var svc = new TimerService(_db, new NullNotificationService());
         await svc.StartAsync(_logId);
         var dto = await svc.PauseAsync(_logId);
         Assert.NotNull(dto.EndedAt);
@@ -121,7 +121,7 @@ public class TimerServiceTests : IDisposable
         await _db.SaveChangesAsync();
         _db.ChangeTracker.Clear();
 
-        var svc = new TimerService(_db);
+        var svc = new TimerService(_db, new NullNotificationService());
         var dto = await svc.StartAsync(_logId);
 
         Assert.Equal(StepStatus.Running, dto.Status);
@@ -137,7 +137,7 @@ public class TimerServiceTests : IDisposable
     [Fact]
     public async Task Complete_SetsStatus_Completed()
     {
-        var svc = new TimerService(_db);
+        var svc = new TimerService(_db, new NullNotificationService());
         await svc.StartAsync(_logId);
         var dto = await svc.CompleteAsync(_logId);
         Assert.Equal(StepStatus.Completed, dto.Status);
@@ -146,7 +146,7 @@ public class TimerServiceTests : IDisposable
     [Fact]
     public async Task Complete_SetsEndedAt_NotNull()
     {
-        var svc = new TimerService(_db);
+        var svc = new TimerService(_db, new NullNotificationService());
         await svc.StartAsync(_logId);
         var dto = await svc.CompleteAsync(_logId);
         Assert.NotNull(dto.EndedAt);
@@ -157,7 +157,7 @@ public class TimerServiceTests : IDisposable
     [Fact]
     public async Task AdjustPlanned_DoesNotChangeStartedAt_WhenRunning()
     {
-        var svc = new TimerService(_db);
+        var svc = new TimerService(_db, new NullNotificationService());
         await svc.StartAsync(_logId);
 
         var before = (await _db.BakeStepLogs.FindAsync(_logId))!.StartedAt;
@@ -172,7 +172,7 @@ public class TimerServiceTests : IDisposable
     [Fact]
     public async Task AdjustPlanned_DoesNotChangeEndedAt_WhenPaused()
     {
-        var svc = new TimerService(_db);
+        var svc = new TimerService(_db, new NullNotificationService());
         await svc.StartAsync(_logId);
         await svc.PauseAsync(_logId);
 
@@ -189,7 +189,7 @@ public class TimerServiceTests : IDisposable
     public async Task AdjustPlanned_ClampsToMaxDuration()
     {
         // Step 101 has MaxDurationMin=15, default=5
-        var svc = new TimerService(_db);
+        var svc = new TimerService(_db, new NullNotificationService());
         var dto = await svc.AdjustPlannedAsync(_logId, deltaMinutes: 999);
         Assert.Equal(15, dto.PlannedDurationMin); // clamped to max
     }
@@ -198,7 +198,7 @@ public class TimerServiceTests : IDisposable
     public async Task AdjustPlanned_ClampsToMinDuration()
     {
         // Step 101 has MinDurationMin=3, default=5
-        var svc = new TimerService(_db);
+        var svc = new TimerService(_db, new NullNotificationService());
         var dto = await svc.AdjustPlannedAsync(_logId, deltaMinutes: -999);
         Assert.Equal(3, dto.PlannedDurationMin); // clamped to min
     }
@@ -206,7 +206,7 @@ public class TimerServiceTests : IDisposable
     [Fact]
     public async Task AdjustPlanned_IncrementsCorrectly()
     {
-        var svc = new TimerService(_db);
+        var svc = new TimerService(_db, new NullNotificationService());
         var dto = await svc.AdjustPlannedAsync(_logId, deltaMinutes: 5);
         Assert.Equal(10, dto.PlannedDurationMin); // 5 (default) + 5 = 10
     }
@@ -216,7 +216,7 @@ public class TimerServiceTests : IDisposable
     [Fact]
     public async Task Start_ThrowsKeyNotFound_ForMissingId()
     {
-        var svc = new TimerService(_db);
+        var svc = new TimerService(_db, new NullNotificationService());
         await Assert.ThrowsAsync<KeyNotFoundException>(() => svc.StartAsync(99999));
     }
 }

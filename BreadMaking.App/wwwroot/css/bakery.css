@@ -1453,6 +1453,47 @@ body {
 .ms-btn-save:disabled, .ms-btn-save.ms-btn-loading { opacity: .6; cursor: not-allowed; }
 }
 
+/* ===== Bake notifications ===== */
+.bake-notifications {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 16px;
+}
+
+.bake-notification {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--panel);
+    border: 1.5px solid var(--amber);
+    border-left: 4px solid var(--amber);
+    border-radius: var(--radius-sm);
+    font-size: .875rem;
+    color: var(--text);
+    animation: notif-slide-in .2s ease;
+}
+
+@keyframes notif-slide-in {
+    from { transform: translateY(-6px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+}
+
+.bake-notification-text { flex: 1; }
+
+.bake-notification-dismiss {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    line-height: 1;
+    padding: 0 2px;
+    transition: color .15s;
+}
+.bake-notification-dismiss:hover { color: var(--text); }
+
 /* ===== Chart containers ===== */
 .rise-chart {
     padding: 4px 20px 0;

@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BreadMaking.App.Server.Services;
 
-public class TimerService(AppDbContext db) : ITimerService
+public class TimerService(AppDbContext db, INotificationService notifications) : ITimerService
 {
     public async Task<BakeStepLogDto> StartAsync(int id)
     {
@@ -47,8 +47,9 @@ public class TimerService(AppDbContext db) : ITimerService
     {
         var log = await Load(id);
         log.EndedAt = DateTimeOffset.UtcNow;
-        log.Status = StepStatus.Completed;
+        log.Status  = StepStatus.Completed;
         await db.SaveChangesAsync();
+        await notifications.SendStepCompletedAsync(log.BakeId, log.RecipeStep?.Name ?? "Step");
         return DtoMapper.ToDto(log);
     }
 

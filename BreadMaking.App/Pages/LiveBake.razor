@@ -1,7 +1,8 @@
 @page "/bake/{Id:int}"
 @inject HttpClient Http
 @inject NavigationManager Nav
-@implements IDisposable
+@implements IAsyncDisposable
+@using Microsoft.AspNetCore.SignalR.Client
 
 @if (_loading)
 {
@@ -42,6 +43,21 @@ else
             </div>
         </div>
 
+        @if (_notifications.Count > 0)
+        {
+            <div class="bake-notifications">
+                @foreach (var n in _notifications.ToList())
+                {
+                    <div class="bake-notification">
+                        <span class="bake-notification-text">@n</span>
+                        <button class="bake-notification-dismiss"
+                                @onclick="() => _notifications.Remove(n)"
+                                title="Dismiss">×</button>
+                    </div>
+                }
+            </div>
+        }
+
         @if (!_anyStarted)
         {
             <div class="planning-view">
@@ -73,6 +89,8 @@ else
     private BakeDto?  _bake;
     private bool      _loading = true;
     private System.Threading.Timer? _ticker;
+    private HubConnection? _hub;
+    private readonly List<string> _notifications = [];
 
     private bool _anyStarted =>
         _bake?.StepLogs.Any(l => l.Status != StepStatus.NotStarted) == true;
@@ -84,15 +102,48 @@ else
         _loading = false;
     }
 
-    protected override void OnAfterRender(bool firstRender)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
-            _ticker = new System.Threading.Timer(
-                _ => InvokeAsync(StateHasChanged), null,
-                TimeSpan.Zero, TimeSpan.FromSeconds(1));
+        if (!firstRender) return;
+
+        _ticker = new System.Threading.Timer(
+            _ => InvokeAsync(StateHasChanged), null,
+            TimeSpan.Zero, TimeSpan.FromSeconds(1));
+
+        try
+        {
+            _hub = new HubConnectionBuilder()
+                .WithUrl(Nav.ToAbsoluteUri("/hubs/bake"))
+                .WithAutomaticReconnect()
+                .Build();
+
+            _hub.On<string>("FoldsReminder", msg => AddNotification("🕐 " + msg));
+            _hub.On<string>("Bulk50Crossed", msg => AddNotification("📈 " + msg));
+            _hub.On<string>("StepCompleted", msg => AddNotification("✓ " + msg));
+
+            await _hub.StartAsync();
+            await _hub.InvokeAsync("JoinBake", Id);
+        }
+        catch
+        {
+            // Notifications are optional — degrade silently if hub is unavailable.
+        }
     }
 
-    public void Dispose() => _ticker?.Dispose();
+    public async ValueTask DisposeAsync()
+    {
+        _ticker?.Dispose();
+        if (_hub is not null)
+            await _hub.DisposeAsync();
+    }
+
+    private void AddNotification(string message)
+    {
+        _notifications.Insert(0, message);
+        if (_notifications.Count > 5)
+            _notifications.RemoveAt(_notifications.Count - 1);
+        InvokeAsync(StateHasChanged);
+    }
 
     // ── API handlers ─────────────────────────────────────────────────────────
 
@@ -132,5 +183,4 @@ else
     {
         _bake = await Http.GetFromJsonAsync<BakeDto>($"/api/bakes/{Id}");
     }
-
 }
