@@ -1,0 +1,104 @@
+@* Run chart — loaf height (or chosen metric) across successive bakes.
+   Used on the /history page. Falls back to illustrative demo data when
+   fewer than 3 bakes with outcomes exist. *@
+
+<div class="run-chart">
+    <ApexChart TItem="BakeResult" Options="_options" Height="260">
+
+        <ApexPointSeries TItem="BakeResult"
+            Items="DisplayData"
+            Name="Loaf height (cm)"
+            SeriesType="SeriesType.Line"
+            XValue="@(r => (decimal)r.BakeNumber)"
+            YValue="@(r => (decimal)r.HeightCm)" />
+
+    </ApexChart>
+</div>
+
+@if (IsDemo)
+{
+    <p class="chart-demo-note">
+        Showing illustrative data — log your first bake outcome to see your own results.
+    </p>
+}
+
+@code {
+    /// <summary>Real bake history. If empty or fewer than 3 entries, demo data is shown.</summary>
+    [Parameter] public List<(int BakeNumber, double HeightCm)> History { get; set; } = [];
+
+    /// <summary>Target loaf height in cm. Shown as a dashed reference line.</summary>
+    [Parameter] public double Target { get; set; } = 11.0;
+
+    public record BakeResult(int BakeNumber, double HeightCm);
+
+    private bool IsDemo => History.Count < 3;
+
+    private List<BakeResult> DisplayData => IsDemo
+        ? DemoData
+        : History.Select(h => new BakeResult(h.BakeNumber, h.HeightCm)).ToList();
+
+    // Matches the shape of the spec chart (05_bake_run_chart.png):
+    // early bakes scatter, later bakes converge on target.
+    private static readonly List<BakeResult> DemoData =
+    [
+        new(1,  9.8), new(2, 10.3), new(3, 10.0), new(4, 9.7),
+        new(5, 10.2), new(6, 9.9),  new(7, 10.8), new(8, 11.6),
+        new(9, 10.5), new(10,10.5), new(11,11.1), new(12,11.0),
+        new(13,11.0), new(14,10.6), new(15,11.0), new(16,11.1),
+    ];
+
+    private ApexChartOptions<BakeResult> _options = null!;
+
+    protected override void OnInitialized()
+    {
+        _options = new ApexChartOptions<BakeResult>
+        {
+            Chart = new Chart
+            {
+                Background = "transparent",
+                Toolbar = new Toolbar { Show = false },
+            },
+            Colors = ["#c2651a"],
+            Stroke = new Stroke { Width = [2.0], Curve = [Curve.Smooth] },
+            Markers = new Markers { Size = 4 },
+            DataLabels = new DataLabels { Enabled = false },
+            Grid = new Grid { Show = true, BorderColor = "#e0c9a8", StrokeDashArray = 3 },
+            Legend = new Legend { Show = false },
+            Xaxis = new XAxis
+            {
+                Title          = new AxisTitle { Text = "Bake number" },
+                Type           = XAxisType.Numeric,
+                Min            = 1,
+                DecimalsInFloat = 0,
+            },
+            Yaxis = [new YAxis
+            {
+                Title          = new AxisTitle { Text = "Loaf height (cm)" },
+                DecimalsInFloat = 1,
+            }],
+            Annotations = new Annotations
+            {
+                Yaxis =
+                [
+                    new AnnotationsYAxis
+                    {
+                        Y              = (decimal)Target,
+                        BorderColor    = "#4a7c59",
+                        StrokeDashArray = 4,
+                        Label          = new Label
+                        {
+                            Text  = $"Target {Target} cm",
+                            Style = new Style
+                            {
+                                Background = "#4a7c59",
+                                Color      = "#fff",
+                                FontSize   = "11px",
+                            },
+                            Position = LabelPosition.Right,
+                        },
+                    }
+                ]
+            },
+        };
+    }
+}
