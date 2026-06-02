@@ -49,7 +49,7 @@ public class BakeSessionService(AppDbContext db) : IBakeSessionService
             .Include(b => b.Recipe).ThenInclude(r => r!.GrainProfile)
             .Include(b => b.Outcome)
             .Include(b => b.StepLogs)
-            .OrderByDescending(b => b.StartedAt)
+            .OrderByDescending(b => b.Id)
             .ToListAsync();
 
         return bakes.Select(b => new BakeListItemDto

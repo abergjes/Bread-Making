@@ -7,4 +7,6 @@ unpacked_autolyse/
 .idea/
 *.db
 *.db-shm
-*.db-wal
+*.db-walnode_modules/
+package.json
+package-lock.json
