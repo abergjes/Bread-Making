@@ -1,6 +1,7 @@
 @page "/"
 @using BreadMaking.App.Models
 @using BreadMaking.App.Components
+@inject CloneBakeState CloneState
 
 <PageTitle>Bread Strategy Advisor</PageTitle>
 
@@ -19,6 +20,12 @@
 
 @code {
     private BakerExperience _experience = BakerExperience.None;
+
+    protected override void OnInitialized()
+    {
+        if (CloneState.HasPending)
+            _experience = BakerExperience.Experienced;
+    }
 
     private void OnExperienceSelected(BakerExperience exp) => _experience = exp;
     private void Reset() => _experience = BakerExperience.None;

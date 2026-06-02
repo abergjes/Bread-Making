@@ -1529,6 +1529,125 @@ body {
 
 .history-title-group { flex: 1; }
 
+/* ===== History filters ===== */
+.history-filters {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.filter-select {
+    padding: 8px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--panel);
+    color: var(--text);
+    font-size: .875rem;
+    font-family: var(--font-body);
+    cursor: pointer;
+    transition: border-color .15s;
+}
+.filter-select:focus { outline: none; border-color: var(--accent); }
+
+/* ===== Bake list ===== */
+.bake-list { display: flex; flex-direction: column; gap: 10px; }
+
+.bake-item {
+    background: var(--panel);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: border-color .15s;
+}
+.bake-item:hover { border-color: var(--tan); }
+
+.bake-item-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.bake-grain-emoji { font-size: 1.4rem; flex-shrink: 0; }
+
+.bake-item-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.bake-item-title {
+    font-weight: 700;
+    font-size: .95rem;
+    color: var(--text);
+}
+
+.bake-item-date {
+    font-size: .8rem;
+    color: var(--text-muted);
+}
+
+.bake-batch { color: var(--text-light); }
+
+.bake-outcome-check {
+    font-size: .85rem;
+    font-weight: 800;
+    color: var(--success);
+    flex-shrink: 0;
+}
+
+.bake-item-meta {
+    display: flex;
+    gap: 16px;
+    font-size: .82rem;
+    color: var(--text-muted);
+    padding-left: 34px;
+}
+
+.bake-item-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding-left: 34px;
+}
+
+.btn-bake-action {
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
+    font-size: .8rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: var(--font-body);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    transition: background .15s, color .15s;
+    border: none;
+}
+.btn-view {
+    background: var(--accent);
+    color: #fff;
+}
+.btn-view:hover { background: var(--accent-dark); }
+
+.btn-similar {
+    background: var(--panel-dark);
+    color: var(--text);
+    border: 1.5px solid var(--border);
+}
+.btn-similar:hover { background: var(--border); }
+
+.btn-export {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1.5px solid var(--border);
+}
+.btn-export:hover { color: var(--text); border-color: var(--tan); }
+
 .btn-compare {
     flex-shrink: 0;
     align-self: flex-end;

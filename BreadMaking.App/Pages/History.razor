@@ -1,5 +1,7 @@
 @page "/history"
 @inject NavigationManager Nav
+@inject HttpClient Http
+@inject CloneBakeState CloneState
 
 <div class="history-page">
 
@@ -22,11 +24,142 @@
         <RunChart />
     </div>
 
-    <div class="history-empty-note">
-        <p>Past bakes will be listed here in M6. Start a bake from the advisor to begin your record.</p>
-        <button class="btn-primary" @onclick='() => Nav.NavigateTo("/")'>Go to advisor</button>
-    </div>
+    @if (_loading)
+    {
+        <p class="comparison-loading">Loading bakes…</p>
+    }
+    else if (_allBakes.Count == 0)
+    {
+        <div class="history-empty-note">
+            <p>Past bakes will appear here once you start your first bake.</p>
+            <button class="btn-primary" @onclick='() => Nav.NavigateTo("/")'>Go to advisor</button>
+        </div>
+    }
+    else
+    {
+        <div class="history-filters">
+            <select class="filter-select" @bind="_grainFilter">
+                <option value="">All grains</option>
+                @foreach (var grain in _grains)
+                {
+                    <option value="@grain">@grain</option>
+                }
+            </select>
+            <select class="filter-select" @bind="_methodFilter">
+                <option value="">All methods</option>
+                <option value="Autolyse">Autolyse</option>
+                <option value="Fermentolyse">Fermentolyse</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+
+        @if (!FilteredBakes.Any())
+        {
+            <p class="history-hint" style="text-align:center;padding:24px 0">
+                No bakes match the selected filters.
+            </p>
+        }
+        else
+        {
+            <div class="bake-list">
+                @foreach (var bake in FilteredBakes)
+                {
+                    <div class="bake-item">
+                        <div class="bake-item-header">
+                            <span class="bake-grain-emoji">@GrainEmoji(bake.GrainName)</span>
+                            <div class="bake-item-info">
+                                <span class="bake-item-title">@bake.GrainName · @bake.Method</span>
+                                <span class="bake-item-date">
+                                    @bake.StartedAt.ToLocalTime().ToString("d MMM yyyy")
+                                    @if (!string.IsNullOrEmpty(bake.FlourBatch))
+                                    {
+                                        <span class="bake-batch"> · @bake.FlourBatch</span>
+                                    }
+                                </span>
+                            </div>
+                            @if (bake.HasOutcome)
+                            {
+                                <span class="bake-outcome-check" title="Outcome recorded">✓</span>
+                            }
+                        </div>
+
+                        @if (bake.OvenSpringPct.HasValue || bake.CrumbOpenness.HasValue)
+                        {
+                            <div class="bake-item-meta">
+                                @if (bake.OvenSpringPct.HasValue)
+                                {
+                                    <span>Oven spring @bake.OvenSpringPct.Value.ToString("F0")%</span>
+                                }
+                                @if (bake.CrumbOpenness.HasValue)
+                                {
+                                    <span>Crumb @bake.CrumbOpenness.Value/10</span>
+                                }
+                            </div>
+                        }
+
+                        <div class="bake-item-actions">
+                            <button class="btn-bake-action btn-view"
+                                    @onclick='() => Nav.NavigateTo($"/bake/{bake.Id}")'>
+                                View
+                            </button>
+                            <button class="btn-bake-action btn-similar"
+                                    @onclick="() => StartSimilar(bake.Id)">
+                                Start similar
+                            </button>
+                            <a class="btn-bake-action btn-export"
+                               href="/api/bakes/@bake.Id/export?format=csv">CSV</a>
+                            <a class="btn-bake-action btn-export"
+                               href="/api/bakes/@bake.Id/export?format=json">JSON</a>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    }
 
 </div>
 
-@code { }
+@code {
+    private bool _loading = true;
+    private List<BakeListItemDto> _allBakes = [];
+    private string _grainFilter  = "";
+    private string _methodFilter = "";
+
+    private IEnumerable<string> _grains => _allBakes
+        .Select(b => b.GrainName)
+        .Distinct()
+        .OrderBy(g => g);
+
+    private IEnumerable<BakeListItemDto> FilteredBakes => _allBakes
+        .Where(b => string.IsNullOrEmpty(_grainFilter)  || b.GrainName == _grainFilter)
+        .Where(b => string.IsNullOrEmpty(_methodFilter) || b.Method.ToString() == _methodFilter);
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _allBakes = await Http.GetFromJsonAsync<List<BakeListItemDto>>("/api/bakes") ?? [];
+        }
+        finally { _loading = false; }
+    }
+
+    private async Task StartSimilar(int bakeId)
+    {
+        var req = await Http.GetFromJsonAsync<StartBakeRequest>($"/api/bakes/{bakeId}/inputs");
+        if (req is null) return;
+        CloneState.Set(req);
+        Nav.NavigateTo("/");
+    }
+
+    private static string GrainEmoji(string grain) => grain switch
+    {
+        "Modern wheat" or "Whole grain" => "🌾",
+        "Rye"                           => "🌿",
+        "Spelt"                         => "🌱",
+        "Einkorn"                       => "⚜️",
+        "Emmer (farro)"                 => "🌿",
+        "Kamut (khorasan)"              => "🌰",
+        "Teff" or "Sorghum"             => "🫘",
+        _                               => "🌾",
+    };
+}
