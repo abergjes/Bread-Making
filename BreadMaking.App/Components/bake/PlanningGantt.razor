@@ -1,0 +1,63 @@
+@* Planning Gantt — horizontal bar chart of step default durations.
+   Shown on the live bake page before any step is started.
+   X-axis in hours; categories (step names) on the left. *@
+
+<div class="planning-gantt">
+    <ApexChart TItem="GanttBar" Options="_options" Height="@ChartHeight">
+
+        <ApexPointSeries TItem="GanttBar"
+            Items="Steps.Select(ToBar).ToList()"
+            Name="Default"
+            SeriesType="SeriesType.Bar"
+            XValue="@(b => b.Name)"
+            YValue="@(b => b.DefaultHours)" />
+
+    </ApexChart>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public List<BakeStepLogDto> Steps { get; set; } = null!;
+
+    private record GanttBar(string Name, decimal DefaultHours, int MinMin, int MaxMin, int DefaultMin);
+
+    private int ChartHeight => Math.Max(280, Steps.Count * 30 + 60);
+
+    private readonly ApexChartOptions<GanttBar> _options = new()
+    {
+        Chart = new Chart
+        {
+            Background = "transparent",
+            Toolbar = new Toolbar { Show = false },
+        },
+        Colors = ["#c2651a"],
+        PlotOptions = new PlotOptions
+        {
+            Bar = new PlotOptionsBar
+            {
+                Horizontal  = true,
+                BorderRadius = 4,
+            }
+        },
+        DataLabels = new DataLabels { Enabled = false },
+        Grid = new Grid { Show = true, BorderColor = "#e0c9a8", StrokeDashArray = 3 },
+        Legend = new Legend { Show = false },
+        Xaxis = new XAxis
+        {
+            Title          = new AxisTitle { Text = "Duration (h)" },
+            DecimalsInFloat = 1,
+            Min            = 0,
+        },
+        Tooltip = new Tooltip
+        {
+            Y = new TooltipY { Title = new TooltipYTitle { Formatter = "function(n) { return n; }" } },
+        },
+    };
+
+    private static GanttBar ToBar(BakeStepLogDto s) => new(
+        s.StepName,
+        DefaultHours: Math.Round((decimal)s.DefaultDurationMin / 60m, 2),
+        MinMin:       s.MinDurationMin,
+        MaxMin:       s.MaxDurationMin,
+        DefaultMin:   s.DefaultDurationMin
+    );
+}

@@ -1,0 +1,147 @@
+@* Live rise curve — shown inside the Bulk fermentation step while Running.
+   Three logistic reference curves (22/24/26°C) plus the baker's actual
+   aliquot rise readings overlaid. Shaded band marks the 50–75% shaping window. *@
+
+<div class="rise-chart">
+    <ApexChart TItem="RisePoint" Options="_options" Height="220">
+
+        @* Reference curves — dashed, muted *@
+        <ApexPointSeries TItem="RisePoint"
+            Items="_ref26" Name="26 °C ref"
+            SeriesType="SeriesType.Line"
+            XValue="@(p => p.Hours)"
+            YValue="@(p => p.Rise)" />
+
+        <ApexPointSeries TItem="RisePoint"
+            Items="_ref24" Name="24 °C ref"
+            SeriesType="SeriesType.Line"
+            XValue="@(p => p.Hours)"
+            YValue="@(p => p.Rise)" />
+
+        <ApexPointSeries TItem="RisePoint"
+            Items="_ref22" Name="22 °C ref"
+            SeriesType="SeriesType.Line"
+            XValue="@(p => p.Hours)"
+            YValue="@(p => p.Rise)" />
+
+        @* Baker's actual readings — solid accent line with markers *@
+        <ApexPointSeries TItem="RisePoint"
+            Items="_actual" Name="Your dough"
+            SeriesType="SeriesType.Line"
+            XValue="@(p => p.Hours)"
+            YValue="@(p => p.Rise)" />
+
+    </ApexChart>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public BakeStepLogDto Step { get; set; } = null!;
+
+    private record RisePoint(decimal Hours, decimal Rise);
+
+    private List<RisePoint> _ref26 = [];
+    private List<RisePoint> _ref24 = [];
+    private List<RisePoint> _ref22 = [];
+    private List<RisePoint> _actual = [];
+
+    private readonly ApexChartOptions<RisePoint> _options = new()
+    {
+        Chart = new Chart
+        {
+            Background = "transparent",
+            Toolbar  = new Toolbar { Show = false },
+            Animations = new Animations { Enabled = false },
+        },
+        Colors = ["#c2651a", "#4a7c59", "#7a9cb0", "#3b2a1a"],
+        Stroke = new Stroke
+        {
+            Width    = [1.5, 1.5, 1.5, 2.5],
+            DashArray = [5, 5, 5, 0],
+            Curve    = [Curve.Smooth, Curve.Smooth, Curve.Smooth, Curve.Straight],
+        },
+        Markers = new Markers { Size = 0 },
+        DataLabels = new DataLabels { Enabled = false },
+        Grid = new Grid
+        {
+            Show = true,
+            BorderColor = "#e0c9a8",
+            StrokeDashArray = 3,
+        },
+        Legend = new Legend { Position = LegendPosition.Top, FontSize = "11px" },
+        Xaxis = new XAxis
+        {
+            Type  = XAxisType.Numeric,
+            Title = new AxisTitle { Text = "Elapsed (h)" },
+            Min   = 0,
+            Max   = 6,
+            DecimalsInFloat = 1,
+        },
+        Yaxis = [new YAxis
+        {
+            Title = new AxisTitle { Text = "Rise (%)" },
+            Min   = 0,
+            Max   = 100,
+        }],
+        Annotations = new Annotations
+        {
+            Yaxis =
+            [
+                new AnnotationsYAxis
+                {
+                    Y         = 50m,
+                    Y2        = 75m,
+                    FillColor = "#c8e6c9",
+                    Opacity   = 0.3,
+                    Label     = new Label
+                    {
+                        Text = "Target: 50–75%",
+                        Style = new Style { Background = "#4a7c59", Color = "#fff", FontSize = "10px" },
+                    },
+                }
+            ]
+        },
+        Tooltip = new Tooltip { X = new TooltipX { Format = "0.0h" } },
+    };
+
+    protected override void OnInitialized()
+    {
+        _ref26 = LogisticCurve(k: 1.8, t0: 2.5);
+        _ref24 = LogisticCurve(k: 1.5, t0: 3.0);
+        _ref22 = LogisticCurve(k: 1.2, t0: 4.5);
+    }
+
+    protected override void OnParametersSet()
+    {
+        // Update actual readings whenever the parent passes a fresh Step
+        _actual = Step.Measurements
+            .Where(m => m.TypeName == "Aliquot rise" && Step.StartedAt.HasValue)
+            .OrderBy(m => m.RecordedAt)
+            .Select(m =>
+            {
+                var hours = (decimal)(m.RecordedAt - Step.StartedAt!.Value).TotalHours;
+                return new RisePoint(hours, (decimal)m.Value);
+            })
+            .ToList();
+
+        // Add a live "now" point if the step is running
+        if (Step.Status == StepStatus.Running && Step.StartedAt.HasValue && _actual.Count > 0)
+        {
+            var nowHours = (decimal)(DateTimeOffset.UtcNow - Step.StartedAt.Value).TotalHours;
+            var lastRise = _actual[^1].Rise;
+            if (nowHours > _actual[^1].Hours)
+                _actual.Add(new RisePoint(nowHours, lastRise));
+        }
+    }
+
+    // Logistic growth: rise(t) = 100 / (1 + e^(-k*(t - t0)))
+    // Calibrated from the published chart: t0 is hours at which 50% rise is reached.
+    private static List<RisePoint> LogisticCurve(double k, double t0, int points = 61)
+        => Enumerable.Range(0, points)
+            .Select(i =>
+            {
+                double t    = i * 6.0 / (points - 1);
+                double rise = 100.0 / (1.0 + Math.Exp(-k * (t - t0)));
+                return new RisePoint((decimal)Math.Round(t, 2), (decimal)Math.Round(rise, 1));
+            })
+            .ToList();
+}

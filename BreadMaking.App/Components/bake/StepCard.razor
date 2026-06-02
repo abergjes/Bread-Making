@@ -1,0 +1,205 @@
+@* Single baking step card — renders a compact row or full expanded card based on StepStatus. *@
+
+<div class="@CardClass">
+
+    @if (Step.Status == StepStatus.Completed)
+    {
+        <div class="step-card-compact">
+            <span class="step-status-pill pill-done">✓ DONE</span>
+            <span class="step-name-compact">@Step.StepName</span>
+            <span class="step-actual-dur">@FormatElapsed(ActualDuration)</span>
+        </div>
+    }
+    else if (Step.Status == StepStatus.Skipped)
+    {
+        <div class="step-card-compact">
+            <span class="step-status-pill pill-skipped">— SKIPPED</span>
+            <span class="step-name-compact">@Step.StepName</span>
+        </div>
+    }
+    else if (Step.Status == StepStatus.NotStarted)
+    {
+        <div class="step-card-compact">
+            <span class="step-order">@Step.Order</span>
+            <div class="step-name-group">
+                <span class="step-name-compact">@Step.StepName</span>
+                @if (Step.TargetTempC.HasValue)
+                {
+                    <span class="step-meta-inline">🌡 @Step.TargetTempC.Value.ToString("F0") °C</span>
+                }
+            </div>
+            <span class="step-dur-label">@FormatMin(Step.DefaultDurationMin)</span>
+            <button class="step-action-btn btn-start"
+                    @onclick="() => OnStart.InvokeAsync(Step.Id)">Start ▶</button>
+        </div>
+    }
+    else
+    {
+        @* Running or Paused — full expanded card *@
+        <div class="step-card-head">
+            @if (Step.Status == StepStatus.Running)
+            {
+                <span class="step-status-pill pill-running">● RUNNING</span>
+            }
+            else
+            {
+                <span class="step-status-pill pill-paused">⏸ PAUSED</span>
+            }
+            <h3 class="step-name-expanded">@Step.StepName</h3>
+        </div>
+
+        <div class="step-meta-row">
+            <span>⏱ @FormatRange()</span>
+            @if (Step.TargetTempC.HasValue)
+            {
+                <span>🌡 @Step.TargetTempC.Value.ToString("F0") °C</span>
+            }
+        </div>
+
+        @if (!string.IsNullOrEmpty(Step.Description))
+        {
+            <p class="step-description">@Step.Description</p>
+        }
+
+        <div class="step-timer-row">
+            <span class="step-elapsed">@FormatElapsed(Elapsed)</span>
+            <span class="step-planned-label">/ @FormatMin(Step.PlannedDurationMin) planned</span>
+        </div>
+
+        <div class="step-progress-track"
+             role="progressbar"
+             aria-valuenow="@ProgressPct"
+             aria-valuemin="0"
+             aria-valuemax="100"
+             aria-label="@Step.StepName progress">
+            <div class="step-progress-bar" style="width:@ProgressPct%"></div>
+        </div>
+
+        @if (Step.Phase == "Bulk")
+        {
+            <RiseCurveChart Step="Step" />
+        }
+
+        <div class="step-controls">
+            <div class="step-duration-stepper">
+                <button class="stepper-btn" @onclick="() => OnDecrease.InvokeAsync(Step.Id)">−</button>
+                <span class="stepper-value">@FormatMin(Step.PlannedDurationMin)</span>
+                <button class="stepper-btn" @onclick="() => OnIncrease.InvokeAsync(Step.Id)">+</button>
+                <span class="stepper-hint">±@Step.StepMin min</span>
+            </div>
+            <div class="step-action-btns">
+                @if (Step.Status == StepStatus.Running)
+                {
+                    <button class="step-action-btn btn-pause"
+                            @onclick="() => OnPause.InvokeAsync(Step.Id)">Pause</button>
+                }
+                else
+                {
+                    <button class="step-action-btn btn-start"
+                            @onclick="() => OnStart.InvokeAsync(Step.Id)">Resume</button>
+                }
+                <button class="step-action-btn btn-complete"
+                        @onclick="() => OnComplete.InvokeAsync(Step.Id)">Done ✓</button>
+            </div>
+        </div>
+
+        <div class="step-measurements">
+            <span class="measurements-label">MEASUREMENTS LOGGED THIS STEP</span>
+            <div class="measurement-chips">
+                @foreach (var m in Step.Measurements)
+                {
+                    <span class="measurement-chip">
+                        <span class="chip-type">@m.TypeName</span>
+                        <strong class="chip-value">@m.Value.ToString("G4") @m.Unit</strong>
+                    </span>
+                }
+                <button class="measurement-chip chip-add" @onclick="OpenSheet">+ Add</button>
+            </div>
+            <p class="measurements-hint">Tap a chip to edit · values are auto-timestamped</p>
+        </div>
+    }
+
+    @if (MeasurementTypes.Count > 0)
+    {
+        <MeasurementSheet Step="Step"
+                          MeasurementTypes="MeasurementTypes"
+                          IsVisible="_showSheet"
+                          OnSaved="HandleMeasurementSaved"
+                          OnCancelled="CloseSheet" />
+    }
+
+</div>
+
+@code {
+    [Parameter, EditorRequired] public BakeStepLogDto Step { get; set; } = null!;
+
+    private string CardClass => Step.Status switch
+    {
+        StepStatus.Running   => "step-card running" + (IsOverrun ? " overrun" : ""),
+        StepStatus.Paused    => "step-card paused",
+        StepStatus.Completed => "step-card completed",
+        StepStatus.Skipped   => "step-card skipped",
+        _                    => "step-card not-started",
+    };
+    [Parameter] public EventCallback<int>              OnStart             { get; set; }
+    [Parameter] public EventCallback<int>              OnPause             { get; set; }
+    [Parameter] public EventCallback<int>              OnComplete          { get; set; }
+    [Parameter] public EventCallback<int>              OnIncrease          { get; set; }
+    [Parameter] public EventCallback<int>              OnDecrease          { get; set; }
+    [Parameter] public EventCallback                   OnMeasurementSaved  { get; set; }
+    [Parameter] public List<MeasurementTypeDto>        MeasurementTypes    { get; set; } = [];
+
+    private bool _showSheet;
+    private void OpenSheet()  => _showSheet = true;
+    private void CloseSheet() => _showSheet = false;
+
+    private async Task HandleMeasurementSaved(MeasurementDto _)
+    {
+        _showSheet = false;
+        await OnMeasurementSaved.InvokeAsync();
+    }
+
+    private TimeSpan Elapsed
+    {
+        get
+        {
+            if (Step.StartedAt is null) return TimeSpan.Zero;
+            var end = Step.EndedAt ?? DateTimeOffset.UtcNow;
+            return end - Step.StartedAt.Value;
+        }
+    }
+
+    private TimeSpan ActualDuration =>
+        Step.StartedAt is null || Step.EndedAt is null
+            ? TimeSpan.Zero
+            : Step.EndedAt.Value - Step.StartedAt.Value;
+
+    private bool IsOverrun =>
+        Step.Status == StepStatus.Running &&
+        Elapsed > TimeSpan.FromMinutes(Step.PlannedDurationMin);
+
+    private int ProgressPct =>
+        Step.PlannedDurationMin == 0
+            ? 100
+            : (int)Math.Min(100, Elapsed.TotalMinutes / Step.PlannedDurationMin * 100);
+
+    private static string FormatElapsed(TimeSpan ts)
+        => $"{(int)ts.TotalHours:D2}:{ts.Minutes:D2}:{ts.Seconds:D2}";
+
+    private static string FormatMin(int min)
+    {
+        if (min < 60) return $"{min} min";
+        var h = min / 60; var m = min % 60;
+        return m == 0 ? $"{h}h" : $"{h}h {m}m";
+    }
+
+    private string FormatRange()
+    {
+        var def  = FormatMin(Step.DefaultDurationMin);
+        var minS = FormatMin(Step.MinDurationMin);
+        var maxS = FormatMin(Step.MaxDurationMin);
+        return Step.MinDurationMin == Step.MaxDurationMin
+            ? def
+            : $"{minS}–{maxS} (default {def})";
+    }
+}

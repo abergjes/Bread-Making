@@ -100,7 +100,7 @@
 
     <!-- Right panel: recommendation + timeline + blend guide -->
     <div class="result-panel">
-        <RecommendationPanel Recommendation="@_recommendation" />
+        <RecommendationPanel Recommendation="@_recommendation" Inputs="@Inputs" />
         <BakingTimeline Steps="@_recommendation?.Timeline" />
         <BlendingGuide BlendNote="@(_recommendation?.BlendNote ?? "")" />
     </div>
@@ -108,12 +108,36 @@
 
 @code {
     [Parameter] public EventCallback OnBack { get; set; }
-    [Inject] private BreadAdvisorService Advisor { get; set; } = default!;
+    [Inject] private BreadAdvisorService Advisor    { get; set; } = default!;
+    [Inject] private CloneBakeState     CloneState  { get; set; } = default!;
 
     private BreadInputs Inputs { get; set; } = new() { Experience = BakerExperience.Experienced };
     private BreadRecommendation? _recommendation;
 
-    protected override void OnInitialized() => UpdateRecommendation();
+    protected override void OnInitialized()
+    {
+        var clone = CloneState.TakeAndClear();
+        if (clone is not null)
+        {
+            if (clone.AmbientTempC.HasValue)
+                Inputs.KitchenTemperatureC = clone.AmbientTempC.Value;
+            Inputs.FlourType = GrainNameToFlourType(clone.GrainName);
+        }
+        UpdateRecommendation();
+    }
+
+    private static FlourType GrainNameToFlourType(string name) => name switch
+    {
+        "Einkorn"           => FlourType.Einkorn,
+        "Emmer (farro)"     => FlourType.Emmer,
+        "Spelt"             => FlourType.Spelt,
+        "Kamut (khorasan)"  => FlourType.Kamut,
+        "Teff"              => FlourType.Teff,
+        "Sorghum"           => FlourType.Sorghum,
+        "Whole grain"       => FlourType.WholeGrain,
+        "Rye"               => FlourType.Rye,
+        _                   => FlourType.White,
+    };
 
     private void OnTempChange(ChangeEventArgs e)
     {

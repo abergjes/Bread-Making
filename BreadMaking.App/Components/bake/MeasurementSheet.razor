@@ -1,0 +1,206 @@
+@* Bottom-sheet modal for logging a single measurement to a bake step. *@
+@using System.Text.Json
+@inject HttpClient Http
+
+@if (IsVisible)
+{
+    <div class="ms-overlay" @onclick="HandleBackdropClick">
+        <div class="ms-sheet" @onclick:stopPropagation="true">
+
+            <div class="ms-handle"></div>
+
+            <div class="ms-header">
+                <h3 class="ms-title">Log measurement</h3>
+                <p class="ms-subtitle">@Step.StepName · timestamped to this step</p>
+            </div>
+
+            <div class="ms-section">
+                <label class="ms-field-label">TYPE</label>
+                <div class="ms-type-chips">
+                    @foreach (var t in MeasurementTypes)
+                    {
+                        <button class="ms-type-chip @(SelectedType?.Id == t.Id ? "selected" : "")"
+                                @onclick="() => SelectType(t)">
+                            @t.Name
+                        </button>
+                    }
+                </div>
+            </div>
+
+            <div class="ms-section">
+                <label class="ms-field-label">VALUE</label>
+                <div class="ms-value-row">
+                    <button class="ms-stepper-btn" @onclick="Decrement">−</button>
+                    <div class="ms-value-display">
+                        <span class="ms-value-number">@_value.ToString(ValueFormat)</span>
+                        <span class="ms-value-unit">@(SelectedType?.Unit ?? "")</span>
+                    </div>
+                    <button class="ms-stepper-btn" @onclick="Increment">+</button>
+                </div>
+            </div>
+
+            @if (SelectedType is not null)
+            {
+                <div class="ms-range-hint @(_validationError is not null ? "hint-error" : "hint-ok")">
+                    @if (_validationError is not null)
+                    {
+                        <strong>Out of range</strong>
+                        <span>@_validationError</span>
+                    }
+                    else
+                    {
+                        <strong>Expected for this phase</strong>
+                        <span>@RangeHint</span>
+                    }
+                </div>
+            }
+
+            <div class="ms-actions">
+                <button class="ms-btn ms-btn-cancel" @onclick="Cancel">Cancel</button>
+                <button class="ms-btn ms-btn-save @(_saving ? "ms-btn-loading" : "")"
+                        disabled="@_saving"
+                        @onclick="Save">
+                    @(_saving ? "Saving…" : "Save measurement")
+                </button>
+            </div>
+
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter, EditorRequired] public BakeStepLogDto           Step             { get; set; } = null!;
+    [Parameter, EditorRequired] public List<MeasurementTypeDto> MeasurementTypes { get; set; } = null!;
+    [Parameter]                 public bool                     IsVisible        { get; set; }
+    [Parameter]                 public EventCallback<MeasurementDto> OnSaved     { get; set; }
+    [Parameter]                 public EventCallback            OnCancelled      { get; set; }
+
+    private MeasurementTypeDto? SelectedType  { get; set; }
+    private double              _value;
+    private bool                _saving;
+    private string?             _validationError;
+
+    // ── Initialise when the sheet becomes visible ────────────────────────────
+
+    protected override void OnParametersSet()
+    {
+        if (!IsVisible) return;
+        // Pre-select the type appropriate for this step's phase
+        SelectedType = MeasurementTypes.FirstOrDefault(t => t.DefaultForPhase == Step.Phase)
+                    ?? MeasurementTypes.FirstOrDefault();
+        _value = DefaultValueFor(SelectedType);
+        _validationError = null;
+    }
+
+    // ── Type selection ────────────────────────────────────────────────────────
+
+    private void SelectType(MeasurementTypeDto t)
+    {
+        SelectedType     = t;
+        _value           = DefaultValueFor(t);
+        _validationError = null;
+    }
+
+    // ── Value stepping ────────────────────────────────────────────────────────
+
+    private void Increment() => _value = Math.Round(_value + StepIncrement, 2);
+    private void Decrement() => _value = Math.Round(_value - StepIncrement, 2);
+
+    private double StepIncrement => SelectedType?.Unit switch
+    {
+        "pH"  => 0.1,
+        "°C"  => 0.5,
+        "%"   => 1.0,
+        "mL"  => 1.0,
+        _     => 1.0,
+    };
+
+    private string ValueFormat => SelectedType?.Unit switch
+    {
+        "pH" => "F1",
+        "°C" => "F1",
+        _    => "F0",
+    };
+
+    // ── Range hint ────────────────────────────────────────────────────────────
+
+    private string RangeHint
+    {
+        get
+        {
+            if (SelectedType is null) return "";
+            var min = SelectedType.MinValid;
+            var max = SelectedType.MaxValid;
+            var unit = SelectedType.Unit;
+            return (min, max) switch
+            {
+                (not null, not null) => $"{SelectedType.Name} {min}{unit}–{max}{unit}",
+                (not null, null)     => $"{SelectedType.Name} ≥ {min}{unit}",
+                (null, not null)     => $"{SelectedType.Name} ≤ {max}{unit}",
+                _                   => $"No range guidance for {SelectedType.Name}",
+            };
+        }
+    }
+
+    // ── Save ─────────────────────────────────────────────────────────────────
+
+    private async Task Save()
+    {
+        if (SelectedType is null || _saving) return;
+        _saving          = true;
+        _validationError = null;
+
+        var req = new AddMeasurementRequest
+        {
+            MeasurementTypeId = SelectedType.Id,
+            Value             = _value,
+        };
+
+        var response = await Http.PostAsJsonAsync(
+            $"/api/steplogs/{Step.Id}/measurements", req);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var dto = await response.Content.ReadFromJsonAsync<MeasurementDto>();
+            _saving = false;
+            if (dto is not null)
+                await OnSaved.InvokeAsync(dto);
+        }
+        else if ((int)response.StatusCode == 422)
+        {
+            var body = await response.Content.ReadAsStringAsync();
+            try
+            {
+                using var doc = JsonDocument.Parse(body);
+                _validationError = doc.RootElement.TryGetProperty("error", out var err)
+                    ? err.GetString()
+                    : "Value is outside the valid range.";
+            }
+            catch
+            {
+                _validationError = "Value is outside the valid range.";
+            }
+            _saving = false;
+        }
+        else
+        {
+            _validationError = $"Server error ({(int)response.StatusCode}). Please try again.";
+            _saving = false;
+        }
+    }
+
+    private async Task Cancel()    => await OnCancelled.InvokeAsync();
+    private async Task HandleBackdropClick() => await OnCancelled.InvokeAsync();
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private static double DefaultValueFor(MeasurementTypeDto? t) => t?.Name switch
+    {
+        "Dough temp"    => 24.0,
+        "Aliquot rise"  => 50.0,
+        "pH"            => 4.5,
+        "TTA"           => 8.0,
+        "Internal temp" => 95.0,
+        _               => t?.MinValid ?? 0,
+    };
+}

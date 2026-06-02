@@ -1,0 +1,161 @@
+@page "/history/compare"
+@inject HttpClient Http
+@inject NavigationManager Nav
+
+<div class="comparison-page">
+
+    <div class="comparison-header">
+        <button class="back-btn" @onclick='() => Nav.NavigateTo("/history")'>← History</button>
+        <div>
+            <h2 class="comparison-title">Grain comparison</h2>
+            <p class="comparison-subtitle">Average outcomes across all logged bakes, by grain</p>
+        </div>
+    </div>
+
+    @if (_loading)
+    {
+        <p class="comparison-loading">Loading…</p>
+    }
+    else if (_data.Count == 0)
+    {
+        <div class="comparison-empty">
+            <p>No bake outcomes recorded yet. Finish a bake and log its outcome to see grain comparisons here.</p>
+            <button class="btn-primary" @onclick='() => Nav.NavigateTo("/")'>Go to advisor</button>
+        </div>
+    }
+    else
+    {
+        <div class="comparison-charts">
+
+            <div class="comparison-panel">
+                <h3 class="panel-title">Oven spring</h3>
+                <ApexChart TItem="GrainBar" Options="_ovenOptions" Height="320">
+                    <ApexPointSeries TItem="GrainBar"
+                        Items="_ovenBars"
+                        Name="Oven spring %"
+                        SeriesType="SeriesType.Bar"
+                        XValue="@(b => b.Name)"
+                        YValue="@(b => b.Value)" />
+                </ApexChart>
+            </div>
+
+            <div class="comparison-panel">
+                <h3 class="panel-title">Crumb openness</h3>
+                <ApexChart TItem="GrainBar" Options="_crumbOptions" Height="320">
+                    <ApexPointSeries TItem="GrainBar"
+                        Items="_crumbBars"
+                        Name="Crumb openness"
+                        SeriesType="SeriesType.Bar"
+                        XValue="@(b => b.Name)"
+                        YValue="@(b => b.Value)" />
+                </ApexChart>
+            </div>
+
+            <div class="comparison-panel">
+                <h3 class="panel-title">Time to 50% rise</h3>
+                <ApexChart TItem="GrainBar" Options="_timeOptions" Height="320">
+                    <ApexPointSeries TItem="GrainBar"
+                        Items="_timeBars"
+                        Name="Hours to 50% rise"
+                        SeriesType="SeriesType.Bar"
+                        XValue="@(b => b.Name)"
+                        YValue="@(b => b.Value)" />
+                </ApexChart>
+            </div>
+
+        </div>
+
+        <p class="comparison-legend-note">
+            Grey bars = fewer than 3 bakes recorded — log more bakes to see comparison data.
+        </p>
+    }
+
+</div>
+
+@code {
+    private bool _loading = true;
+    private List<GrainComparisonDto> _data = [];
+
+    private record GrainBar(string Name, decimal Value, bool IsPlaceholder);
+
+    private List<GrainBar> _ovenBars  = [];
+    private List<GrainBar> _crumbBars = [];
+    private List<GrainBar> _timeBars  = [];
+
+    private ApexChartOptions<GrainBar> _ovenOptions  = null!;
+    private ApexChartOptions<GrainBar> _crumbOptions = null!;
+    private ApexChartOptions<GrainBar> _timeOptions  = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _data = await Http.GetFromJsonAsync<List<GrainComparisonDto>>("/api/grains/comparison") ?? [];
+            BuildChartData();
+        }
+        finally { _loading = false; }
+    }
+
+    private void BuildChartData()
+    {
+        _ovenBars  = BuildBars(_data, d => d.AvgOvenSpringPct,          placeholderHeight: 5m);
+        _crumbBars = BuildBars(_data, d => d.AvgCrumbOpenness,           placeholderHeight: 0.5m);
+        _timeBars  = BuildBars(_data, d => d.AvgTimeTo50PctRiseHours,    placeholderHeight: 0.2m);
+
+        _ovenOptions  = MakeOptions("#c2651a", "% height gain", yMax: null, _ovenBars);
+        _crumbOptions = MakeOptions("#4a7c59", "Score (0–10)",  yMax: 10.0, _crumbBars);
+        _timeOptions  = MakeOptions("#7a9cb0", "Hours",         yMax: null, _timeBars);
+    }
+
+    private static List<GrainBar> BuildBars(
+        List<GrainComparisonDto> data,
+        Func<GrainComparisonDto, double?> selector,
+        decimal placeholderHeight) =>
+        data.Select(d =>
+        {
+            var metric  = selector(d);
+            bool isReal = d.BakeCount >= 3 && metric.HasValue;
+            return new GrainBar(
+                d.GrainName,
+                isReal ? (decimal)metric!.Value : placeholderHeight,
+                IsPlaceholder: !isReal);
+        }).ToList();
+
+    private static ApexChartOptions<GrainBar> MakeOptions(
+        string color,
+        string yLabel,
+        double? yMax,
+        List<GrainBar> bars) =>
+        new()
+        {
+            Chart = new Chart
+            {
+                Background = "transparent",
+                Toolbar    = new Toolbar { Show = false },
+            },
+            Colors = bars.Select(b => b.IsPlaceholder ? "#d0cfc9" : color).ToList(),
+            PlotOptions = new PlotOptions
+            {
+                Bar = new PlotOptionsBar
+                {
+                    Horizontal   = false,
+                    Distributed  = true,
+                    BorderRadius = 4,
+                }
+            },
+            DataLabels = new DataLabels { Enabled = false },
+            Grid = new Grid { Show = true, BorderColor = "#e0c9a8", StrokeDashArray = 3 },
+            Legend = new Legend { Show = false },
+            Xaxis = new XAxis { Type = XAxisType.Category },
+            Yaxis =
+            [
+                new YAxis
+                {
+                    Title           = new AxisTitle { Text = yLabel },
+                    Min             = 0,
+                    Max             = yMax,
+                    DecimalsInFloat = 1,
+                }
+            ],
+        };
+}
