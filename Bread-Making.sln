@@ -3,9 +3,26 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Documentation", "Documentation", "{3AEC4E10-98A9-47A7-B46E-C0D1C2DD0A10}"
 	ProjectSection(SolutionItems) = preProject
 		Documentation\Autolyse_Fermentolyse_AncientGrains_v3_2026-05-31.docx = Documentation\Autolyse_Fermentolyse_AncientGrains_v3_2026-05-31.docx
+		Documentation\Baking-Process-Measurements-20260601\01_dough_rise_curve.png = Documentation\Baking-Process-Measurements-20260601\01_dough_rise_curve.png
+		Documentation\Baking-Process-Measurements-20260601\02_ph_tta_curve.png = Documentation\Baking-Process-Measurements-20260601\02_ph_tta_curve.png
+		Documentation\Baking-Process-Measurements-20260601\03_step_gantt_timeline.png = Documentation\Baking-Process-Measurements-20260601\03_step_gantt_timeline.png
+		Documentation\Baking-Process-Measurements-20260601\04_grain_comparison.png = Documentation\Baking-Process-Measurements-20260601\04_grain_comparison.png
+		Documentation\Baking-Process-Measurements-20260601\05_bake_run_chart.png = Documentation\Baking-Process-Measurements-20260601\05_bake_run_chart.png
+		Documentation\Baking-Process-Measurements-20260601\06_gui_step_card.png = Documentation\Baking-Process-Measurements-20260601\06_gui_step_card.png
+		Documentation\Baking-Process-Measurements-20260601\07_data_model.png = Documentation\Baking-Process-Measurements-20260601\07_data_model.png
+		Documentation\Baking-Process-Measurements-20260601\08_architecture.png = Documentation\Baking-Process-Measurements-20260601\08_architecture.png
+		Documentation\Baking-Process-Measurements-20260601\09_timer_state_machine.png = Documentation\Baking-Process-Measurements-20260601\09_timer_state_machine.png
+		Documentation\Baking-Process-Measurements-20260601\10_gui_measurement_entry.png = Documentation\Baking-Process-Measurements-20260601\10_gui_measurement_entry.png
+		Documentation\Baking-Process-Measurements-20260601\Baking_Measurement_Research_and_Dev_Plan_2026-06-01.md = Documentation\Baking-Process-Measurements-20260601\Baking_Measurement_Research_and_Dev_Plan_2026-06-01.md
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BreadMaking.App", "BreadMaking.App\BreadMaking.App.csproj", "{0DB7EDC8-62B1-4DEB-8C92-615517667CD8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BreadMaking.App.Shared", "BreadMaking.App.Shared\BreadMaking.App.Shared.csproj", "{ADE15167-4639-49C2-AFBD-C1B5B2843273}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BreadMaking.App.Server", "BreadMaking.App.Server\BreadMaking.App.Server.csproj", "{39C4C62F-D48F-4845-A5BF-2197F432CB76}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BreadMaking.App.Server.Tests", "BreadMaking.App.Server.Tests\BreadMaking.App.Server.Tests.csproj", "{E70D6095-C438-41F8-A94A-EB1E61A435B0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,6 +46,42 @@ Global
 		{0DB7EDC8-62B1-4DEB-8C92-615517667CD8}.Release|x64.Build.0 = Release|Any CPU
 		{0DB7EDC8-62B1-4DEB-8C92-615517667CD8}.Release|x86.ActiveCfg = Release|Any CPU
 		{0DB7EDC8-62B1-4DEB-8C92-615517667CD8}.Release|x86.Build.0 = Release|Any CPU
+		{ADE15167-4639-49C2-AFBD-C1B5B2843273}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ADE15167-4639-49C2-AFBD-C1B5B2843273}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ADE15167-4639-49C2-AFBD-C1B5B2843273}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{ADE15167-4639-49C2-AFBD-C1B5B2843273}.Debug|x64.Build.0 = Debug|Any CPU
+		{ADE15167-4639-49C2-AFBD-C1B5B2843273}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{ADE15167-4639-49C2-AFBD-C1B5B2843273}.Debug|x86.Build.0 = Debug|Any CPU
+		{ADE15167-4639-49C2-AFBD-C1B5B2843273}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ADE15167-4639-49C2-AFBD-C1B5B2843273}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ADE15167-4639-49C2-AFBD-C1B5B2843273}.Release|x64.ActiveCfg = Release|Any CPU
+		{ADE15167-4639-49C2-AFBD-C1B5B2843273}.Release|x64.Build.0 = Release|Any CPU
+		{ADE15167-4639-49C2-AFBD-C1B5B2843273}.Release|x86.ActiveCfg = Release|Any CPU
+		{ADE15167-4639-49C2-AFBD-C1B5B2843273}.Release|x86.Build.0 = Release|Any CPU
+		{39C4C62F-D48F-4845-A5BF-2197F432CB76}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{39C4C62F-D48F-4845-A5BF-2197F432CB76}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{39C4C62F-D48F-4845-A5BF-2197F432CB76}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{39C4C62F-D48F-4845-A5BF-2197F432CB76}.Debug|x64.Build.0 = Debug|Any CPU
+		{39C4C62F-D48F-4845-A5BF-2197F432CB76}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{39C4C62F-D48F-4845-A5BF-2197F432CB76}.Debug|x86.Build.0 = Debug|Any CPU
+		{39C4C62F-D48F-4845-A5BF-2197F432CB76}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{39C4C62F-D48F-4845-A5BF-2197F432CB76}.Release|Any CPU.Build.0 = Release|Any CPU
+		{39C4C62F-D48F-4845-A5BF-2197F432CB76}.Release|x64.ActiveCfg = Release|Any CPU
+		{39C4C62F-D48F-4845-A5BF-2197F432CB76}.Release|x64.Build.0 = Release|Any CPU
+		{39C4C62F-D48F-4845-A5BF-2197F432CB76}.Release|x86.ActiveCfg = Release|Any CPU
+		{39C4C62F-D48F-4845-A5BF-2197F432CB76}.Release|x86.Build.0 = Release|Any CPU
+		{E70D6095-C438-41F8-A94A-EB1E61A435B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E70D6095-C438-41F8-A94A-EB1E61A435B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E70D6095-C438-41F8-A94A-EB1E61A435B0}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E70D6095-C438-41F8-A94A-EB1E61A435B0}.Debug|x64.Build.0 = Debug|Any CPU
+		{E70D6095-C438-41F8-A94A-EB1E61A435B0}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E70D6095-C438-41F8-A94A-EB1E61A435B0}.Debug|x86.Build.0 = Debug|Any CPU
+		{E70D6095-C438-41F8-A94A-EB1E61A435B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E70D6095-C438-41F8-A94A-EB1E61A435B0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E70D6095-C438-41F8-A94A-EB1E61A435B0}.Release|x64.ActiveCfg = Release|Any CPU
+		{E70D6095-C438-41F8-A94A-EB1E61A435B0}.Release|x64.Build.0 = Release|Any CPU
+		{E70D6095-C438-41F8-A94A-EB1E61A435B0}.Release|x86.ActiveCfg = Release|Any CPU
+		{E70D6095-C438-41F8-A94A-EB1E61A435B0}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

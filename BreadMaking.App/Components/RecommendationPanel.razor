@@ -1,4 +1,6 @@
 @using BreadMaking.App.Models
+@inject HttpClient Http
+@inject NavigationManager Nav
 
 @if (Recommendation is null)
 {
@@ -86,11 +88,72 @@ else
                 </ul>
             </div>
         }
+
+        @if (Inputs is not null)
+        {
+            <div class="start-bake-section">
+                <button class="btn-start-bake @(_starting ? "btn-loading" : "")"
+                        disabled="@_starting"
+                        @onclick="StartBake">
+                    @(_starting ? "Starting…" : "Start Bake ▶")
+                </button>
+                <p class="start-bake-hint">Records your actual durations and measurements</p>
+            </div>
+        }
     </div>
 }
 
 @code {
     [Parameter] public BreadRecommendation? Recommendation { get; set; }
+    [Parameter] public BreadInputs?         Inputs         { get; set; }
+
+    private bool _starting;
+
+    private async Task StartBake()
+    {
+        if (Recommendation is null || Inputs is null) return;
+        _starting = true;
+
+        var req = new StartBakeRequest
+        {
+            GrainName    = ToGrainName(Inputs.DominantFlourType),
+            Method       = ToMethodName(Recommendation.Method),
+            AmbientTempC = Inputs.KitchenTemperatureC,
+        };
+
+        var response = await Http.PostAsJsonAsync("/api/bakes", req);
+        if (response.IsSuccessStatusCode)
+        {
+            var dto = await response.Content.ReadFromJsonAsync<BakeDto>();
+            if (dto is not null)
+            {
+                Nav.NavigateTo($"/bake/{dto.Id}");
+                return;
+            }
+        }
+        _starting = false;
+    }
+
+    private static string ToGrainName(FlourType flour) => flour switch
+    {
+        FlourType.White     => "Modern wheat",
+        FlourType.WholeGrain => "Whole grain",
+        FlourType.Rye       => "Rye",
+        FlourType.Spelt     => "Spelt",
+        FlourType.Einkorn   => "Einkorn",
+        FlourType.Emmer     => "Emmer (farro)",
+        FlourType.Kamut     => "Kamut (khorasan)",
+        FlourType.Teff      => "Teff",
+        FlourType.Sorghum   => "Sorghum",
+        _                   => "Modern wheat",
+    };
+
+    private static string ToMethodName(RestMethod method) => method switch
+    {
+        RestMethod.Fermentolyse => "Fermentolyse",
+        RestMethod.Soaker       => "Other",
+        _                       => "Autolyse",
+    };
 
     private string MethodClass => Recommendation?.Method switch
     {

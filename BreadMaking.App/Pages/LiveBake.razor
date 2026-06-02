@@ -1,0 +1,136 @@
+@page "/bake/{Id:int}"
+@inject HttpClient Http
+@inject NavigationManager Nav
+@implements IDisposable
+
+@if (_loading)
+{
+    <div class="loading-screen">
+        <div class="loading-icon">🍞</div>
+        <p>Loading bake…</p>
+    </div>
+}
+else if (_bake is null)
+{
+    <div class="live-bake-page">
+        <p class="text-muted">Bake not found.</p>
+        <button class="back-btn" @onclick='() => Nav.NavigateTo("/")'>← Back to advisor</button>
+    </div>
+}
+else
+{
+    <div class="live-bake-page">
+
+        <div class="live-bake-header">
+            <button class="back-btn" @onclick='() => Nav.NavigateTo("/")'>← Home</button>
+            <button class="back-btn" style="margin-left:auto" @onclick='() => Nav.NavigateTo("/history")'>History →</button>
+            <div class="live-bake-title-group">
+                <h2 class="live-bake-title">@_bake.RecipeName</h2>
+                <p class="live-bake-meta">
+                    @_bake.StartedAt.ToLocalTime().ToString("d MMMM yyyy")
+                    @if (_bake.AmbientTempC.HasValue)
+                    {
+                        <span class="meta-sep">·</span>
+                        <span>Kitchen @_bake.AmbientTempC.Value.ToString("F0") °C</span>
+                    }
+                    @if (!string.IsNullOrEmpty(_bake.FlourBatch))
+                    {
+                        <span class="meta-sep">·</span>
+                        <span>@_bake.FlourBatch</span>
+                    }
+                </p>
+            </div>
+        </div>
+
+        @if (!_anyStarted)
+        {
+            <div class="planning-view">
+                <h3 class="section-title">Bake plan</h3>
+                <PlanningGantt Steps="_bake.StepLogs" />
+            </div>
+        }
+
+        <div class="step-list">
+            @foreach (var step in _bake.StepLogs)
+            {
+                <StepCard Step="step"
+                          MeasurementTypes="_bake.MeasurementTypes"
+                          OnStart="HandleStart"
+                          OnPause="HandlePause"
+                          OnComplete="HandleComplete"
+                          OnIncrease="HandleIncrease"
+                          OnDecrease="HandleDecrease"
+                          OnMeasurementSaved="RefreshBake" />
+            }
+        </div>
+
+    </div>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private BakeDto?  _bake;
+    private bool      _loading = true;
+    private System.Threading.Timer? _ticker;
+
+    private bool _anyStarted =>
+        _bake?.StepLogs.Any(l => l.Status != StepStatus.NotStarted) == true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _loading = true;
+        _bake    = await Http.GetFromJsonAsync<BakeDto>($"/api/bakes/{Id}");
+        _loading = false;
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+            _ticker = new System.Threading.Timer(
+                _ => InvokeAsync(StateHasChanged), null,
+                TimeSpan.Zero, TimeSpan.FromSeconds(1));
+    }
+
+    public void Dispose() => _ticker?.Dispose();
+
+    // ── API handlers ─────────────────────────────────────────────────────────
+
+    private async Task HandleStart(int id)
+    {
+        await Http.PostAsync($"/api/steplogs/{id}/start", null);
+        await RefreshBake();
+    }
+
+    private async Task HandlePause(int id)
+    {
+        await Http.PostAsync($"/api/steplogs/{id}/pause", null);
+        await RefreshBake();
+    }
+
+    private async Task HandleComplete(int id)
+    {
+        await Http.PostAsync($"/api/steplogs/{id}/complete", null);
+        await RefreshBake();
+    }
+
+    private async Task HandleIncrease(int id)
+    {
+        var s = _bake!.StepLogs.First(l => l.Id == id);
+        await Http.PatchAsync($"/api/steplogs/{id}/duration?deltaMin={s.StepMin}", null);
+        await RefreshBake();
+    }
+
+    private async Task HandleDecrease(int id)
+    {
+        var s = _bake!.StepLogs.First(l => l.Id == id);
+        await Http.PatchAsync($"/api/steplogs/{id}/duration?deltaMin={-s.StepMin}", null);
+        await RefreshBake();
+    }
+
+    private async Task RefreshBake()
+    {
+        _bake = await Http.GetFromJsonAsync<BakeDto>($"/api/bakes/{Id}");
+    }
+
+}
