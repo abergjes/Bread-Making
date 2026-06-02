@@ -1,0 +1,32 @@
+@page "/history"
+@inject NavigationManager Nav
+
+<div class="history-page">
+
+    <div class="history-header">
+        <button class="back-btn" @onclick='() => Nav.NavigateTo("/")'>← Home</button>
+        <div class="history-title-group">
+            <h2 class="history-title">Bake history</h2>
+            <p class="history-subtitle">Track how your results improve over time</p>
+        </div>
+        <button class="btn-compare" @onclick='() => Nav.NavigateTo("/history/compare")'>
+            Compare grains ▶
+        </button>
+    </div>
+
+    <div class="history-section">
+        <h3 class="section-title">Reproducibility over time</h3>
+        <p class="history-hint">
+            As you log more bakes the scatter narrows and your results converge on target.
+        </p>
+        <RunChart />
+    </div>
+
+    <div class="history-empty-note">
+        <p>Past bakes will be listed here in M6. Start a bake from the advisor to begin your record.</p>
+        <button class="btn-primary" @onclick='() => Nav.NavigateTo("/")'>Go to advisor</button>
+    </div>
+
+</div>
+
+@code { }
