@@ -56,6 +56,30 @@ else
                         <span>Planned @FormatDuration(TimeSpan.FromMinutes(_plannedTotalMin))</span>
                     }
                 </p>
+                @if (_bake.HydrationPct.HasValue || _bake.TotalFlourGrams.HasValue)
+                {
+                    <p class="live-bake-formula">
+                        @if (_bake.HydrationPct.HasValue)
+                        {
+                            <span>@_bake.HydrationPct.Value.ToString("F0")% hydration</span>
+                        }
+                        @if (_bake.TotalFlourGrams.HasValue)
+                        {
+                            <span class="meta-sep">·</span>
+                            <span>@_bake.TotalFlourGrams.Value.ToString("F0") g flour</span>
+                        }
+                        @if (_bake.SaltPct.HasValue)
+                        {
+                            <span class="meta-sep">·</span>
+                            <span>@_bake.SaltPct.Value.ToString("F1")% salt</span>
+                        }
+                        @if (_bake.InoculationPct.HasValue)
+                        {
+                            <span class="meta-sep">·</span>
+                            <span>@_bake.InoculationPct.Value.ToString("F0")% inoculation</span>
+                        }
+                    </p>
+                }
                 <p class="live-bake-duration">
                     @if (_bake.EndedAt.HasValue)
                     {

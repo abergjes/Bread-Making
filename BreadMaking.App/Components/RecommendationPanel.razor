@@ -116,9 +116,11 @@ else
 
         var req = new StartBakeRequest
         {
-            GrainName    = ToGrainName(Inputs.DominantFlourType),
-            Method       = ToMethodName(Recommendation.Method),
-            AmbientTempC = Inputs.KitchenTemperatureC,
+            GrainName       = ToGrainName(Inputs.DominantFlourType),
+            Method          = ToMethodName(Recommendation.Method),
+            AmbientTempC    = Inputs.KitchenTemperatureC,
+            HydrationPct    = Inputs.HydrationPercent,
+            StarterActivity = (int)Inputs.StarterActivity,
         };
 
         var response = await Http.PostAsJsonAsync("/api/bakes", req);

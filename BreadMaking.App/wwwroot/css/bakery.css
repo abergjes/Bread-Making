@@ -1022,6 +1022,15 @@ body {
 .sound-opt input[type="radio"] { display: none; }
 .sound-opt:hover { background: var(--panel-dark); }
 .sound-opt-active { background: var(--panel-dark); color: var(--text); }
+.live-bake-formula {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 4px;
+    margin-top: 4px;
+    font-size: .82rem;
+    color: var(--text-muted);
+}
 .live-bake-duration {
     display: flex;
     align-items: baseline;

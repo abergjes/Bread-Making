@@ -11,4 +11,5 @@ public class BakeListItemDto
     public bool HasOutcome { get; set; }
     public double? OvenSpringPct { get; set; }
     public int? CrumbOpenness { get; set; }
+    public double? HydrationPct { get; set; }
 }

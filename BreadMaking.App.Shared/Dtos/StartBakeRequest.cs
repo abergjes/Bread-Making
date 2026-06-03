@@ -8,4 +8,11 @@ public class StartBakeRequest
     public double? AmbientHumidityPct { get; set; }
     public string? FlourBatch { get; set; }
     public string? Notes { get; set; }
+
+    // Formula fields (M10)
+    public double? HydrationPct    { get; set; }
+    public int?    StarterActivity { get; set; }
+    public double? TotalFlourGrams { get; set; }
+    public double? SaltPct         { get; set; }
+    public double? InoculationPct  { get; set; }
 }

@@ -18,6 +18,11 @@ internal static class DtoMapper
         AmbientHumidityPct = bake.AmbientHumidityPct,
         FlourBatch     = bake.FlourBatch,
         Notes          = bake.Notes,
+        HydrationPct    = bake.HydrationPct,
+        StarterActivity = bake.StarterActivity,
+        TotalFlourGrams = bake.TotalFlourGrams,
+        SaltPct         = bake.SaltPct,
+        InoculationPct  = bake.InoculationPct,
         StepLogs       = bake.StepLogs
                              .OrderBy(l => l.RecipeStep?.Order ?? 0)
                              .Select(ToDto)

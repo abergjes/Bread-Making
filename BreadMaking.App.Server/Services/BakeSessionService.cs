@@ -22,6 +22,11 @@ public class BakeSessionService(AppDbContext db) : IBakeSessionService
             AmbientHumidityPct = request.AmbientHumidityPct,
             FlourBatch         = request.FlourBatch,
             Notes              = request.Notes,
+            HydrationPct       = request.HydrationPct,
+            StarterActivity    = request.StarterActivity,
+            TotalFlourGrams    = request.TotalFlourGrams,
+            SaltPct            = request.SaltPct,
+            InoculationPct     = request.InoculationPct,
             StepLogs           = recipe.Steps
                                        .OrderBy(s => s.Order)
                                        .Select(step => new BakeStepLog
@@ -63,6 +68,7 @@ public class BakeSessionService(AppDbContext db) : IBakeSessionService
             HasOutcome    = b.Outcome is not null,
             OvenSpringPct = b.Outcome?.OvenSpringPct,
             CrumbOpenness = b.Outcome?.CrumbOpenness,
+            HydrationPct  = b.HydrationPct,
         }).ToList();
     }
 
@@ -81,6 +87,11 @@ public class BakeSessionService(AppDbContext db) : IBakeSessionService
             AmbientHumidityPct = bake.AmbientHumidityPct,
             FlourBatch         = bake.FlourBatch,
             Notes              = bake.Notes,
+            HydrationPct       = bake.HydrationPct,
+            StarterActivity    = bake.StarterActivity,
+            TotalFlourGrams    = bake.TotalFlourGrams,
+            SaltPct            = bake.SaltPct,
+            InoculationPct     = bake.InoculationPct,
         };
     }
 
