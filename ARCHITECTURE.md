@@ -69,7 +69,9 @@ The **Server project** is the host: it serves the WASM bundle as static files an
 
 ## Data model
 
-Seven EF Core entities live on the server only. The client always communicates via DTOs from `Shared`.
+EF Core entities live on the server only. The client always communicates via DTOs from `Shared`.
+
+### Entity relationship diagram (M0–M9, current)
 
 ```
 GrainProfile (1) ──< Recipe (1) ──< RecipeStep
@@ -79,21 +81,37 @@ GrainProfile (1) ──< Recipe (1) ──< RecipeStep
                      BakeOutcome (0..1)
 ```
 
-Colour coding from the spec ER diagram:
-- **Brown** (GrainProfile, Recipe, RecipeStep) — recipe definition, the template
+### Extended diagram (M10–M14, planned additions)
+
+```
+Starter (1) ──< StarterFeedLog
+                      │ (0..1)
+GrainProfile (1) ──< Recipe (1) ──< RecipeStep
+                        │         └──< RecipeFormula (0..1)
+                     Bake (1) ──< BakeStepLog (1) ──< Measurement
+                        │
+                     BakeOutcome (0..1)
+```
+
+Colour coding:
+- **Brown** (GrainProfile, Recipe, RecipeStep, RecipeFormula) — recipe definition, the template
 - **Tan** (Bake, BakeStepLog) — a specific bake run, what actually happened
 - **Amber** (Measurement, MeasurementType, BakeOutcome) — captured data
+- **Green** (Starter, StarterFeedLog) — levain health journal
 
-Full entity definitions are in the spec (Part C, section C1). Key properties:
+### Entity key fields
 
 | Entity | Key fields |
 |--------|-----------|
-| `Recipe` | `Method` (autolyse/fermentolyse/other), `GrainProfileId`, `TargetDoughTempC`, `FrictionFactorC` |
+| `Recipe` | `Method` (autolyse/fermentolyse/other), `GrainProfileId`, `TargetDoughTempC`, `FrictionFactorC`, `IsUserDefined`, `CreatedByLabel` |
 | `RecipeStep` | `Order`, `Name`, `Phase`, `DefaultDurationMin`, `MinDurationMin`, `MaxDurationMin`, `StepMin`, `TargetTempC` |
-| `Bake` | `RecipeId`, `StartedAt`, `EndedAt`, `AmbientTempC`, `AmbientHumidityPct`, `FlourBatch`, `Notes` |
-| `BakeStepLog` | `PlannedDurationMin`, `StartedAt`, `EndedAt`, `Status` (enum), `ActualDurationMin` (derived) |
+| `RecipeFormula` | `RecipeId`, `FlourWeightG`, `WaterPct`, `SaltPct`, `StarterPct`, `Notes` |
+| `Bake` | `RecipeId`, `StartedAt`, `EndedAt`, `AmbientTempC`, `AmbientHumidityPct`, `FlourBatch`, `Notes`, `HydrationPct`, `StarterActivity`, `TotalFlourGrams`, `SaltPct`, `InoculationPct`, `StarterFeedLogId` (nullable FK) |
+| `BakeStepLog` | `PlannedDurationMin`, `StartedAt`, `EndedAt`, `Status` (enum), `ActualDurationMin` (derived), `Notes` |
 | `Measurement` | `BakeStepLogId`, `MeasurementTypeId`, `Value`, `Unit`, `RecordedAt` (server-stamped) |
-| `BakeOutcome` | `LoafHeightCm`, `OvenSpringPct`, `InternalTempC`, `WeightLossPct`, `CrumbOpenness`, `CrustScore`, `TasteScore` |
+| `BakeOutcome` | `LoafHeightCm`, `OvenSpringPct`, `InternalTempC`, `WeightLossPct`, `CrumbOpenness`, `CrustScore`, `TasteScore`, `PhotoPath`, `OverallScore`, `Tags`, `IsBestLoaf` |
+| `Starter` | `Id`, `Name`, `HydrationPct`, `FlourBlend`, `CreatedAt`, `Notes` |
+| `StarterFeedLog` | `Id`, `StarterId`, `FedAt`, `FlourGrams`, `WaterGrams`, `PrevStarterGrams`, `AmbientTempC`, `PeakHours`, `FloatTestPassed` |
 
 ---
 
@@ -152,24 +170,45 @@ NotStarted ──[Start]──▶ Running ◀──[Resume]──┐
 
 ## API surface
 
+### Implemented (M0–M9)
+
 ```
 POST   /api/bakes                              Create Bake from BreadInputs → BakeDto (201)
 GET    /api/bakes/{id}                         Load bake with all step logs and measurements → BakeDto
 GET    /api/bakes                              Paginated history list → BakeListItemDto[]
+GET    /api/bakes/{id}/inputs                  Original advisor inputs for clone-bake → StartBakeRequest
+PATCH  /api/bakes/{id}/notes                   Update bake notes → 204
+GET    /api/bakes/{id}/export?format=csv|json  Export a single bake
 
 POST   /api/steplogs/{id}/start                Start or resume → BakeStepLogDto
 POST   /api/steplogs/{id}/pause                Pause → BakeStepLogDto
 POST   /api/steplogs/{id}/complete             Complete → BakeStepLogDto
 PATCH  /api/steplogs/{id}/duration?deltaMin=N  Adjust PlannedDurationMin → BakeStepLogDto
-
 POST   /api/steplogs/{id}/measurements         Add measurement → MeasurementDto (201)
-GET    /api/steplogs/{id}/measurements         List measurements for a step → MeasurementDto[]
 
-POST   /api/bakes/{id}/outcome                 Record BakeOutcome → BakeOutcomeDto (201)
-GET    /api/bakes/{id}/outcome                 Read BakeOutcome → BakeOutcomeDto
+PUT    /api/bakes/{id}/outcome                 Upsert BakeOutcome (fields) → 204
+POST   /api/bakes/{id}/outcome/photo           Upload outcome photo (multipart) → { url } (201)
 
 GET    /api/grains/comparison                  Aggregated outcomes by grain → GrainComparisonDto[]
-GET    /api/bakes/{id}/export?format=csv|json  Export a single bake
+```
+
+### Planned (M11–M15)
+
+```
+PATCH  /api/steplogs/{id}/notes                Update step-level notes → 204                  (M11)
+
+GET    /api/starters                           List starters → StarterDto[]                   (M13)
+POST   /api/starters                           Create starter → StarterDto (201)              (M13)
+GET    /api/starters/{id}/feeds                List feed log entries → StarterFeedDto[]       (M13)
+POST   /api/starters/{id}/feeds                Log a feed entry → StarterFeedDto (201)        (M13)
+
+GET    /api/recipes                            List user-defined recipes → RecipeDto[]        (M14)
+POST   /api/recipes                            Create user recipe → RecipeDto (201)           (M14)
+PUT    /api/recipes/{id}                       Update user recipe → 204                       (M14)
+DELETE /api/recipes/{id}                       Delete user recipe → 204                       (M14)
+
+GET    /api/analytics/correlations             Scatter data: outcome vs factor → point[]     (M15)
+GET    /api/analytics/personal-bests           Best score per grain per metric → summary[]   (M15)
 ```
 
 All endpoints return `DateTimeOffset` values in ISO 8601 UTC. The client formats them for display using the browser's local timezone.
@@ -206,9 +245,20 @@ dotnet ef database update        --project BreadMaking.App.Server
 
 ---
 
-## Phase 2 addition — SignalR (M7, optional)
+## Phase 2 addition — SignalR (M7, implemented)
 
-The architecture reserves a SignalR hub on the server for cross-device reminders. Each active bake has a group named `bake-{id}`; all devices joined to that bake receive step-completed and threshold-crossed events. This is purely additive — no existing components need to change.
+A SignalR hub on the server provides cross-device reminders. Each active bake has a group named `bake-{id}`; all devices joined to that bake receive `FoldsReminder`, `Bulk50Crossed`, and `StepCompleted` events. The hub is at `/hubs/bake`. This is purely additive — no existing components changed.
+
+---
+
+## Phase 3 addition — Offline (M16, planned)
+
+The Blazor WASM template already generates `service-worker.js` and `service-worker.published.js` but they are currently no-ops. M16 wires them up:
+
+- **Cache strategy:** The active bake page (`/bake/{id}`) and its API response are cached on first load. Subsequent loads use the cache when offline.
+- **Offline action queue:** `wwwroot/js/offlineQueue.js` intercepts `POST /api/steplogs/{id}/start|pause|complete` calls when `navigator.onLine` is false. Actions are stored in IndexedDB with their URL and timestamp. On the `online` event, the queue is drained in order and each request is replayed.
+- **Conflict resolution:** Replayed actions use the same endpoints as online actions. The server's start-time-as-source-of-truth design means elapsed is correctly derived even if the POST was delayed by a few seconds.
+- **UI:** `LiveBake.razor` checks `navigator.onLine` on mount and subscribes to `online`/`offline` window events; an amber offline banner appears and disappears automatically.
 
 ---
 

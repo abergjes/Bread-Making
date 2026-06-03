@@ -131,6 +131,10 @@ else
             </div>
             @if (_bake.Outcome is { } o)
             {
+                @if (o.PhotoPath is not null)
+                {
+                    <img src="/uploads/@o.PhotoPath" class="outcome-photo" alt="Bake photo" />
+                }
                 <div class="outcome-chips">
                     @if (o.OvenSpringPct.HasValue)
                     {

@@ -43,6 +43,7 @@ internal static class DtoMapper
             CrumbOpenness = bake.Outcome.CrumbOpenness,
             CrustScore    = bake.Outcome.CrustScore,
             TasteScore    = bake.Outcome.TasteScore,
+            PhotoPath     = bake.Outcome.PhotoPath,
         },
     };
 

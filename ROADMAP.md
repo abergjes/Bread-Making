@@ -1,8 +1,8 @@
 # Bread-Making App — Roadmap
 
-## Current state (v6, June 2026)
+## Current state (v7, June 2026)
 
-All milestones M0–M9 are complete. The app is a hosted Blazor WASM solution with a full ASP.NET Core backend, EF Core + SQLite persistence, live bake execution, measurements, visualisations, history, SignalR notifications, a three-tier overrun warning system with audible alerts, and a full bake outcome capture UI. The original advisor flow is preserved unchanged.
+Milestones M0–M9 are complete, including photo upload for bake outcomes (M9 extension). The app is a hosted Blazor WASM solution with a full ASP.NET Core backend, EF Core + SQLite persistence, live bake execution, measurements, visualisations, history, SignalR notifications, a three-tier overrun warning system with audible alerts, and a full bake outcome capture UI with photo upload. Milestones M10–M16 are planned — they address gaps identified by a senior baker assessment and extend the app from a capable bake tracker into a full data-driven baking companion.
 
 ## Vision
 
@@ -31,7 +31,14 @@ Before any milestone work begins, the solution is converted from a standalone WA
 | M6 | History & comparison | `/history` list, grain comparison view, CSV/JSON export, clone-bake | — | ✅ Complete |
 | M7 | Notifications (optional) | SignalR hub, 30-min fold reminders, bulk-50% push, cross-device alerts | — | ✅ Complete |
 | M8 | Live bake UX enhancements | Duration/total time display; three-tier overrun visualisation; audible alerts with toggle | — | ✅ Complete |
-| M9 | Outcome capture UI | BakeOutcomeDto, PUT /api/bakes/{id}/outcome, OutcomeSheet + OutcomeField components, chips on live bake page | — | ✅ Complete |
+| M9 | Outcome capture UI | BakeOutcomeDto, PUT /api/bakes/{id}/outcome, OutcomeSheet + OutcomeField components, chips + photo on live bake page | — | ✅ Complete |
+| M10 | Formula & extended inputs | Persist hydration %, starter activity, flour weight, salt %, inoculation % on every bake | M15 | 📋 Planned |
+| M11 | Per-step notes | Notes field on BakeStepLog; inline auto-save in StepCard; 📝 indicator on collapsed card | — | 📋 Planned |
+| M12 | Ratings & tags | Overall score (1–5 stars), free-form tags, best-loaf flag on BakeOutcome | M15 | 📋 Planned |
+| M13 | Starter journal | Starter + StarterFeedLog entities; /starter page; link bake to feed log entry | M15 | 📋 Planned |
+| M14 | Recipe library | User-created recipes with baker's %-formula; save-from-advisor flow; IsUserDefined flag | — | 📋 Planned |
+| M15 | Analytics & trends | Scatter correlations, personal bests, season trend, bake-to-bake diff view | — | 📋 Planned |
+| M16 | PWA & offline | Service worker, offline step progression via IndexedDB queue, app manifest | — | 📋 Planned |
 
 ---
 
@@ -193,9 +200,126 @@ Scope:
 
 ---
 
+### M10 — Formula & extended bake inputs
+
+**Goal:** Every bake record captures the full formula used, not just the grain and method. Today `HydrationPercent`, `StarterActivity`, and flour weight are advisor inputs that are silently dropped when the bake is created — a baker cannot look back and see exactly what they baked.
+
+Scope:
+- Extend `Bake` entity: `HydrationPct`, `StarterActivity` (int, mirrors advisor enum), `TotalFlourGrams` (nullable), `SaltPct` (nullable), `InoculationPct` (nullable)
+- Extend `StartBakeRequest` to carry these fields from the advisor
+- Update `BakeSessionService.CreateFromInputsAsync` to persist them
+- Update `BakeDto` and `BakeListItemDto` to expose them
+- Live bake header: show formula summary line (e.g., "78% · 950 g flour · 2% salt")
+- New EF migration: `AddFormulaFieldsToBake`
+
+**Success criteria:** After starting a bake, `GET /api/bakes/{id}` returns `hydrationPct`, `totalFlourGrams`, `saltPct`, and `inoculationPct`. History list shows hydration % alongside grain name.
+
+---
+
+### M11 — Per-step notes
+
+**Goal:** Let the baker pin observations to the exact step where they happened — "dough felt slack at pre-shape" is lost if written in the bake notes field.
+
+Scope:
+- Add `Notes` (string, nullable) to `BakeStepLog` entity
+- New migration: `AddNotesToBakeStepLog`
+- Extend `BakeStepLogDto` with `Notes`
+- `StepCard.razor` (expanded state): inline `<textarea>` with debounced auto-save (mirrors bake-level notes pattern exactly)
+- New API endpoint: `PATCH /api/steplogs/{id}/notes`
+- Collapsed completed step card: 📝 chip indicator when `Notes` is set
+
+**Success criteria:** Type a note in an expanded step card; it auto-saves; on page refresh the note is present; collapsed card shows 📝.
+
+---
+
+### M12 — Bake ratings, tags & best-loaf flag
+
+**Goal:** Make the history list filterable and let the baker bookmark their proudest loaves.
+
+Scope:
+- Add to `BakeOutcome`: `OverallScore` (int?, 1–5), `Tags` (string?, comma-separated), `IsBestLoaf` (bool)
+- New migration: `AddRatingAndTagsToBakeOutcome`
+- `OutcomeSheet.razor`: star-rating row (5 tappable ★ / ☆ icons) and tag chip input above the photo section
+- `BakeOutcomeDto` and `BakeListItemDto`: expose `OverallScore`, `Tags`, `IsBestLoaf`
+- History list: render star rating and tag pills on each bake card; add "⭐ Best loaves only" filter toggle alongside existing grain/method filters
+
+**Success criteria:** Log a 5-star outcome with tag "gift"; it appears in the history list with stars and tag pill; "best loaves only" filter hides unrated bakes.
+
+---
+
+### M13 — Starter journal
+
+**Goal:** Track the health of each sourdough starter over time and link it to the bakes it launches. Starter state is the single most important variable in sourdough timing and is currently invisible in the record.
+
+Scope:
+- New entities: `Starter` (Id, Name, HydrationPct, FlourBlend, CreatedAt, Notes), `StarterFeedLog` (Id, StarterId, FedAt, FlourGrams, WaterGrams, PrevStarterGrams, AmbientTempC, PeakHours, FloatTestPassed)
+- `Bake` entity: add `StarterFeedLogId` (nullable FK to `StarterFeedLog`) — "which feed launched this bake"
+- New migrations: `AddStarterJournal`, `AddStarterFeedLinkToBake`
+- New API endpoints: `GET/POST /api/starters`, `POST /api/starters/{id}/feeds`, `GET /api/starters/{id}/feeds`
+- New page `/starter`: list starters, log a feed entry (amounts, ambient temp), see peak-hours trend chart per starter
+- Advisor start sheet: optional "Link starter feed" selector showing the 3 most recent feed log entries
+- History list bake card: "fed X h ago" badge when a feed is linked
+- `BakeDto`: expose `StarterFeedLog` summary (fed at, hours before bake)
+
+**Success criteria:** Add a starter, log a feed, start a bake and link it to that feed. History shows "fed 4 h ago" on the bake card.
+
+---
+
+### M14 — User recipe library
+
+**Goal:** Let the baker save their own formulas so they can restart a favourite recipe without re-entering everything from scratch each time.
+
+Scope:
+- Extend `Recipe` entity: `IsUserDefined` (bool, default false for all seeded records), `CreatedByLabel` (string?)
+- New `RecipeFormula` entity: `Id`, `RecipeId`, `FlourWeightG`, `WaterPct`, `SaltPct`, `StarterPct`, `Notes`
+- New migrations: `AddUserDefinedToRecipe`, `AddRecipeFormula`
+- New API endpoints: `GET/POST/PUT/DELETE /api/recipes` (user-defined only; seeded recipes are read-only)
+- Advisor UI: "Saved recipes" chip row above the grain selector; tapping one pre-fills all advisor inputs
+- Recommendation panel: "Save as recipe" button — posts current inputs as a new user-defined recipe
+- `IsUserDefined = false` recipes are never exposed via the recipe CRUD endpoints
+
+**Success criteria:** Create a custom recipe from a recommendation; it appears in the "Saved recipes" row; selecting it pre-fills the advisor; deleting it removes it from the list.
+
+---
+
+### M15 — Analytics & trends
+
+**Goal:** Surface the patterns hidden in the accumulated bake history — this is the payoff for all the data entry in M4, M9, M10–M13.
+
+Scope:
+- New API endpoint: `GET /api/analytics/correlations?metric=crumb|ovenspring|taste&factor=hydration|bulktime|kitchentemp`
+  Returns `{ x, y, bakeId, date, grainName }[]` for scatter plotting
+- New API endpoint: `GET /api/analytics/personal-bests` — best score per grain per outcome metric
+- New page `/history/analytics`:
+  - **Scatter chart** — any outcome metric (Y axis) vs any input factor (X axis); each dot is a bake; hover shows date + grain
+  - **Best loaf gallery** — top-rated bake per grain with photo thumbnail (requires M12)
+  - **Season trend** — monthly average oven spring / crumb openness as an area chart
+- Extend `/history/compare` page: **bake diff** — select any two bakes from a dropdown; a table shows every input and outcome side-by-side with changed values highlighted
+
+**Success criteria:** With 5+ bakes logged, the scatter chart shows a visible trend; personal bests list one bake per grain; bake diff highlights differences between two selected bakes.
+
+---
+
+### M16 — PWA & offline
+
+**Goal:** The bake timer must survive a network drop. Kitchens frequently lose wifi, and a step completing while the server is unreachable should not lose state.
+
+Scope:
+- Wire up Blazor WASM service worker scaffolding (`service-worker.js` / `service-worker.published.js`) — already generated by the template, currently no-op
+- Cache the active bake's API response (`/api/bakes/{id}`) for offline reads
+- `LiveBake.razor`: offline banner ("Working offline — timer still running; changes sync when reconnected") when `navigator.onLine` is false
+- New `wwwroot/js/offlineQueue.js` — queues `start`, `pause`, `complete` POST requests to IndexedDB when offline; flushes and replays in order on `navigator.online` event
+- `manifest.json`: app name "Bread-Making", 192×192 and 512×512 icons, `display: standalone`, `start_url: /`
+- One-time "Add to Home Screen" nudge (dismissible, stored in `localStorage`) via `navigator.getInstalledRelatedApps()`
+
+**Success criteria:** Disable network in DevTools while a step is running; start the next step; re-enable network; confirm the step start POST was replayed and server state is correct.
+
+---
+
 ## Out of scope for this roadmap
 
-- Bluetooth probe or scale integration (spec section C8 future extension)
-- Predictive time-to-rise estimation (requires sufficient logged history — defer to post-M6)
+- Bluetooth probe or scale integration (Bluetooth Web API — possible future extension)
+- Predictive time-to-rise estimation (requires sufficient logged history with M13 starter data)
 - Multi-user / shared bake sessions
-- Native mobile app (the app is already a PWA; keep WASM, focus on responsive CSS)
+- Native mobile app (the app is a PWA after M16; keep WASM, focus on responsive CSS)
+- Dark mode (CSS custom properties are already used throughout; a dark theme can be added as a low-priority polish task after M16)

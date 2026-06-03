@@ -15,7 +15,24 @@
 
             <div class="os-fields">
 
-                <div class="os-group-label">MEASUREMENTS</div>
+                <div class="os-group-label">PHOTO</div>
+
+                <div class="os-photo-row">
+                    @if (_photoPreviewUrl is not null)
+                    {
+                        <img src="@_photoPreviewUrl" class="os-photo-thumb" alt="Selected photo" />
+                    }
+                    else if (ExistingOutcome?.PhotoPath is not null)
+                    {
+                        <img src="/uploads/@ExistingOutcome.PhotoPath" class="os-photo-thumb" alt="Bake photo" />
+                    }
+                    <label class="os-photo-btn">
+                        📷 @PhotoBtnLabel
+                        <InputFile OnChange="HandlePhotoSelected" accept="image/*" style="display:none" />
+                    </label>
+                </div>
+
+                <div class="os-group-label" style="margin-top:8px">MEASUREMENTS</div>
 
                 <OutcomeField Label="Loaf height" Unit="cm"
                               Value="_loafHeight" ValueChanged="v => _loafHeight = v"
@@ -72,27 +89,46 @@
     [Parameter]                 public EventCallback    OnSaved         { get; set; }
     [Parameter]                 public EventCallback    OnCancelled     { get; set; }
 
-    private double? _loafHeight;
-    private double? _ovenSpring;
-    private double? _weightLoss;
-    private double? _internalTemp;
-    private int?    _crumbOpenness;
-    private int?    _crustScore;
-    private int?    _tasteScore;
-    private bool    _saving;
-    private string? _error;
+    private double?       _loafHeight;
+    private double?       _ovenSpring;
+    private double?       _weightLoss;
+    private double?       _internalTemp;
+    private int?          _crumbOpenness;
+    private int?          _crustScore;
+    private int?          _tasteScore;
+    private IBrowserFile? _pendingPhoto;
+    private string?       _photoPreviewUrl;
+    private bool          _saving;
+    private string?       _error;
+
+    private string PhotoBtnLabel =>
+        _pendingPhoto is not null           ? "Change photo"  :
+        ExistingOutcome?.PhotoPath is not null ? "Replace photo" :
+                                              "Add photo";
 
     protected override void OnParametersSet()
     {
         if (!IsVisible) return;
-        _loafHeight    = ExistingOutcome?.LoafHeightCm;
-        _ovenSpring    = ExistingOutcome?.OvenSpringPct;
-        _weightLoss    = ExistingOutcome?.WeightLossPct;
-        _internalTemp  = ExistingOutcome?.InternalTempC;
-        _crumbOpenness = ExistingOutcome?.CrumbOpenness;
-        _crustScore    = ExistingOutcome?.CrustScore;
-        _tasteScore    = ExistingOutcome?.TasteScore;
-        _error         = null;
+        _loafHeight      = ExistingOutcome?.LoafHeightCm;
+        _ovenSpring      = ExistingOutcome?.OvenSpringPct;
+        _weightLoss      = ExistingOutcome?.WeightLossPct;
+        _internalTemp    = ExistingOutcome?.InternalTempC;
+        _crumbOpenness   = ExistingOutcome?.CrumbOpenness;
+        _crustScore      = ExistingOutcome?.CrustScore;
+        _tasteScore      = ExistingOutcome?.TasteScore;
+        _pendingPhoto    = null;
+        _photoPreviewUrl = null;
+        _error           = null;
+    }
+
+    private async Task HandlePhotoSelected(InputFileChangeEventArgs e)
+    {
+        _pendingPhoto = e.File;
+        // Resize to a preview thumbnail (max 400×400) to avoid reading a multi-MB image as base64
+        var preview = await e.File.RequestImageFileAsync("image/jpeg", 400, 400);
+        using var ms = new MemoryStream();
+        await preview.OpenReadStream(maxAllowedSize: 1024 * 1024).CopyToAsync(ms);
+        _photoPreviewUrl = $"data:image/jpeg;base64,{Convert.ToBase64String(ms.ToArray())}";
     }
 
     private async Task Save()
@@ -100,6 +136,7 @@
         _saving = true;
         _error  = null;
 
+        // 1. Save outcome fields
         var dto = new BakeOutcomeDto
         {
             LoafHeightCm  = _loafHeight,
@@ -112,12 +149,35 @@
         };
 
         var resp = await Http.PutAsJsonAsync($"/api/bakes/{BakeId}/outcome", dto);
-        _saving = false;
+        if (!resp.IsSuccessStatusCode)
+        {
+            _error  = $"Could not save outcome ({(int)resp.StatusCode}). Please try again.";
+            _saving = false;
+            return;
+        }
 
-        if (resp.IsSuccessStatusCode)
-            await OnSaved.InvokeAsync();
-        else
-            _error = $"Could not save outcome ({(int)resp.StatusCode}). Please try again.";
+        // 2. Upload photo if one was selected
+        if (_pendingPhoto is not null)
+        {
+            using var content     = new MultipartFormDataContent();
+            var       fileStream  = _pendingPhoto.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+            var       fileContent = new StreamContent(fileStream);
+            fileContent.Headers.ContentType =
+                new System.Net.Http.Headers.MediaTypeHeaderValue(_pendingPhoto.ContentType);
+            content.Add(fileContent, "photo", _pendingPhoto.Name);
+
+            var photoResp = await Http.PostAsync($"/api/bakes/{BakeId}/outcome/photo", content);
+            if (!photoResp.IsSuccessStatusCode)
+            {
+                _error  = "Outcome saved but photo upload failed. You can re-open and try again.";
+                _saving = false;
+                await OnSaved.InvokeAsync(); // outcome fields were saved successfully
+                return;
+            }
+        }
+
+        _saving = false;
+        await OnSaved.InvokeAsync();
     }
 
     private async Task Cancel()             => await OnCancelled.InvokeAsync();

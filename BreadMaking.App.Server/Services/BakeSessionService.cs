@@ -118,6 +118,15 @@ public class BakeSessionService(AppDbContext db) : IBakeSessionService
         return true;
     }
 
+    public async Task<bool> SavePhotoAsync(int bakeId, string relativePath)
+    {
+        var outcome = await db.BakeOutcomes.FirstOrDefaultAsync(o => o.BakeId == bakeId);
+        if (outcome is null) return false;
+        outcome.PhotoPath = relativePath;
+        await db.SaveChangesAsync();
+        return true;
+    }
+
     private async Task<Recipe> FindRecipeAsync(string grainName, BakeMethod method)
     {
         // Exact match: grain name + method

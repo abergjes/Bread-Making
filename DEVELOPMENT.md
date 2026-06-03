@@ -15,32 +15,47 @@ This is the implementation reference for developers building the milestones desc
 
 ---
 
-## Solution structure after M0
+## Solution structure (M9 complete, M10–M16 additions noted)
 
 ```
 Bread-Making.sln
-├── BreadMaking.App.Client/          (Blazor WASM — .NET 10)
+├── BreadMaking.App/                 (Blazor WASM — .NET 10)
 │   ├── Models/
 │   ├── Services/
 │   ├── Components/
-│   │   └── bake/                   ← new: StepCard, MeasurementSheet, PlanningGantt, charts
+│   │   └── bake/                   ← StepCard, MeasurementSheet, PlanningGantt, charts
+│   │                                  OutcomeSheet, OutcomeField
 │   ├── Pages/
 │   │   ├── Home.razor
-│   │   ├── LiveBake.razor          ← new: /bake/{id}
-│   │   ├── History.razor           ← new: /history
-│   │   └── GrainComparison.razor   ← new: /history/compare
+│   │   ├── LiveBake.razor          ← /bake/{id}
+│   │   ├── History.razor           ← /history
+│   │   ├── GrainComparison.razor   ← /history/compare
+│   │   ├── StarterJournal.razor    ← /starter                        (M13, planned)
+│   │   └── Analytics.razor         ← /history/analytics              (M15, planned)
 │   └── wwwroot/
+│       ├── css/bakery.css
+│       ├── js/audio.js             ← Web Audio API alerts (M8)
+│       ├── js/offlineQueue.js      ← IndexedDB action queue          (M16, planned)
+│       ├── service-worker.js       ← PWA offline cache               (M16, planned)
+│       └── manifest.json           ← PWA manifest                    (M16, planned)
 │
 ├── BreadMaking.App.Server/          (ASP.NET Core Web App — .NET 10)
-│   ├── Api/                        ← endpoint mapping files (or Controllers/)
+│   ├── Api/
+│   │   ├── BakeEndpoints.cs
+│   │   ├── StepLogEndpoints.cs
+│   │   ├── GrainEndpoints.cs
+│   │   ├── StarterEndpoints.cs     ← (M13, planned)
+│   │   ├── RecipeEndpoints.cs      ← (M14, planned)
+│   │   └── AnalyticsEndpoints.cs   ← (M15, planned)
 │   ├── Services/
 │   │   ├── TimerService.cs
 │   │   ├── MeasurementService.cs
-│   │   └── BakeSessionService.cs
+│   │   ├── BakeSessionService.cs
+│   │   └── StarterService.cs       ← (M13, planned)
 │   ├── Data/
 │   │   ├── AppDbContext.cs
 │   │   ├── Migrations/
-│   │   └── Seed/                   ← seed data as static methods or IEntityTypeConfiguration
+│   │   └── SeedData.cs
 │   ├── appsettings.json
 │   └── appsettings.Development.json
 │
@@ -498,3 +513,375 @@ From spec section C7:
 - [ ] CSV export contains all steps and measurements
 - [ ] JSON export is valid JSON with full bake graph
 - [ ] Grain comparison chart shows bars for all grains with 3+ bakes
+
+**M9:**
+- [ ] "Log outcome" button opens OutcomeSheet bottom sheet
+- [ ] All 7 outcome fields can be set and cleared independently with ± steppers
+- [ ] Default starting values are sensible (loaf 10 cm, oven spring 20%, internal temp 95 °C)
+- [ ] PUT /api/bakes/{id}/outcome returns 204; outcome chips appear on page
+- [ ] "Edit" reopens sheet with pre-filled values
+- [ ] Photo can be selected, previewed, and uploaded alongside outcome fields
+- [ ] Photo survives a subsequent outcome field edit (PUT does not overwrite PhotoPath)
+- [ ] History list shows ✓ checkmark on bakes with logged outcomes
+
+**M10:**
+- [ ] `GET /api/bakes/{id}` returns `hydrationPct`, `totalFlourGrams`, `saltPct`, `inoculationPct`
+- [ ] Live bake header shows formula summary line
+- [ ] Clone-bake pre-fills hydration and formula fields in the advisor
+- [ ] History list shows hydration % on each bake card
+
+**M11:**
+- [ ] Expand a step card → notes textarea is visible
+- [ ] Type a note → auto-saves within 1.2 s; "Saving…" / "Saved" status feedback
+- [ ] Refresh page → note is still present
+- [ ] Complete step → 📝 chip visible on the collapsed card when note is set
+
+**M12:**
+- [ ] OutcomeSheet shows 5-star rating row; tapping a star saves the score
+- [ ] Tag input accepts comma-separated text; tags appear as chips on history card
+- [ ] "Best loaves only" filter in History hides bakes without a rating
+
+**M13:**
+- [ ] `/starter` page lists all starters; "Add starter" creates one
+- [ ] Log a feed entry (amounts + ambient temp); entry appears in feed list
+- [ ] Start a bake; link it to the latest feed entry
+- [ ] History bake card shows "fed X h ago" badge
+
+**M14:**
+- [ ] "Save as recipe" on recommendation panel creates a user recipe
+- [ ] "Saved recipes" row appears in advisor; selecting one pre-fills inputs
+- [ ] Delete a user recipe → it disappears from the list
+- [ ] Seeded recipes are not deletable and do not appear in recipe CRUD list
+
+**M15:**
+- [ ] `/history/analytics` loads with scatter chart; dots appear for each bake
+- [ ] Changing the X or Y axis metric re-plots the chart
+- [ ] Bake diff: select two bakes → table shows all inputs + outcomes side-by-side
+- [ ] Personal bests list shows one bake per grain
+
+**M16:**
+- [ ] Disable network in DevTools → offline banner appears in `LiveBake`
+- [ ] Start/pause/complete a step while offline → no error shown
+- [ ] Re-enable network → queued actions replay; step status updates correctly
+- [ ] App can be installed from the browser (manifest + service worker registered)
+
+---
+
+## M10 — Formula & extended bake inputs
+
+### Entity changes
+
+Add to `Bake.cs`:
+
+```csharp
+public double?  HydrationPct    { get; set; }
+public int?     StarterActivity { get; set; }   // mirrors BreadInputs.StarterActivity enum value
+public double?  TotalFlourGrams { get; set; }
+public double?  SaltPct         { get; set; }
+public double?  InoculationPct  { get; set; }
+```
+
+### StartBakeRequest changes
+
+```csharp
+public double?  HydrationPct    { get; set; }
+public int?     StarterActivity { get; set; }
+public double?  TotalFlourGrams { get; set; }
+public double?  SaltPct         { get; set; }
+public double?  InoculationPct  { get; set; }
+```
+
+`RecommendationPanel.razor` already has access to the full `BreadInputs` when it posts to `POST /api/bakes` — map `inputs.HydrationPercent`, `inputs.StarterActivity`, etc. into the request there.
+
+### BakeSessionService
+
+In `CreateFromInputsAsync`, after creating the `Bake` entity, populate the new fields from the request:
+
+```csharp
+bake.HydrationPct    = req.HydrationPct;
+bake.StarterActivity = req.StarterActivity;
+bake.TotalFlourGrams = req.TotalFlourGrams;
+bake.SaltPct         = req.SaltPct;
+bake.InoculationPct  = req.InoculationPct;
+```
+
+### DTO + display
+
+Add to `BakeDto` and `BakeListItemDto`. In `LiveBake.razor` header, show:
+
+```razor
+@if (_bake.HydrationPct.HasValue || _bake.TotalFlourGrams.HasValue)
+{
+    <p class="live-bake-formula">
+        @if (_bake.HydrationPct.HasValue)  { <span>@_bake.HydrationPct.Value.ToString("F0")%</span> }
+        @if (_bake.TotalFlourGrams.HasValue){ <span class="meta-sep">·</span><span>@_bake.TotalFlourGrams.Value.ToString("F0") g flour</span> }
+        @if (_bake.SaltPct.HasValue)        { <span class="meta-sep">·</span><span>@_bake.SaltPct.Value.ToString("F1")% salt</span> }
+    </p>
+}
+```
+
+### Migration
+
+```
+dotnet ef migrations add AddFormulaFieldsToBake --project BreadMaking.App.Server
+dotnet ef database update --project BreadMaking.App.Server
+```
+
+---
+
+## M11 — Per-step notes
+
+### Entity + migration
+
+```csharp
+// BakeStepLog.cs
+public string? Notes { get; set; }
+```
+
+```
+dotnet ef migrations add AddNotesToBakeStepLog --project BreadMaking.App.Server
+```
+
+### API endpoint
+
+```csharp
+group.MapPatch("/{id}/notes", async (int id, UpdateNotesRequest req, IBakeSessionService svc) =>
+    await svc.SaveStepNotesAsync(id, req.Notes) ? Results.NoContent() : Results.NotFound());
+```
+
+Add `SaveStepNotesAsync(int stepLogId, string? notes)` to `IBakeSessionService` / `BakeSessionService` — mirrors the existing `SaveNotesAsync` for bakes.
+
+### StepCard UI
+
+Inside the expanded card section, after the measurements row:
+
+```razor
+<div class="step-notes-row">
+    <textarea class="step-notes-textarea"
+              placeholder="Notes for this step…"
+              @bind="@_stepNotes"
+              @oninput="HandleStepNotesInput" />
+    @if (_stepSaveStatus is not null)
+    {
+        <span class="notes-save-status @(_stepSaveStatus == "Saving…" ? "saving" : "saved")">
+            @_stepSaveStatus
+        </span>
+    }
+</div>
+```
+
+Debounce pattern is identical to `LiveBake.razor`'s `HandleNotesInput` — 1200 ms, `PATCH /api/steplogs/{id}/notes`.
+
+On the **collapsed** completed card, add a 📝 chip alongside the actual-duration span when `Step.Notes` is not null/empty.
+
+---
+
+## M12 — Bake ratings, tags & best-loaf flag
+
+### Entity + migration
+
+```csharp
+// BakeOutcome.cs
+public int?    OverallScore { get; set; }   // 1–5
+public string? Tags         { get; set; }   // comma-separated
+public bool    IsBestLoaf   { get; set; }
+```
+
+```
+dotnet ef migrations add AddRatingAndTagsToBakeOutcome --project BreadMaking.App.Server
+```
+
+### OutcomeSheet additions
+
+Add a RATING section above PHOTO:
+
+```razor
+<div class="os-group-label">RATING</div>
+<div class="os-star-row">
+    @for (int i = 1; i <= 5; i++)
+    {
+        var star = i;
+        <button class="os-star @((_overallScore ?? 0) >= star ? "os-star-filled" : "")"
+                @onclick="() => _overallScore = (_overallScore == star ? null : star)">★</button>
+    }
+</div>
+<div class="os-tag-row">
+    <input class="os-tag-input" placeholder="Tags (comma separated)"
+           @bind="_tags" @bind:event="oninput" />
+</div>
+```
+
+`_overallScore`, `_tags`, `_isBestLoaf` follow the same load-on-open / save-on-save pattern as existing fields in `OutcomeSheet.razor`.
+
+### BakeListItemDto
+
+Add `OverallScore`, `Tags`, `IsBestLoaf`. Update `DtoMapper` and the history query projection.
+
+---
+
+## M13 — Starter journal
+
+### New entities
+
+```csharp
+// Starter.cs
+public class Starter {
+    public int     Id          { get; set; }
+    public string  Name        { get; set; } = "";
+    public double  HydrationPct{ get; set; }
+    public string? FlourBlend  { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+    public string? Notes       { get; set; }
+    public List<StarterFeedLog> Feeds { get; set; } = [];
+}
+
+// StarterFeedLog.cs
+public class StarterFeedLog {
+    public int     Id               { get; set; }
+    public int     StarterId        { get; set; }
+    public Starter Starter          { get; set; } = null!;
+    public DateTimeOffset FedAt     { get; set; }
+    public double  FlourGrams       { get; set; }
+    public double  WaterGrams       { get; set; }
+    public double  PrevStarterGrams { get; set; }
+    public double? AmbientTempC     { get; set; }
+    public double? PeakHours        { get; set; }
+    public bool?   FloatTestPassed  { get; set; }
+}
+```
+
+Add `StarterFeedLogId int?` FK on `Bake` with nullable navigation.
+
+### Migrations
+
+```
+dotnet ef migrations add AddStarterJournal      --project BreadMaking.App.Server
+dotnet ef migrations add AddStarterFeedLinkToBake --project BreadMaking.App.Server
+dotnet ef database update --project BreadMaking.App.Server
+```
+
+### StarterService
+
+`IStarterService` with: `GetAllAsync()`, `CreateAsync(name, hydration, flourBlend)`, `LogFeedAsync(starterId, feedDto)`, `GetFeedsAsync(starterId)`.
+
+### /starter page
+
+Simple list of starters with an "Add" sheet. Per-starter expanded view shows feed history as a timeline with peak hours plotted (ApexCharts line chart — reuses the existing chart setup).
+
+---
+
+## M14 — User recipe library
+
+### Entity changes
+
+```csharp
+// Recipe.cs (additions)
+public bool    IsUserDefined   { get; set; }
+public string? CreatedByLabel  { get; set; }
+public RecipeFormula? Formula  { get; set; }
+
+// RecipeFormula.cs (new)
+public class RecipeFormula {
+    public int     Id           { get; set; }
+    public int     RecipeId     { get; set; }
+    public Recipe  Recipe       { get; set; } = null!;
+    public double  FlourWeightG { get; set; }
+    public double  WaterPct     { get; set; }
+    public double  SaltPct      { get; set; }
+    public double  StarterPct   { get; set; }
+    public string? Notes        { get; set; }
+}
+```
+
+All 12 seeded recipes have `IsUserDefined = false`. The API endpoints filter to `IsUserDefined = true` only, preventing deletion of seed data.
+
+### Migrations
+
+```
+dotnet ef migrations add AddUserDefinedToRecipe --project BreadMaking.App.Server
+dotnet ef migrations add AddRecipeFormula       --project BreadMaking.App.Server
+dotnet ef database update --project BreadMaking.App.Server
+```
+
+### Advisor integration
+
+In `RecommendationPanel.razor`, after the recommendation is shown, add a "Save as recipe" link button. On click, POST to `/api/recipes` with the current inputs mapped to a recipe DTO.
+
+On `Home.razor`, load `GET /api/recipes` on first render and display as chip rows above the grain selector. Tapping a chip calls a new `LoadRecipe(RecipeDto r)` method that sets `BreadInputs` fields and triggers a re-render.
+
+---
+
+## M15 — Analytics & trends
+
+### Server-side queries
+
+`AnalyticsEndpoints.cs` — two endpoints backed by raw EF LINQ projections:
+
+**Correlations:**
+```csharp
+// factor: hydration → bake.HydrationPct; bulktime → bulk step actual duration; kitchentemp → bake.AmbientTempC
+// metric: crumb → outcome.CrumbOpenness; ovenspring → outcome.OvenSpringPct; taste → outcome.TasteScore
+var points = await db.Bakes
+    .Where(b => b.Outcome != null)
+    .Select(b => new { X = xSelector(b), Y = ySelector(b), b.Id, b.StartedAt, GrainName = b.Recipe!.GrainProfile!.Name })
+    .Where(p => p.X != null && p.Y != null)
+    .ToListAsync();
+```
+
+Use `Expression<Func<Bake, double?>>` factory methods keyed by the `factor` and `metric` query params.
+
+### /history/analytics page
+
+Uses ApexCharts scatter series (same `AddApexCharts()` setup already in place). The bake diff table is a simple `<table>` comparing two `BakeDto` objects fetched by ID.
+
+---
+
+## M16 — PWA & offline
+
+### Service worker
+
+Blazor WASM projects generate `service-worker.js` (development) and `service-worker.published.js` (production). In development mode, edit `service-worker.js` to cache the active bake API response:
+
+```js
+self.addEventListener('fetch', event => {
+    if (event.request.url.includes('/api/bakes/') && event.request.method === 'GET') {
+        event.respondWith(
+            caches.open('bake-cache-v1').then(cache =>
+                fetch(event.request).then(resp => { cache.put(event.request, resp.clone()); return resp; })
+                .catch(() => cache.match(event.request))
+            )
+        );
+    }
+});
+```
+
+### Offline queue (wwwroot/js/offlineQueue.js)
+
+```js
+const DB_NAME = 'bread-offline', STORE = 'queue';
+async function enqueue(url, method) { /* open IDB, add { url, method, ts } */ }
+async function flush()             { /* replay each entry in order, delete on 2xx */ }
+window.addEventListener('online', flush);
+window.breadOffline = { enqueue };
+```
+
+`LiveBake.razor` calls `breadOffline.enqueue(url, method)` via `IJSRuntime` instead of `HttpClient.PostAsync` when `navigator.onLine` is false.
+
+### manifest.json (wwwroot/manifest.json)
+
+```json
+{
+  "name": "Bread-Making",
+  "short_name": "Bread",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fdf6ec",
+  "theme_color": "#7a4f2e",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
+```
+
+Add `<link rel="manifest" href="manifest.json" />` to `index.html`.

@@ -9,4 +9,5 @@ public class BakeOutcomeDto
     public int?    CrumbOpenness  { get; set; }
     public int?    CrustScore     { get; set; }
     public int?    TasteScore     { get; set; }
+    public string? PhotoPath      { get; set; }
 }

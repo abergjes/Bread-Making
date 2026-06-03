@@ -50,6 +50,31 @@ public static class BakeEndpoints
             return ok ? Results.NoContent() : Results.NotFound();
         });
 
+        group.MapPost("/{id:int}/outcome/photo", async (
+            int id, IFormFile photo, IBakeSessionService svc, IWebHostEnvironment env) =>
+        {
+            var ext = Path.GetExtension(photo.FileName).ToLowerInvariant();
+            if (ext is not (".jpg" or ".jpeg" or ".png" or ".webp"))
+                return Results.BadRequest(new { error = "Only JPEG, PNG, and WebP images are accepted." });
+
+            if (photo.Length > 10 * 1024 * 1024)
+                return Results.BadRequest(new { error = "Photo must be under 10 MB." });
+
+            var dir = Path.Combine(env.ContentRootPath, "uploads", "bake-photos");
+            Directory.CreateDirectory(dir);
+
+            var fileName  = $"bake-{id}{ext}";
+            var filePath  = Path.Combine(dir, fileName);
+            await using var stream = File.Create(filePath);
+            await photo.CopyToAsync(stream);
+
+            var relative = $"bake-photos/{fileName}";
+            var ok = await svc.SavePhotoAsync(id, relative);
+            return ok
+                ? Results.Ok(new { url = $"/uploads/{relative}" })
+                : Results.NotFound();
+        }).DisableAntiforgery();
+
         group.MapGet("/{id:int}/export", async (int id, string format, IBakeSessionService svc) =>
         {
             var bake = await svc.GetBakeAsync(id);
