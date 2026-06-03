@@ -1041,6 +1041,43 @@ body {
 /* ===== Step List ===== */
 .step-list { display: flex; flex-direction: column; gap: 8px; }
 
+/* ===== Bake Notes ===== */
+.bake-notes-section {
+    margin-top: 32px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+}
+.bake-notes-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+.bake-notes-textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 12px;
+    font-family: var(--font-body);
+    font-size: .9rem;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) - 4px);
+    resize: vertical;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color .15s;
+}
+.bake-notes-textarea:focus { border-color: var(--amber); }
+.notes-save-status {
+    font-size: .78rem;
+    font-style: italic;
+}
+.notes-save-status.saving { color: var(--text-muted); }
+.notes-save-status.saved  { color: var(--amber); }
+
 /* ===== Step Card Base ===== */
 .step-card {
     background: var(--panel);

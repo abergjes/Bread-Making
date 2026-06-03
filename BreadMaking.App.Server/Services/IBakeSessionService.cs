@@ -8,4 +8,5 @@ public interface IBakeSessionService
     Task<BakeDto?> GetBakeAsync(int id);
     Task<List<BakeListItemDto>> GetBakeListAsync();
     Task<StartBakeRequest?> GetBakeInputsAsync(int id);
+    Task<bool> UpdateNotesAsync(int id, string? notes);
 }

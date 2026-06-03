@@ -80,6 +80,20 @@ else
             }
         </div>
 
+        <div class="bake-notes-section">
+            <div class="bake-notes-header">
+                <h3 class="section-title">Notes</h3>
+                @if (_saveStatus is not null)
+                {
+                    <span class="notes-save-status @(_saveStatus == "Saving…" ? "saving" : "saved")">@_saveStatus</span>
+                }
+            </div>
+            <textarea class="bake-notes-textarea"
+                      placeholder="Add any notes about this bake…"
+                      @bind="_notes"
+                      @oninput="HandleNotesInput" />
+        </div>
+
     </div>
 }
 
@@ -92,6 +106,10 @@ else
     private HubConnection? _hub;
     private readonly List<string> _notifications = [];
 
+    private string? _notes;
+    private string? _saveStatus;
+    private System.Threading.Timer? _notesDebounceTicker;
+
     private bool _anyStarted =>
         _bake?.StepLogs.Any(l => l.Status != StepStatus.NotStarted) == true;
 
@@ -99,6 +117,7 @@ else
     {
         _loading = true;
         _bake    = await Http.GetFromJsonAsync<BakeDto>($"/api/bakes/{Id}");
+        _notes   = _bake?.Notes;
         _loading = false;
     }
 
@@ -133,6 +152,7 @@ else
     public async ValueTask DisposeAsync()
     {
         _ticker?.Dispose();
+        _notesDebounceTicker?.Dispose();
         if (_hub is not null)
             await _hub.DisposeAsync();
     }
@@ -143,6 +163,28 @@ else
         if (_notifications.Count > 5)
             _notifications.RemoveAt(_notifications.Count - 1);
         InvokeAsync(StateHasChanged);
+    }
+
+    // ── Notes auto-save ──────────────────────────────────────────────────────
+
+    private void HandleNotesInput(ChangeEventArgs e)
+    {
+        _notes = e.Value?.ToString();
+        _saveStatus = "Saving…";
+        _notesDebounceTicker?.Dispose();
+        _notesDebounceTicker = new System.Threading.Timer(
+            _ => InvokeAsync(SaveNotesAsync), null,
+            TimeSpan.FromMilliseconds(1200), Timeout.InfiniteTimeSpan);
+    }
+
+    private async Task SaveNotesAsync()
+    {
+        await Http.PatchAsJsonAsync($"/api/bakes/{Id}/notes", new { Notes = _notes });
+        _saveStatus = "Saved";
+        StateHasChanged();
+        await Task.Delay(2000);
+        _saveStatus = null;
+        StateHasChanged();
     }
 
     // ── API handlers ─────────────────────────────────────────────────────────

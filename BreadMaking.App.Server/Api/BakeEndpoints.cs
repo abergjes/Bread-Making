@@ -38,6 +38,12 @@ public static class BakeEndpoints
             return req is null ? Results.NotFound() : Results.Ok(req);
         });
 
+        group.MapPatch("/{id:int}/notes", async (int id, UpdateNotesRequest req, IBakeSessionService svc) =>
+        {
+            var ok = await svc.UpdateNotesAsync(id, req.Notes);
+            return ok ? Results.NoContent() : Results.NotFound();
+        });
+
         group.MapGet("/{id:int}/export", async (int id, string format, IBakeSessionService svc) =>
         {
             var bake = await svc.GetBakeAsync(id);

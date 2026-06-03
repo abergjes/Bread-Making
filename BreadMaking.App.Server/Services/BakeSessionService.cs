@@ -84,6 +84,15 @@ public class BakeSessionService(AppDbContext db) : IBakeSessionService
         };
     }
 
+    public async Task<bool> UpdateNotesAsync(int id, string? notes)
+    {
+        var bake = await db.Bakes.FindAsync(id);
+        if (bake is null) return false;
+        bake.Notes = notes;
+        await db.SaveChangesAsync();
+        return true;
+    }
+
     private async Task<Recipe> FindRecipeAsync(string grainName, BakeMethod method)
     {
         // Exact match: grain name + method
