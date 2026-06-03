@@ -239,6 +239,8 @@ In `RecommendationPanel.razor`:
 
 Toggle by computing `elapsed > TimeSpan.FromMinutes(dto.PlannedDurationMin)` in the component and applying the `overrun` CSS class.
 
+> **Implemented (basic overrun):** 2026-06-03 — extended in M8 to a three-tier system; see M8 below.
+
 ---
 
 ## M4 — Measurements
@@ -328,6 +330,127 @@ JSON: return `JsonSerializer.Serialize(bakeDto)` with `JsonSerializerOptions { W
 ### Clone-bake
 
 `GET /api/bakes/{id}/inputs` — returns the `StartBakeRequest` used to create the bake. The client pre-fills the advisor form with these values and navigates to `Home`. No new page needed; re-use the existing advisor flow.
+
+---
+
+---
+
+## M8 — Live bake UX enhancements
+
+> **Implemented:** 2026-06-03
+
+### Duration display
+
+Added to `LiveBake.razor` header (`live-bake-title-group`):
+
+- **Planned total** — appended to the existing meta `<p>` as `· Planned Xh Ym` (sum of all `PlannedDurationMin` values from step logs). Computed client-side; no new API call.
+- **Elapsed / Total counter** — a new `<p class="live-bake-duration">` below the meta line:
+  - Hidden before any step is started
+  - Shows **ELAPSED Xh Ym** (ticking every second via the existing `_ticker`) once any step has started
+  - Shows **TOTAL Xh Ym** (static) once `_bake.EndedAt` is set
+
+`FormatDuration(TimeSpan)` helper: renders `"1h 05m"` for spans ≥ 1 hour, `"22m"` for shorter.
+
+### Three-tier overrun visualisation
+
+> **Implemented:** 2026-06-03
+
+All logic is client-side in `StepCard.razor`. No new API fields needed — `PlannedDurationMin`, `MaxDurationMin`, `StartedAt`, `EndedAt`, and `Status` are already in `BakeStepLogDto`.
+
+**Computed properties:**
+
+```csharp
+// Extended to include Paused (was Running-only in M3)
+private bool IsOverrun =>
+    (Step.Status == StepStatus.Running || Step.Status == StepStatus.Paused) &&
+    Elapsed > TimeSpan.FromMinutes(Step.PlannedDurationMin);
+
+private bool IsMaxOverrun =>
+    (Step.Status == StepStatus.Running || Step.Status == StepStatus.Paused) &&
+    Step.MaxDurationMin > 0 &&
+    Elapsed > TimeSpan.FromMinutes(Step.MaxDurationMin);
+
+private bool CompletedOverPlanned =>
+    Step.Status == StepStatus.Completed &&
+    ActualDuration > TimeSpan.FromMinutes(Step.PlannedDurationMin);
+
+private bool CompletedOverMax =>
+    Step.Status == StepStatus.Completed &&
+    Step.MaxDurationMin > 0 &&
+    ActualDuration > TimeSpan.FromMinutes(Step.MaxDurationMin);
+```
+
+**CSS classes applied via `CardClass`:**
+
+| State | CSS modifier |
+|---|---|
+| Running / Paused — over planned | `overrun` (orange border, orange progress bar) |
+| Running / Paused — over max | `critical-overrun` (red border, red progress bar, red elapsed timer) |
+| Completed — over planned | `over-planned` (amber-tinted border, cream background) |
+| Completed — over max | `over-max` (red border, light-red background) |
+
+**Overrun badge** — inserted into `step-timer-row` after the "/ X min planned" label:
+
+```razor
+@if (IsMaxOverrun)
+    <span class="step-overrun-badge overrun-critical">+@OverrunMinutes min — exceeds max</span>
+else if (IsOverrun)
+    <span class="step-overrun-badge overrun-warn">+@OverrunMinutes min over</span>
+```
+
+**Completed duration colouring** — `step-actual-dur` class gains a modifier (`dur-on-time` / `dur-over-planned` / `dur-over-max`) to colour the actual time in green, orange, or red.
+
+### Audible alerts
+
+> **Implemented:** 2026-06-03
+
+Tone generation via the Web Audio API — no audio files. Module at `BreadMaking.App/wwwroot/js/audio.js`, loaded via `<script>` in `index.html`.
+
+```js
+window.breadAudio = (() => {
+    // ...
+    return {
+        warnOverPlanned() { beep(523, 0.45); },           // C5 — single soft tone
+        warnOverMax()     { beep(880, 0.3); setTimeout(() => beep(880, 0.3), 380); }  // A5 × 2
+    };
+})();
+```
+
+`AudioContext` starts suspended (browser policy). It becomes resumable after the first user gesture (clicking Start on a step), which always precedes any overrun.
+
+**Alert dispatch in `LiveBake.razor`:**
+
+The 1-second ticker was changed from `StateHasChanged` to `TickAsync`, which calls `CheckOverrunAlertsAsync` before re-rendering:
+
+```csharp
+private readonly HashSet<int> _alreadyAlertedPlanned = [];
+private readonly HashSet<int> _alreadyAlertedMax     = [];
+
+private async Task CheckOverrunAlertsAsync()
+{
+    if (_bake is null || !_soundEnabled) return;
+    foreach (var step in _bake.StepLogs.Where(s => s.Status == StepStatus.Running))
+    {
+        var elapsed = DateTimeOffset.UtcNow - step.StartedAt!.Value;
+        if (step.MaxDurationMin > 0
+            && elapsed > TimeSpan.FromMinutes(step.MaxDurationMin)
+            && _alreadyAlertedMax.Add(step.Id))
+            await JS.InvokeVoidAsync("breadAudio.warnOverMax");
+        else if (elapsed > TimeSpan.FromMinutes(step.PlannedDurationMin)
+            && !_alreadyAlertedMax.Contains(step.Id)
+            && _alreadyAlertedPlanned.Add(step.Id))
+            await JS.InvokeVoidAsync("breadAudio.warnOverPlanned");
+    }
+}
+```
+
+`HashSet.Add` returns `true` only on the first insertion — each alert fires exactly once per step per page session.
+
+### Sound toggle
+
+> **Implemented:** 2026-06-03
+
+A `🔔 / 🔕` radio pill is rendered inside `live-bake-header` in `LiveBake.razor`. Toggling sets `_soundEnabled`; the visual overrun indicators are unaffected by this flag.
 
 ---
 

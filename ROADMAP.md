@@ -1,8 +1,8 @@
 # Bread-Making App — Roadmap
 
-## Current state (v4, June 2026)
+## Current state (v5, June 2026)
 
-All milestones M0–M7 are complete. The app is a hosted Blazor WASM solution with a full ASP.NET Core backend, EF Core + SQLite persistence, live bake execution, measurements, visualisations, history, and SignalR notifications. The original advisor flow is preserved unchanged.
+All milestones M0–M8 are complete. The app is a hosted Blazor WASM solution with a full ASP.NET Core backend, EF Core + SQLite persistence, live bake execution, measurements, visualisations, history, SignalR notifications, and a three-tier overrun warning system with audible alerts. The original advisor flow is preserved unchanged.
 
 ## Vision
 
@@ -30,6 +30,7 @@ Before any milestone work begins, the solution is converted from a standalone WA
 | M5 | Visualisations | Live rise curve, planning Gantt, history run chart, grain comparison via ApexCharts.Blazor | M6 | ✅ Complete |
 | M6 | History & comparison | `/history` list, grain comparison view, CSV/JSON export, clone-bake | — | ✅ Complete |
 | M7 | Notifications (optional) | SignalR hub, 30-min fold reminders, bulk-50% push, cross-device alerts | — | ✅ Complete |
+| M8 | Live bake UX enhancements | Duration/total time display; three-tier overrun visualisation; audible alerts with toggle | — | ✅ Complete |
 
 ---
 
@@ -150,6 +151,26 @@ Scope:
 - Cross-device: a second browser/device can join an active bake session and receive the same alerts
 
 This milestone is purely additive — no existing components need to change to support it.
+
+---
+
+### M8 — Live bake UX enhancements
+
+**Goal:** Surface timing problems immediately and audibly so the baker doesn't have to watch the screen.
+
+Scope:
+- **Duration display** — bake header shows "Planned Xh Ym" (sum of all step planned durations) in the meta line, and an "ELAPSED / TOTAL" counter below it that ticks every second while the bake is running and freezes once complete
+- **Three-tier overrun visualisation** — applied across Running, Paused, and Completed step cards:
+  - On-time: normal accent styling
+  - Over `PlannedDurationMin`: orange border, orange progress bar, "+X min over" badge
+  - Over `MaxDurationMin`: red border, red elapsed timer, "exceeds max" badge
+- **Completed step colour-coding** — compact card actual-duration text: green (on-time), orange (over planned), red (over max); completed card border also shifts
+- **Audible alerts** — `wwwroot/js/audio.js` via Web Audio API (no audio files); single C5 beep when a running step first crosses `PlannedDurationMin`; double A5 beep when it first crosses `MaxDurationMin`; each fires at most once per step per page session
+- **Sound toggle** — 🔔/🔕 radio pill in the bake page header; silences future beeps without affecting visual indicators
+
+**Success criteria:** A running step that exceeds its planned duration shows orange; continuing past the recipe maximum turns it red and fires a double beep. Pressing 🔕 stops future beeps. Completing an over-time step shows the actual duration in orange or red in the compact row.
+
+**Implemented:** 2026-06-03
 
 ---
 
