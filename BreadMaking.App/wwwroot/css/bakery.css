@@ -1001,6 +1001,46 @@ body {
 }
 .live-bake-meta { font-size: .875rem; color: var(--text-muted); }
 .meta-sep { margin: 0 6px; color: var(--border); }
+.sound-toggle {
+    display: flex;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    flex-shrink: 0;
+    align-self: flex-start;
+}
+.sound-opt {
+    display: flex;
+    align-items: center;
+    padding: 6px 11px;
+    cursor: pointer;
+    font-size: .9rem;
+    color: var(--text-muted);
+    background: var(--panel);
+    transition: background .15s, color .15s;
+}
+.sound-opt input[type="radio"] { display: none; }
+.sound-opt:hover { background: var(--panel-dark); }
+.sound-opt-active { background: var(--panel-dark); color: var(--text); }
+.live-bake-duration {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-top: 6px;
+}
+.duration-label {
+    font-size: .75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--text-muted);
+}
+.duration-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+}
 
 /* ===== Planning View ===== */
 .section-title {
@@ -1096,11 +1136,25 @@ body {
     border-color: var(--warn) !important;
     box-shadow: 0 0 0 3px rgba(184,92,0,.12) !important;
 }
+.step-card.critical-overrun {
+    border-color: var(--danger) !important;
+    box-shadow: 0 0 0 3px rgba(155,42,42,.14) !important;
+}
+.step-card.critical-overrun .step-progress-bar { background: var(--danger); }
+.step-card.critical-overrun .step-elapsed      { color: var(--danger); }
 .step-card.paused { border-color: var(--tan); }
 .step-card.completed {
     border-color: var(--success);
     background: #f1f7f3;
     opacity: .9;
+}
+.step-card.completed.over-planned {
+    border-color: rgba(184,92,0,.55);
+    background: #fdf6ec;
+}
+.step-card.completed.over-max {
+    border-color: var(--danger);
+    background: #fdf0f0;
 }
 .step-card.skipped { opacity: .6; }
 
@@ -1128,7 +1182,10 @@ body {
 .step-name-compact { font-size: .92rem; font-weight: 600; color: var(--text); }
 .step-meta-inline  { font-size: .78rem; color: var(--text-muted); }
 .step-dur-label    { font-size: .84rem; color: var(--text-muted); flex-shrink: 0; }
-.step-actual-dur   { font-size: .84rem; color: var(--success); font-weight: 700; flex-shrink: 0; }
+.step-actual-dur              { font-size: .84rem; font-weight: 700; flex-shrink: 0; }
+.step-actual-dur.dur-on-time      { color: var(--success); }
+.step-actual-dur.dur-over-planned { color: var(--warn); }
+.step-actual-dur.dur-over-max     { color: var(--danger); }
 
 /* ===== Expanded Card (Running / Paused) ===== */
 .step-card-head {
@@ -1172,6 +1229,15 @@ body {
     line-height: 1;
 }
 .step-planned-label { font-size: .875rem; color: var(--text-muted); }
+.step-overrun-badge {
+    font-size: .78rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 10px;
+    line-height: 1.3;
+}
+.step-overrun-badge.overrun-warn     { background: rgba(184,92,0,.12);  color: var(--warn); }
+.step-overrun-badge.overrun-critical { background: rgba(155,42,42,.12); color: var(--danger); }
 .step-progress-track {
     height: 6px;
     background: var(--panel-dark);

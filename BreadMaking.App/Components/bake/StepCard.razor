@@ -7,7 +7,7 @@
         <div class="step-card-compact">
             <span class="step-status-pill pill-done">✓ DONE</span>
             <span class="step-name-compact">@Step.StepName</span>
-            <span class="step-actual-dur">@FormatElapsed(ActualDuration)</span>
+            <span class="step-actual-dur @(CompletedOverMax ? "dur-over-max" : CompletedOverPlanned ? "dur-over-planned" : "dur-on-time")">@FormatElapsed(ActualDuration)</span>
         </div>
     }
     else if (Step.Status == StepStatus.Skipped)
@@ -64,6 +64,14 @@
         <div class="step-timer-row">
             <span class="step-elapsed">@FormatElapsed(Elapsed)</span>
             <span class="step-planned-label">/ @FormatMin(Step.PlannedDurationMin) planned</span>
+            @if (IsMaxOverrun)
+            {
+                <span class="step-overrun-badge overrun-critical">+@OverrunMinutes min — exceeds max</span>
+            }
+            else if (IsOverrun)
+            {
+                <span class="step-overrun-badge overrun-warn">+@OverrunMinutes min over</span>
+            }
         </div>
 
         <div class="step-progress-track"
@@ -135,12 +143,18 @@
 
     private string CardClass => Step.Status switch
     {
-        StepStatus.Running   => "step-card running" + (IsOverrun ? " overrun" : ""),
-        StepStatus.Paused    => "step-card paused",
-        StepStatus.Completed => "step-card completed",
+        StepStatus.Running   => "step-card running"   + ActiveSuffix,
+        StepStatus.Paused    => "step-card paused"    + ActiveSuffix,
+        StepStatus.Completed => "step-card completed" + CompletedSuffix,
         StepStatus.Skipped   => "step-card skipped",
         _                    => "step-card not-started",
     };
+
+    private string ActiveSuffix =>
+        IsMaxOverrun ? " critical-overrun" : IsOverrun ? " overrun" : "";
+
+    private string CompletedSuffix =>
+        CompletedOverMax ? " over-max" : CompletedOverPlanned ? " over-planned" : "";
     [Parameter] public EventCallback<int>              OnStart             { get; set; }
     [Parameter] public EventCallback<int>              OnPause             { get; set; }
     [Parameter] public EventCallback<int>              OnComplete          { get; set; }
@@ -175,8 +189,25 @@
             : Step.EndedAt.Value - Step.StartedAt.Value;
 
     private bool IsOverrun =>
-        Step.Status == StepStatus.Running &&
+        (Step.Status == StepStatus.Running || Step.Status == StepStatus.Paused) &&
         Elapsed > TimeSpan.FromMinutes(Step.PlannedDurationMin);
+
+    private bool IsMaxOverrun =>
+        (Step.Status == StepStatus.Running || Step.Status == StepStatus.Paused) &&
+        Step.MaxDurationMin > 0 &&
+        Elapsed > TimeSpan.FromMinutes(Step.MaxDurationMin);
+
+    private int OverrunMinutes =>
+        (int)Math.Max(0, Elapsed.TotalMinutes - Step.PlannedDurationMin);
+
+    private bool CompletedOverPlanned =>
+        Step.Status == StepStatus.Completed &&
+        ActualDuration > TimeSpan.FromMinutes(Step.PlannedDurationMin);
+
+    private bool CompletedOverMax =>
+        Step.Status == StepStatus.Completed &&
+        Step.MaxDurationMin > 0 &&
+        ActualDuration > TimeSpan.FromMinutes(Step.MaxDurationMin);
 
     private int ProgressPct =>
         Step.PlannedDurationMin == 0

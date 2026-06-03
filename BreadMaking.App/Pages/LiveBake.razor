@@ -1,6 +1,7 @@
 @page "/bake/{Id:int}"
 @inject HttpClient Http
 @inject NavigationManager Nav
+@inject IJSRuntime JS
 @implements IAsyncDisposable
 @using Microsoft.AspNetCore.SignalR.Client
 
@@ -25,6 +26,16 @@ else
         <div class="live-bake-header">
             <button class="back-btn" @onclick='() => Nav.NavigateTo("/")'>← Home</button>
             <button class="back-btn" style="margin-left:auto" @onclick='() => Nav.NavigateTo("/history")'>History →</button>
+            <div class="sound-toggle">
+                <label class="sound-opt @(_soundEnabled ? "sound-opt-active" : "")">
+                    <input type="radio" name="sound-@Id" @onchange="() => _soundEnabled = true"
+                           checked="@_soundEnabled" /> 🔔
+                </label>
+                <label class="sound-opt @(!_soundEnabled ? "sound-opt-active" : "")">
+                    <input type="radio" name="sound-@Id" @onchange="() => _soundEnabled = false"
+                           checked="@(!_soundEnabled)" /> 🔕
+                </label>
+            </div>
             <div class="live-bake-title-group">
                 <h2 class="live-bake-title">@_bake.RecipeName</h2>
                 <p class="live-bake-meta">
@@ -38,6 +49,23 @@ else
                     {
                         <span class="meta-sep">·</span>
                         <span>@_bake.FlourBatch</span>
+                    }
+                    @if (_plannedTotalMin > 0)
+                    {
+                        <span class="meta-sep">·</span>
+                        <span>Planned @FormatDuration(TimeSpan.FromMinutes(_plannedTotalMin))</span>
+                    }
+                </p>
+                <p class="live-bake-duration">
+                    @if (_bake.EndedAt.HasValue)
+                    {
+                        <span class="duration-label">Total</span>
+                        <span class="duration-value">@FormatDuration(_bake.EndedAt.Value - _bake.StartedAt)</span>
+                    }
+                    else if (_anyStarted)
+                    {
+                        <span class="duration-label">Elapsed</span>
+                        <span class="duration-value">@FormatDuration(DateTimeOffset.UtcNow - _bake.StartedAt)</span>
                     }
                 </p>
             </div>
@@ -106,12 +134,26 @@ else
     private HubConnection? _hub;
     private readonly List<string> _notifications = [];
 
+    private bool _soundEnabled = true;
+    private readonly HashSet<int> _alreadyAlertedPlanned = [];
+    private readonly HashSet<int> _alreadyAlertedMax     = [];
+
     private string? _notes;
     private string? _saveStatus;
     private System.Threading.Timer? _notesDebounceTicker;
 
     private bool _anyStarted =>
         _bake?.StepLogs.Any(l => l.Status != StepStatus.NotStarted) == true;
+
+    private int _plannedTotalMin =>
+        _bake?.StepLogs.Sum(l => l.PlannedDurationMin) ?? 0;
+
+    private static string FormatDuration(TimeSpan span)
+    {
+        var h = (int)span.TotalHours;
+        var m = span.Minutes;
+        return h > 0 ? $"{h}h {m:D2}m" : $"{m}m";
+    }
 
     protected override async Task OnParametersSetAsync()
     {
@@ -126,7 +168,7 @@ else
         if (!firstRender) return;
 
         _ticker = new System.Threading.Timer(
-            _ => InvokeAsync(StateHasChanged), null,
+            _ => InvokeAsync(TickAsync), null,
             TimeSpan.Zero, TimeSpan.FromSeconds(1));
 
         try
@@ -163,6 +205,38 @@ else
         if (_notifications.Count > 5)
             _notifications.RemoveAt(_notifications.Count - 1);
         InvokeAsync(StateHasChanged);
+    }
+
+    // ── Tick + overrun alerts ────────────────────────────────────────────────
+
+    private async Task TickAsync()
+    {
+        await CheckOverrunAlertsAsync();
+        StateHasChanged();
+    }
+
+    private async Task CheckOverrunAlertsAsync()
+    {
+        if (_bake is null || !_soundEnabled) return;
+
+        foreach (var step in _bake.StepLogs.Where(s => s.Status == StepStatus.Running))
+        {
+            if (step.StartedAt is null) continue;
+            var elapsed = DateTimeOffset.UtcNow - step.StartedAt.Value;
+
+            if (step.MaxDurationMin > 0
+                && elapsed > TimeSpan.FromMinutes(step.MaxDurationMin)
+                && _alreadyAlertedMax.Add(step.Id))
+            {
+                await JS.InvokeVoidAsync("breadAudio.warnOverMax");
+            }
+            else if (elapsed > TimeSpan.FromMinutes(step.PlannedDurationMin)
+                && !_alreadyAlertedMax.Contains(step.Id)
+                && _alreadyAlertedPlanned.Add(step.Id))
+            {
+                await JS.InvokeVoidAsync("breadAudio.warnOverPlanned");
+            }
+        }
     }
 
     // ── Notes auto-save ──────────────────────────────────────────────────────

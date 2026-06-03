@@ -112,7 +112,8 @@ public static class SeedData
                 10,  5,   20,  5, null,
                 "Build surface tension. Place seam-side up in floured banneton."),
             S(++id, recipeId, 8,  "Proof", "Cold proof",
-                960, 480, 1440, 60, 4.0,
+            // Changed the stepMin from 60 to 30 minutes (2026-06-03)
+                960, 480, 1440, 30, 4.0,
                 "Retard in fridge overnight. Develops flavour and structure."),
             S(++id, recipeId, 9,  "Bake",  "Preheat + Dutch oven",
                 45,  30,  60,  15, 250.0,
