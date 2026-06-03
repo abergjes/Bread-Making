@@ -1118,6 +1118,143 @@ body {
 .notes-save-status.saving { color: var(--text-muted); }
 .notes-save-status.saved  { color: var(--amber); }
 
+/* ===== Bake Outcome Section ===== */
+.bake-outcome-section {
+    margin-top: 24px;
+    background: var(--panel);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+}
+.bake-outcome-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+.btn-outcome-edit {
+    font-size: .82rem;
+    font-weight: 700;
+    padding: 5px 14px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--accent);
+    background: transparent;
+    color: var(--accent);
+    cursor: pointer;
+    transition: background .15s, color .15s;
+}
+.btn-outcome-edit:hover { background: var(--accent); color: #fff; }
+.outcome-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.outcome-chip {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    background: var(--panel-dark);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    min-width: 90px;
+}
+.oc-label {
+    font-size: .72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--text-muted);
+}
+.oc-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+}
+.outcome-empty-hint {
+    font-size: .875rem;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+/* ===== Outcome Sheet ===== */
+.os-sheet { max-height: 90vh; overflow-y: auto; }
+.os-fields { padding: 0 20px; display: flex; flex-direction: column; gap: 4px; }
+.os-group-label {
+    font-size: .72rem;
+    font-weight: 700;
+    letter-spacing: .07em;
+    color: var(--text-muted);
+    padding: 8px 0 2px;
+}
+.os-field {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--panel-dark);
+}
+.os-field:last-child { border-bottom: none; }
+.os-field-label { font-size: .9rem; color: var(--text); font-weight: 500; }
+.os-field-controls { display: flex; align-items: center; gap: 6px; }
+.os-stepper-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    background: var(--panel-dark);
+    color: var(--text);
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .12s;
+}
+.os-stepper-btn:hover { background: var(--border); }
+.os-value-display {
+    display: flex;
+    align-items: baseline;
+    gap: 2px;
+    min-width: 60px;
+    justify-content: center;
+}
+.os-value-number { font-weight: 700; font-size: 1rem; font-variant-numeric: tabular-nums; }
+.os-value-unit   { font-size: .78rem; color: var(--text-muted); }
+.os-value-unset  { font-size: .9rem; color: var(--text-light); min-width: 60px; text-align: center; }
+.os-clear-btn {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: .85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+.os-clear-btn:hover { background: var(--panel-dark); color: var(--text); }
+.os-set-btn {
+    font-size: .78rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    border: 1.5px dashed var(--accent);
+    background: transparent;
+    color: var(--accent);
+    cursor: pointer;
+}
+.os-set-btn:hover { background: rgba(194,101,26,.08); }
+.os-error {
+    margin: 8px 20px 0;
+    font-size: .84rem;
+    color: var(--danger);
+}
+
 /* ===== Step Card Base ===== */
 .step-card {
     background: var(--panel);

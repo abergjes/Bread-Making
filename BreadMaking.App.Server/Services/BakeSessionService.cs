@@ -93,6 +93,31 @@ public class BakeSessionService(AppDbContext db) : IBakeSessionService
         return true;
     }
 
+    public async Task<bool> SaveOutcomeAsync(int bakeId, BakeOutcomeDto dto)
+    {
+        var bake = await db.Bakes
+            .Include(b => b.Outcome)
+            .FirstOrDefaultAsync(b => b.Id == bakeId);
+        if (bake is null) return false;
+
+        if (bake.Outcome is null)
+        {
+            bake.Outcome = new BakeOutcome { BakeId = bakeId };
+            db.BakeOutcomes.Add(bake.Outcome);
+        }
+
+        bake.Outcome.LoafHeightCm  = dto.LoafHeightCm;
+        bake.Outcome.OvenSpringPct = dto.OvenSpringPct;
+        bake.Outcome.InternalTempC = dto.InternalTempC;
+        bake.Outcome.WeightLossPct = dto.WeightLossPct;
+        bake.Outcome.CrumbOpenness = dto.CrumbOpenness;
+        bake.Outcome.CrustScore    = dto.CrustScore;
+        bake.Outcome.TasteScore    = dto.TasteScore;
+
+        await db.SaveChangesAsync();
+        return true;
+    }
+
     private async Task<Recipe> FindRecipeAsync(string grainName, BakeMethod method)
     {
         // Exact match: grain name + method
@@ -129,6 +154,7 @@ public class BakeSessionService(AppDbContext db) : IBakeSessionService
             .Include(b => b.StepLogs)
                 .ThenInclude(l => l.Measurements)
                     .ThenInclude(m => m.MeasurementType)
+            .Include(b => b.Outcome)
             .FirstOrDefaultAsync(b => b.Id == id);
 
         if (bake is null) return null;

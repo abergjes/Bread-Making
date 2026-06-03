@@ -15,4 +15,5 @@ public class BakeDto
     public string? Notes { get; set; }
     public List<BakeStepLogDto> StepLogs { get; set; } = [];
     public List<MeasurementTypeDto> MeasurementTypes { get; set; } = [];
+    public BakeOutcomeDto? Outcome { get; set; }
 }

@@ -122,6 +122,58 @@ else
                       @oninput="HandleNotesInput" />
         </div>
 
+        <div class="bake-outcome-section">
+            <div class="bake-outcome-header">
+                <h3 class="section-title">Outcome</h3>
+                <button class="btn-outcome-edit" @onclick="() => _showOutcomeSheet = true">
+                    @(_bake.Outcome is null ? "Log outcome" : "Edit")
+                </button>
+            </div>
+            @if (_bake.Outcome is { } o)
+            {
+                <div class="outcome-chips">
+                    @if (o.OvenSpringPct.HasValue)
+                    {
+                        <div class="outcome-chip"><span class="oc-label">Oven spring</span><span class="oc-value">@o.OvenSpringPct.Value.ToString("F0")%</span></div>
+                    }
+                    @if (o.LoafHeightCm.HasValue)
+                    {
+                        <div class="outcome-chip"><span class="oc-label">Loaf height</span><span class="oc-value">@o.LoafHeightCm.Value.ToString("F1") cm</span></div>
+                    }
+                    @if (o.InternalTempC.HasValue)
+                    {
+                        <div class="outcome-chip"><span class="oc-label">Internal temp</span><span class="oc-value">@o.InternalTempC.Value.ToString("F1") °C</span></div>
+                    }
+                    @if (o.WeightLossPct.HasValue)
+                    {
+                        <div class="outcome-chip"><span class="oc-label">Weight loss</span><span class="oc-value">@o.WeightLossPct.Value.ToString("F1")%</span></div>
+                    }
+                    @if (o.CrumbOpenness.HasValue)
+                    {
+                        <div class="outcome-chip"><span class="oc-label">Crumb</span><span class="oc-value">@o.CrumbOpenness.Value/10</span></div>
+                    }
+                    @if (o.CrustScore.HasValue)
+                    {
+                        <div class="outcome-chip"><span class="oc-label">Crust</span><span class="oc-value">@o.CrustScore.Value/10</span></div>
+                    }
+                    @if (o.TasteScore.HasValue)
+                    {
+                        <div class="outcome-chip"><span class="oc-label">Taste</span><span class="oc-value">@o.TasteScore.Value/10</span></div>
+                    }
+                </div>
+            }
+            else
+            {
+                <p class="outcome-empty-hint">Record measurements and scores after the bake to track your results over time.</p>
+            }
+        </div>
+
+        <OutcomeSheet BakeId="Id"
+                      ExistingOutcome="_bake.Outcome"
+                      IsVisible="_showOutcomeSheet"
+                      OnSaved="HandleOutcomeSaved"
+                      OnCancelled="() => _showOutcomeSheet = false" />
+
     </div>
 }
 
@@ -137,6 +189,7 @@ else
     private bool _soundEnabled = true;
     private readonly HashSet<int> _alreadyAlertedPlanned = [];
     private readonly HashSet<int> _alreadyAlertedMax     = [];
+    private bool _showOutcomeSheet;
 
     private string? _notes;
     private string? _saveStatus;
@@ -298,5 +351,11 @@ else
     private async Task RefreshBake()
     {
         _bake = await Http.GetFromJsonAsync<BakeDto>($"/api/bakes/{Id}");
+    }
+
+    private async Task HandleOutcomeSaved()
+    {
+        _showOutcomeSheet = false;
+        await RefreshBake();
     }
 }

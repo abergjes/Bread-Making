@@ -1,0 +1,54 @@
+@* A single ± stepper row for one outcome metric. Null = not set. *@
+
+<div class="os-field">
+    <span class="os-field-label">@Label</span>
+    <div class="os-field-controls">
+        @if (Value.HasValue)
+        {
+            <button class="os-stepper-btn" @onclick="Decrement">−</button>
+            <span class="os-value-display">
+                <span class="os-value-number">@Value.Value.ToString(Format)</span>
+                <span class="os-value-unit">@Unit</span>
+            </span>
+            <button class="os-stepper-btn" @onclick="Increment">+</button>
+            <button class="os-clear-btn" @onclick="Clear" title="Clear">×</button>
+        }
+        else
+        {
+            <span class="os-value-unset">—</span>
+            <button class="os-set-btn" @onclick="SetDefault">Set</button>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired] public string               Label        { get; set; } = "";
+    [Parameter, EditorRequired] public string               Unit         { get; set; } = "";
+    [Parameter]                 public double?              Value        { get; set; }
+    [Parameter]                 public EventCallback<double?> ValueChanged { get; set; }
+    [Parameter]                 public double               Step         { get; set; } = 1;
+    [Parameter]                 public string               Format       { get; set; } = "F1";
+    [Parameter]                 public double?              Min          { get; set; }
+    [Parameter]                 public double?              Max          { get; set; }
+    [Parameter]                 public bool                 IsInteger    { get; set; }
+    [Parameter]                 public double?              DefaultValue { get; set; }
+
+    private double DefaultStart => DefaultValue ?? Min ?? (IsInteger ? 5 : Step * 2);
+
+    private async Task Increment()
+    {
+        var v = Math.Round((Value ?? DefaultStart) + Step, 2);
+        if (Max.HasValue) v = Math.Min(v, Max.Value);
+        await ValueChanged.InvokeAsync(v);
+    }
+
+    private async Task Decrement()
+    {
+        var v = Math.Round((Value ?? DefaultStart) - Step, 2);
+        if (Min.HasValue) v = Math.Max(v, Min.Value);
+        await ValueChanged.InvokeAsync(v);
+    }
+
+    private async Task SetDefault() => await ValueChanged.InvokeAsync(DefaultStart);
+    private async Task Clear()      => await ValueChanged.InvokeAsync(null);
+}

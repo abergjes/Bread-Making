@@ -44,6 +44,12 @@ public static class BakeEndpoints
             return ok ? Results.NoContent() : Results.NotFound();
         });
 
+        group.MapPut("/{id:int}/outcome", async (int id, BakeOutcomeDto dto, IBakeSessionService svc) =>
+        {
+            var ok = await svc.SaveOutcomeAsync(id, dto);
+            return ok ? Results.NoContent() : Results.NotFound();
+        });
+
         group.MapGet("/{id:int}/export", async (int id, string format, IBakeSessionService svc) =>
         {
             var bake = await svc.GetBakeAsync(id);

@@ -34,6 +34,16 @@ internal static class DtoMapper
                                  DefaultForPhase = t.DefaultForPhase,
                              })
                              .ToList(),
+        Outcome = bake.Outcome is null ? null : new BakeOutcomeDto
+        {
+            LoafHeightCm  = bake.Outcome.LoafHeightCm,
+            OvenSpringPct = bake.Outcome.OvenSpringPct,
+            InternalTempC = bake.Outcome.InternalTempC,
+            WeightLossPct = bake.Outcome.WeightLossPct,
+            CrumbOpenness = bake.Outcome.CrumbOpenness,
+            CrustScore    = bake.Outcome.CrustScore,
+            TasteScore    = bake.Outcome.TasteScore,
+        },
     };
 
     internal static BakeStepLogDto ToDto(BakeStepLog log) => new()
