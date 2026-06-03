@@ -35,6 +35,10 @@ public static class StepLogEndpoints
             catch (KeyNotFoundException) { return Results.NotFound(); }
         });
 
+        // PATCH /api/steplogs/{id}/notes
+        group.MapPatch("/{id:int}/notes", async (int id, UpdateNotesRequest req, IBakeSessionService svc) =>
+            await svc.UpdateStepNotesAsync(id, req.Notes) ? Results.NoContent() : Results.NotFound());
+
         // POST /api/steplogs/{id}/measurements
         group.MapPost("/{id:int}/measurements",
             async (int id, AddMeasurementRequest req, IMeasurementService svc) =>

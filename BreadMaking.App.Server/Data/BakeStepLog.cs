@@ -13,6 +13,7 @@ public class BakeStepLog
     public DateTimeOffset? StartedAt { get; set; }
     public DateTimeOffset? EndedAt { get; set; }
     public StepStatus Status { get; set; } = StepStatus.NotStarted;
+    public string? Notes { get; set; }
 
     public ICollection<Measurement> Measurements { get; set; } = new List<Measurement>();
 

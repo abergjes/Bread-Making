@@ -1,4 +1,5 @@
 @* Single baking step card — renders a compact row or full expanded card based on StepStatus. *@
+@inject HttpClient Http
 
 <div class="@CardClass">
 
@@ -7,6 +8,10 @@
         <div class="step-card-compact">
             <span class="step-status-pill pill-done">✓ DONE</span>
             <span class="step-name-compact">@Step.StepName</span>
+            @if (!string.IsNullOrWhiteSpace(Step.Notes))
+            {
+                <span class="step-note-chip" title="@Step.Notes">📝</span>
+            }
             <span class="step-actual-dur @(CompletedOverMax ? "dur-over-max" : CompletedOverPlanned ? "dur-over-planned" : "dur-on-time")">@FormatElapsed(ActualDuration)</span>
         </div>
     }
@@ -111,6 +116,20 @@
             </div>
         </div>
 
+        <div class="step-notes-section">
+            <div class="step-notes-header">
+                <span class="step-notes-label">STEP NOTES</span>
+                @if (_notesSaveStatus is not null)
+                {
+                    <span class="notes-save-status @(_notesSaveStatus == "Saving…" ? "saving" : "saved")">@_notesSaveStatus</span>
+                }
+            </div>
+            <textarea class="step-notes-textarea"
+                      placeholder="Add notes for this step…"
+                      @bind="_stepNotes"
+                      @oninput="HandleNotesInput" />
+        </div>
+
         <div class="step-measurements">
             <span class="measurements-label">MEASUREMENTS LOGGED THIS STEP</span>
             <div class="measurement-chips">
@@ -166,6 +185,35 @@
     private bool _showSheet;
     private void OpenSheet()  => _showSheet = true;
     private void CloseSheet() => _showSheet = false;
+
+    private string? _stepNotes;
+    private string? _notesSaveStatus;
+    private System.Threading.Timer? _notesDebounceTicker;
+
+    protected override void OnParametersSet()
+    {
+        _stepNotes = Step.Notes;
+    }
+
+    private void HandleNotesInput(ChangeEventArgs e)
+    {
+        _stepNotes = e.Value?.ToString();
+        _notesSaveStatus = "Saving…";
+        _notesDebounceTicker?.Dispose();
+        _notesDebounceTicker = new System.Threading.Timer(
+            _ => InvokeAsync(SaveNotesAsync), null,
+            TimeSpan.FromMilliseconds(1200), Timeout.InfiniteTimeSpan);
+    }
+
+    private async Task SaveNotesAsync()
+    {
+        await Http.PatchAsJsonAsync($"/api/steplogs/{Step.Id}/notes", new { Notes = _stepNotes });
+        _notesSaveStatus = "Saved";
+        StateHasChanged();
+        await Task.Delay(2000);
+        _notesSaveStatus = null;
+        StateHasChanged();
+    }
 
     private async Task HandleMeasurementSaved(MeasurementDto _)
     {

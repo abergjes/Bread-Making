@@ -9,6 +9,7 @@ public interface IBakeSessionService
     Task<List<BakeListItemDto>> GetBakeListAsync();
     Task<StartBakeRequest?> GetBakeInputsAsync(int id);
     Task<bool> UpdateNotesAsync(int id, string? notes);
+    Task<bool> UpdateStepNotesAsync(int stepLogId, string? notes);
     Task<bool> SaveOutcomeAsync(int bakeId, BakeOutcomeDto dto);
     Task<bool> SavePhotoAsync(int bakeId, string relativePath);
 }

@@ -104,6 +104,15 @@ public class BakeSessionService(AppDbContext db) : IBakeSessionService
         return true;
     }
 
+    public async Task<bool> UpdateStepNotesAsync(int stepLogId, string? notes)
+    {
+        var log = await db.BakeStepLogs.FindAsync(stepLogId);
+        if (log is null) return false;
+        log.Notes = notes;
+        await db.SaveChangesAsync();
+        return true;
+    }
+
     public async Task<bool> SaveOutcomeAsync(int bakeId, BakeOutcomeDto dto)
     {
         var bake = await db.Bakes

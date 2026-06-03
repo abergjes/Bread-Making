@@ -17,5 +17,6 @@ public class BakeStepLogDto
     public DateTimeOffset? StartedAt { get; set; }
     public DateTimeOffset? EndedAt { get; set; }
     public StepStatus Status { get; set; }
+    public string? Notes { get; set; }
     public List<MeasurementDto> Measurements { get; set; } = [];
 }

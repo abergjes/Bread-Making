@@ -69,6 +69,7 @@ internal static class DtoMapper
         StartedAt          = log.StartedAt,
         EndedAt            = log.EndedAt,
         Status             = log.Status,
+        Notes              = log.Notes,
         Measurements       = log.Measurements
                                .OrderBy(m => m.RecordedAt)
                                .Select(m => new MeasurementDto
