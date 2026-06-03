@@ -1,6 +1,7 @@
 @using BreadMaking.App.Models
 @inject HttpClient Http
 @inject NavigationManager Nav
+@using BreadMaking.App.Shared.Dtos
 
 @if (Recommendation is null)
 {
@@ -92,6 +93,21 @@ else
         @if (Inputs is not null)
         {
             <div class="start-bake-section">
+                @if (_recentFeeds.Count > 0)
+                {
+                    <div class="starter-feed-selector">
+                        <label class="starter-feed-label">Link starter feed (optional)</label>
+                        <select class="starter-feed-select" @bind="_linkedFeedId">
+                            <option value="">— No link —</option>
+                            @foreach (var feed in _recentFeeds)
+                            {
+                                <option value="@feed.Id">
+                                    @feed.StarterName · @FormatFeedAge(feed.FedAt)
+                                </option>
+                            }
+                        </select>
+                    </div>
+                }
                 <button class="btn-start-bake @(_starting ? "btn-loading" : "")"
                         disabled="@_starting"
                         @onclick="StartBake">
@@ -108,6 +124,18 @@ else
     [Parameter] public BreadInputs?         Inputs         { get; set; }
 
     private bool _starting;
+    private List<StarterFeedLogDto> _recentFeeds = [];
+    private string _linkedFeedId = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            _recentFeeds = await Http.GetFromJsonAsync<List<StarterFeedLogDto>>(
+                "/api/starters/recent-feeds?count=5") ?? [];
+        }
+        catch { /* starters not set up yet — degrade silently */ }
+    }
 
     private async Task StartBake()
     {
@@ -116,11 +144,12 @@ else
 
         var req = new StartBakeRequest
         {
-            GrainName       = ToGrainName(Inputs.DominantFlourType),
-            Method          = ToMethodName(Recommendation.Method),
-            AmbientTempC    = Inputs.KitchenTemperatureC,
-            HydrationPct    = Inputs.HydrationPercent,
-            StarterActivity = (int)Inputs.StarterActivity,
+            GrainName        = ToGrainName(Inputs.DominantFlourType),
+            Method           = ToMethodName(Recommendation.Method),
+            AmbientTempC     = Inputs.KitchenTemperatureC,
+            HydrationPct     = Inputs.HydrationPercent,
+            StarterActivity  = (int)Inputs.StarterActivity,
+            StarterFeedLogId = int.TryParse(_linkedFeedId, out var fid) ? fid : null,
         };
 
         var response = await Http.PostAsJsonAsync("/api/bakes", req);
@@ -176,4 +205,12 @@ else
     };
 
     private string RiskClass => Recommendation?.RiskLevel?.ToLower().Replace(" ", "-") ?? "";
+
+    private static string FormatFeedAge(DateTimeOffset fedAt)
+    {
+        var hours = (DateTimeOffset.UtcNow - fedAt).TotalHours;
+        if (hours < 1)   return "just fed";
+        if (hours < 24)  return $"{(int)hours}h ago";
+        return $"{(int)(hours / 24)}d ago";
+    }
 }

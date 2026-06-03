@@ -18,6 +18,11 @@ internal static class DtoMapper
         AmbientHumidityPct = bake.AmbientHumidityPct,
         FlourBatch     = bake.FlourBatch,
         Notes          = bake.Notes,
+        StarterFeedLogId      = bake.StarterFeedLogId,
+        StarterName           = bake.StarterFeed?.Starter?.Name,
+        StarterFedHoursBefore = bake.StarterFeedLogId.HasValue && bake.StarterFeed is not null
+            ? (bake.StartedAt - bake.StarterFeed.FedAt).TotalHours
+            : null,
         HydrationPct    = bake.HydrationPct,
         StarterActivity = bake.StarterActivity,
         TotalFlourGrams = bake.TotalFlourGrams,

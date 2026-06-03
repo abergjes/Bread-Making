@@ -17,6 +17,7 @@ builder.Services.AddHostedService<FoldsReminderService>();
 builder.Services.AddScoped<ITimerService, TimerService>();
 builder.Services.AddScoped<IBakeSessionService, BakeSessionService>();
 builder.Services.AddScoped<IMeasurementService, MeasurementService>();
+builder.Services.AddScoped<IStarterService, StarterService>();
 
 var app = builder.Build();
 
@@ -39,6 +40,7 @@ app.UseStaticFiles(new StaticFileOptions
 app.MapBakeEndpoints();
 app.MapStepLogEndpoints();
 app.MapGrainEndpoints();
+app.MapStarterEndpoints();
 app.MapHub<BakeHub>("/hubs/bake");
 
 app.MapFallbackToFile("index.html");

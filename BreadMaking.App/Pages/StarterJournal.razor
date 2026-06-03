@@ -1,0 +1,292 @@
+@page "/starter"
+@inject HttpClient Http
+@inject NavigationManager Nav
+
+<div class="starter-page">
+
+    <div class="starter-header">
+        <button class="back-btn" @onclick='() => Nav.NavigateTo("/")'>← Home</button>
+        <div class="starter-title-group">
+            <h2 class="starter-title">Starter Journal</h2>
+            <p class="starter-subtitle">Track your sourdough starters and feed history</p>
+        </div>
+        <button class="btn-add-starter" @onclick="ToggleAddForm">
+            @(_showAddForm ? "Cancel" : "+ Add starter")
+        </button>
+    </div>
+
+    @if (_showAddForm)
+    {
+        <div class="starter-add-form">
+            <h3 class="starter-form-title">New starter</h3>
+            <div class="starter-form-row">
+                <label class="starter-form-label">Name</label>
+                <input class="starter-form-input" placeholder="e.g. My Rye Starter" @bind="_newName" />
+            </div>
+            <div class="starter-form-row">
+                <label class="starter-form-label">Hydration %</label>
+                <input class="starter-form-input" type="number" min="50" max="200"
+                       @bind="_newHydration" />
+            </div>
+            <div class="starter-form-row">
+                <label class="starter-form-label">Flour blend</label>
+                <input class="starter-form-input" placeholder="e.g. 50% white + 50% rye"
+                       @bind="_newFlourBlend" />
+            </div>
+            <div class="starter-form-row">
+                <label class="starter-form-label">Notes</label>
+                <input class="starter-form-input" placeholder="Any extra notes"
+                       @bind="_newNotes" />
+            </div>
+            @if (_addError is not null)
+            {
+                <p class="starter-form-error">@_addError</p>
+            }
+            <div class="starter-form-actions">
+                <button class="ms-btn ms-btn-cancel" @onclick="ToggleAddForm">Cancel</button>
+                <button class="ms-btn ms-btn-save @(_addSaving ? "ms-btn-loading" : "")"
+                        disabled="@_addSaving" @onclick="AddStarter">
+                    @(_addSaving ? "Saving…" : "Create starter")
+                </button>
+            </div>
+        </div>
+    }
+
+    @if (_loading)
+    {
+        <p class="starter-loading">Loading starters…</p>
+    }
+    else if (_starters.Count == 0 && !_showAddForm)
+    {
+        <div class="starter-empty">
+            <p>No starters yet. Add your first starter to begin tracking feeds.</p>
+        </div>
+    }
+    else
+    {
+        <div class="starter-list">
+            @foreach (var starter in _starters)
+            {
+                <div class="starter-card @(_expandedId == starter.Id ? "starter-card-expanded" : "")">
+
+                    <div class="starter-card-header" @onclick="() => ToggleExpand(starter.Id)">
+                        <span class="starter-card-icon">🧫</span>
+                        <div class="starter-card-info">
+                            <span class="starter-card-name">@starter.Name</span>
+                            <span class="starter-card-meta">
+                                @starter.HydrationPct.ToString("F0")% hydration
+                                @if (!string.IsNullOrWhiteSpace(starter.FlourBlend))
+                                {
+                                    <span class="meta-sep">·</span>
+                                    <span>@starter.FlourBlend</span>
+                                }
+                                <span class="meta-sep">·</span>
+                                <span>@starter.Feeds.Count feed@(starter.Feeds.Count == 1 ? "" : "s") logged</span>
+                            </span>
+                        </div>
+                        <span class="starter-expand-icon">@(_expandedId == starter.Id ? "▲" : "▼")</span>
+                    </div>
+
+                    @if (_expandedId == starter.Id)
+                    {
+                        <div class="starter-card-body">
+
+                            @if (!string.IsNullOrWhiteSpace(starter.Notes))
+                            {
+                                <p class="starter-notes">@starter.Notes</p>
+                            }
+
+                            <div class="starter-feed-section">
+                                <div class="starter-feed-heading">
+                                    <span class="starter-feed-title">Feed history</span>
+                                    <button class="btn-log-feed"
+                                            @onclick="() => ToggleFeedForm(starter.Id)">
+                                        @(_feedFormStarterId == starter.Id ? "Cancel" : "+ Log feed")
+                                    </button>
+                                </div>
+
+                                @if (_feedFormStarterId == starter.Id)
+                                {
+                                    <div class="feed-form">
+                                        <div class="feed-form-grid">
+                                            <div class="feed-form-field">
+                                                <label>Flour (g)</label>
+                                                <input type="number" min="1" @bind="_feedFlour" />
+                                            </div>
+                                            <div class="feed-form-field">
+                                                <label>Water (g)</label>
+                                                <input type="number" min="1" @bind="_feedWater" />
+                                            </div>
+                                            <div class="feed-form-field">
+                                                <label>Starter in (g)</label>
+                                                <input type="number" min="1" @bind="_feedPrev" />
+                                            </div>
+                                            <div class="feed-form-field">
+                                                <label>Ambient °C</label>
+                                                <input type="number" step="0.5" @bind="_feedTemp" />
+                                            </div>
+                                            <div class="feed-form-field">
+                                                <label>Peak (hours)</label>
+                                                <input type="number" step="0.25" min="0" @bind="_feedPeak" />
+                                            </div>
+                                            <div class="feed-form-field feed-form-float">
+                                                <label>Float test</label>
+                                                <select @bind="_feedFloat">
+                                                    <option value="">—</option>
+                                                    <option value="true">✓ Passed</option>
+                                                    <option value="false">✗ Failed</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="feed-form-actions">
+                                            <button class="ms-btn ms-btn-cancel"
+                                                    @onclick="() => _feedFormStarterId = null">Cancel</button>
+                                            <button class="ms-btn ms-btn-save @(_feedSaving ? "ms-btn-loading" : "")"
+                                                    disabled="@_feedSaving"
+                                                    @onclick="() => LogFeed(starter.Id)">
+                                                @(_feedSaving ? "Saving…" : "Log feed")
+                                            </button>
+                                        </div>
+                                    </div>
+                                }
+
+                                @if (starter.Feeds.Count == 0)
+                                {
+                                    <p class="feed-empty">No feeds logged yet.</p>
+                                }
+                                else
+                                {
+                                    <div class="feed-list">
+                                        @foreach (var feed in starter.Feeds)
+                                        {
+                                            <div class="feed-row">
+                                                <span class="feed-date">@feed.FedAt.ToLocalTime().ToString("d MMM HH:mm")</span>
+                                                <span class="feed-amounts">@feed.FlourGrams g flour · @feed.WaterGrams g water · @feed.PrevStarterGrams g starter</span>
+                                                <div class="feed-metrics">
+                                                    @if (feed.AmbientTempC.HasValue)
+                                                    {
+                                                        <span class="feed-metric">🌡 @feed.AmbientTempC.Value.ToString("F0")°C</span>
+                                                    }
+                                                    @if (feed.PeakHours.HasValue)
+                                                    {
+                                                        <span class="feed-metric">⏱ peak @feed.PeakHours.Value.ToString("F2")h</span>
+                                                    }
+                                                    @if (feed.FloatTestPassed.HasValue)
+                                                    {
+                                                        <span class="feed-metric @(feed.FloatTestPassed.Value ? "float-pass" : "float-fail")">
+                                                            @(feed.FloatTestPassed.Value ? "✓ Float" : "✗ Float")
+                                                        </span>
+                                                    }
+                                                </div>
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+
+                        </div>
+                    }
+
+                </div>
+            }
+        </div>
+    }
+
+</div>
+
+@code {
+    private List<StarterDto> _starters = [];
+    private bool   _loading           = true;
+    private bool   _showAddForm       = false;
+    private int?   _expandedId        = null;
+    private int?   _feedFormStarterId = null;
+
+    // Add starter form
+    private string  _newName       = "";
+    private double  _newHydration  = 100;
+    private string? _newFlourBlend = null;
+    private string? _newNotes      = null;
+    private bool    _addSaving     = false;
+    private string? _addError      = null;
+
+    // Log feed form
+    private double  _feedFlour = 50;
+    private double  _feedWater = 50;
+    private double  _feedPrev  = 10;
+    private double? _feedTemp  = null;
+    private double? _feedPeak  = null;
+    private string  _feedFloat = "";
+    private bool    _feedSaving = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try   { _starters = await Http.GetFromJsonAsync<List<StarterDto>>("/api/starters") ?? []; }
+        finally { _loading = false; }
+    }
+
+    private void ToggleAddForm()
+    {
+        _showAddForm = !_showAddForm;
+        _addError = null;
+    }
+
+    private void ToggleExpand(int id) =>
+        _expandedId = _expandedId == id ? null : id;
+
+    private void ToggleFeedForm(int starterId)
+    {
+        _feedFormStarterId = _feedFormStarterId == starterId ? null : starterId;
+        _feedFlour = 50; _feedWater = 50; _feedPrev = 10;
+        _feedTemp = null; _feedPeak = null; _feedFloat = "";
+    }
+
+    private async Task AddStarter()
+    {
+        if (string.IsNullOrWhiteSpace(_newName)) { _addError = "Name is required."; return; }
+        _addSaving = true; _addError = null;
+
+        var req = new CreateStarterRequest
+        {
+            Name         = _newName,
+            HydrationPct = _newHydration,
+            FlourBlend   = string.IsNullOrWhiteSpace(_newFlourBlend) ? null : _newFlourBlend,
+            Notes        = string.IsNullOrWhiteSpace(_newNotes) ? null : _newNotes,
+        };
+
+        var resp = await Http.PostAsJsonAsync("/api/starters", req);
+        if (resp.IsSuccessStatusCode)
+        {
+            var dto = await resp.Content.ReadFromJsonAsync<StarterDto>();
+            if (dto is not null) _starters.Insert(0, dto);
+            _showAddForm = false;
+            _newName = ""; _newHydration = 100; _newFlourBlend = null; _newNotes = null;
+        }
+        else { _addError = "Could not save starter. Please try again."; }
+        _addSaving = false;
+    }
+
+    private async Task LogFeed(int starterId)
+    {
+        _feedSaving = true;
+        var req = new LogFeedRequest
+        {
+            FlourGrams       = _feedFlour,
+            WaterGrams       = _feedWater,
+            PrevStarterGrams = _feedPrev,
+            AmbientTempC     = _feedTemp,
+            PeakHours        = _feedPeak,
+            FloatTestPassed  = _feedFloat switch { "true" => true, "false" => false, _ => null },
+        };
+
+        var resp = await Http.PostAsJsonAsync($"/api/starters/{starterId}/feeds", req);
+        if (resp.IsSuccessStatusCode)
+        {
+            var feed = await resp.Content.ReadFromJsonAsync<StarterFeedLogDto>();
+            var starter = _starters.FirstOrDefault(s => s.Id == starterId);
+            if (starter is not null && feed is not null)
+                starter.Feeds.Insert(0, feed);
+            _feedFormStarterId = null;
+        }
+        _feedSaving = false;
+    }
+}

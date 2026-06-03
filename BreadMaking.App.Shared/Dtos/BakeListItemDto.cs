@@ -13,6 +13,10 @@ public class BakeListItemDto
     public int? CrumbOpenness { get; set; }
     public double? HydrationPct { get; set; }
 
+    // Starter journal link (M13)
+    public string? StarterName           { get; set; }
+    public double? StarterFedHoursBefore { get; set; }
+
     // Rating fields (M12)
     public int?    OverallScore { get; set; }
     public string? Tags         { get; set; }

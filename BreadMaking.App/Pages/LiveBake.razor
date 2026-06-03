@@ -50,6 +50,16 @@ else
                         <span class="meta-sep">·</span>
                         <span>@_bake.FlourBatch</span>
                     }
+                    @if (_bake.StarterName is not null)
+                    {
+                        <span class="meta-sep">·</span>
+                        <span>🧫 @_bake.StarterName
+                            @if (_bake.StarterFedHoursBefore.HasValue)
+                            {
+                                <span>(fed @((int)_bake.StarterFedHoursBefore.Value)h before)</span>
+                            }
+                        </span>
+                    }
                     @if (_plannedTotalMin > 0)
                     {
                         <span class="meta-sep">·</span>

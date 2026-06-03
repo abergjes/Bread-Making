@@ -11,9 +11,14 @@
             <h2 class="history-title">Bake history</h2>
             <p class="history-subtitle">Track how your results improve over time</p>
         </div>
-        <button class="btn-compare" @onclick='() => Nav.NavigateTo("/history/compare")'>
-            Compare grains ▶
-        </button>
+        <div class="history-header-actions">
+            <button class="btn-secondary" @onclick='() => Nav.NavigateTo("/starter")'>
+                🧫 Starters
+            </button>
+            <button class="btn-compare" @onclick='() => Nav.NavigateTo("/history/compare")'>
+                Compare grains ▶
+            </button>
+        </div>
     </div>
 
     <div class="history-section">
@@ -115,6 +120,17 @@
                             </div>
                         }
 
+                        @if (bake.StarterName is not null)
+                        {
+                            <div class="bake-starter-badge">
+                                🧫 @bake.StarterName
+                                @if (bake.StarterFedHoursBefore.HasValue)
+                                {
+                                    <span class="bake-starter-age">· fed @FormatHours(bake.StarterFedHoursBefore.Value) before bake</span>
+                                }
+                            </div>
+                        }
+
                         @if (!string.IsNullOrWhiteSpace(bake.Tags))
                         {
                             <div class="bake-item-tags">
@@ -180,6 +196,11 @@
         CloneState.Set(req);
         Nav.NavigateTo("/");
     }
+
+    private static string FormatHours(double h) =>
+        h < 1   ? "< 1h" :
+        h < 24  ? $"{(int)h}h" :
+                  $"{(int)(h / 24)}d";
 
     private static string GrainEmoji(string grain) => grain switch
     {

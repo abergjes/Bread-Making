@@ -27,6 +27,7 @@ public class BakeSessionService(AppDbContext db) : IBakeSessionService
             TotalFlourGrams    = request.TotalFlourGrams,
             SaltPct            = request.SaltPct,
             InoculationPct     = request.InoculationPct,
+            StarterFeedLogId   = request.StarterFeedLogId,
             StepLogs           = recipe.Steps
                                        .OrderBy(s => s.Order)
                                        .Select(step => new BakeStepLog
@@ -54,6 +55,7 @@ public class BakeSessionService(AppDbContext db) : IBakeSessionService
             .Include(b => b.Recipe).ThenInclude(r => r!.GrainProfile)
             .Include(b => b.Outcome)
             .Include(b => b.StepLogs)
+            .Include(b => b.StarterFeed).ThenInclude(f => f!.Starter)
             .OrderByDescending(b => b.Id)
             .ToListAsync();
 
@@ -69,6 +71,10 @@ public class BakeSessionService(AppDbContext db) : IBakeSessionService
             OvenSpringPct = b.Outcome?.OvenSpringPct,
             CrumbOpenness = b.Outcome?.CrumbOpenness,
             HydrationPct  = b.HydrationPct,
+            StarterName           = b.StarterFeed?.Starter?.Name,
+            StarterFedHoursBefore = b.StarterFeedLogId.HasValue && b.StarterFeed is not null
+                ? (b.StartedAt - b.StarterFeed.FedAt).TotalHours
+                : null,
             OverallScore  = b.Outcome?.OverallScore,
             Tags          = b.Outcome?.Tags,
             IsBestLoaf    = b.Outcome?.IsBestLoaf ?? false,
@@ -95,6 +101,7 @@ public class BakeSessionService(AppDbContext db) : IBakeSessionService
             TotalFlourGrams    = bake.TotalFlourGrams,
             SaltPct            = bake.SaltPct,
             InoculationPct     = bake.InoculationPct,
+            StarterFeedLogId   = bake.StarterFeedLogId,
         };
     }
 
@@ -190,6 +197,7 @@ public class BakeSessionService(AppDbContext db) : IBakeSessionService
                 .ThenInclude(l => l.Measurements)
                     .ThenInclude(m => m.MeasurementType)
             .Include(b => b.Outcome)
+            .Include(b => b.StarterFeed).ThenInclude(f => f!.Starter)
             .FirstOrDefaultAsync(b => b.Id == id);
 
         if (bake is null) return null;

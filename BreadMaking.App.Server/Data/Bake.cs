@@ -12,6 +12,10 @@ public class Bake
     public string? FlourBatch { get; set; }
     public string? Notes { get; set; }
 
+    // Starter journal link (M13)
+    public int?            StarterFeedLogId { get; set; }
+    public StarterFeedLog? StarterFeed      { get; set; }
+
     // Formula fields — persisted from advisor inputs (M10)
     public double? HydrationPct    { get; set; }
     public int?    StarterActivity { get; set; }   // int mirror of BreadInputs.StarterActivity enum

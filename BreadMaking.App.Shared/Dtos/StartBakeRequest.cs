@@ -9,6 +9,9 @@ public class StartBakeRequest
     public string? FlourBatch { get; set; }
     public string? Notes { get; set; }
 
+    // Starter journal link (M13)
+    public int? StarterFeedLogId { get; set; }
+
     // Formula fields (M10)
     public double? HydrationPct    { get; set; }
     public int?    StarterActivity { get; set; }
