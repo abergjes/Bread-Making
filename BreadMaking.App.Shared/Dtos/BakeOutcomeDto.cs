@@ -10,4 +10,9 @@ public class BakeOutcomeDto
     public int?    CrustScore     { get; set; }
     public int?    TasteScore     { get; set; }
     public string? PhotoPath      { get; set; }
+
+    // Rating fields (M12)
+    public int?    OverallScore  { get; set; }
+    public string? Tags          { get; set; }
+    public bool    IsBestLoaf    { get; set; }
 }

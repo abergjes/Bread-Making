@@ -12,4 +12,9 @@ public class BakeListItemDto
     public double? OvenSpringPct { get; set; }
     public int? CrumbOpenness { get; set; }
     public double? HydrationPct { get; set; }
+
+    // Rating fields (M12)
+    public int?    OverallScore { get; set; }
+    public string? Tags         { get; set; }
+    public bool    IsBestLoaf   { get; set; }
 }

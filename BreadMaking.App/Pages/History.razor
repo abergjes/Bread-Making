@@ -51,6 +51,10 @@
                 <option value="Fermentolyse">Fermentolyse</option>
                 <option value="Other">Other</option>
             </select>
+            <button class="filter-toggle @(_bestOnly ? "filter-toggle-active" : "")"
+                    @onclick="() => _bestOnly = !_bestOnly">
+                🏆 Best loaves only
+            </button>
         </div>
 
         @if (!FilteredBakes.Any())
@@ -75,12 +79,26 @@
                                     {
                                         <span class="bake-batch"> · @bake.FlourBatch</span>
                                     }
+                                    @if (bake.HydrationPct.HasValue)
+                                    {
+                                        <span class="bake-batch"> · @bake.HydrationPct.Value.ToString("F0")%</span>
+                                    }
                                 </span>
                             </div>
-                            @if (bake.HasOutcome)
-                            {
-                                <span class="bake-outcome-check" title="Outcome recorded">✓</span>
-                            }
+                            <div class="bake-item-badges">
+                                @if (bake.IsBestLoaf)
+                                {
+                                    <span class="bake-best-badge" title="Best loaf">🏆</span>
+                                }
+                                @if (bake.OverallScore.HasValue)
+                                {
+                                    <span class="bake-rating-badge">@bake.OverallScore★</span>
+                                }
+                                @if (bake.HasOutcome)
+                                {
+                                    <span class="bake-outcome-check" title="Outcome recorded">✓</span>
+                                }
+                            </div>
                         </div>
 
                         @if (bake.OvenSpringPct.HasValue || bake.CrumbOpenness.HasValue)
@@ -93,6 +111,16 @@
                                 @if (bake.CrumbOpenness.HasValue)
                                 {
                                     <span>Crumb @bake.CrumbOpenness.Value/10</span>
+                                }
+                            </div>
+                        }
+
+                        @if (!string.IsNullOrWhiteSpace(bake.Tags))
+                        {
+                            <div class="bake-item-tags">
+                                @foreach (var tag in bake.Tags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                                {
+                                    <span class="bake-tag">@tag</span>
                                 }
                             </div>
                         }
@@ -124,6 +152,7 @@
     private List<BakeListItemDto> _allBakes = [];
     private string _grainFilter  = "";
     private string _methodFilter = "";
+    private bool   _bestOnly     = false;
 
     private IEnumerable<string> _grains => _allBakes
         .Select(b => b.GrainName)
@@ -132,7 +161,8 @@
 
     private IEnumerable<BakeListItemDto> FilteredBakes => _allBakes
         .Where(b => string.IsNullOrEmpty(_grainFilter)  || b.GrainName == _grainFilter)
-        .Where(b => string.IsNullOrEmpty(_methodFilter) || b.Method.ToString() == _methodFilter);
+        .Where(b => string.IsNullOrEmpty(_methodFilter) || b.Method.ToString() == _methodFilter)
+        .Where(b => !_bestOnly || b.IsBestLoaf);
 
     protected override async Task OnInitializedAsync()
     {

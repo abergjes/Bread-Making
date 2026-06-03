@@ -13,4 +13,9 @@ public class BakeOutcome
     public int? CrustScore { get; set; }
     public int? TasteScore { get; set; }
     public string? PhotoPath { get; set; }
+
+    // Rating fields (M12)
+    public int?    OverallScore { get; set; }   // 1–5
+    public string? Tags         { get; set; }   // comma-separated
+    public bool    IsBestLoaf   { get; set; }
 }

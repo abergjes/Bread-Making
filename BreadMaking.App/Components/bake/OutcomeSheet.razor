@@ -15,7 +15,33 @@
 
             <div class="os-fields">
 
-                <div class="os-group-label">PHOTO</div>
+                <div class="os-group-label">RATING</div>
+
+                <div class="os-rating-row">
+                    @for (int i = 1; i <= 5; i++)
+                    {
+                        var star = i;
+                        <button type="button"
+                                class="os-star @(_overallScore >= star ? "os-star-filled" : "")"
+                                @onclick="() => _overallScore = (_overallScore == star ? (int?)null : star)">★</button>
+                    }
+                    @if (_overallScore.HasValue)
+                    {
+                        <span class="os-rating-label">@_overallScore / 5</span>
+                    }
+                </div>
+
+                <div class="os-tag-row">
+                    <input class="os-tag-input" placeholder="Tags, comma separated (e.g. gift, best, holiday)"
+                           @bind="_tags" @bind:event="oninput" />
+                </div>
+
+                <label class="os-best-loaf-row">
+                    <input type="checkbox" @bind="_isBestLoaf" />
+                    <span>🏆 Mark as best loaf</span>
+                </label>
+
+                <div class="os-group-label" style="margin-top:12px">PHOTO</div>
 
                 <div class="os-photo-row">
                     @if (_photoPreviewUrl is not null)
@@ -96,6 +122,9 @@
     private int?          _crumbOpenness;
     private int?          _crustScore;
     private int?          _tasteScore;
+    private int?          _overallScore;
+    private string?       _tags;
+    private bool          _isBestLoaf;
     private IBrowserFile? _pendingPhoto;
     private string?       _photoPreviewUrl;
     private bool          _saving;
@@ -116,6 +145,9 @@
         _crumbOpenness   = ExistingOutcome?.CrumbOpenness;
         _crustScore      = ExistingOutcome?.CrustScore;
         _tasteScore      = ExistingOutcome?.TasteScore;
+        _overallScore    = ExistingOutcome?.OverallScore;
+        _tags            = ExistingOutcome?.Tags;
+        _isBestLoaf      = ExistingOutcome?.IsBestLoaf ?? false;
         _pendingPhoto    = null;
         _photoPreviewUrl = null;
         _error           = null;
@@ -146,6 +178,9 @@
             CrumbOpenness = _crumbOpenness,
             CrustScore    = _crustScore,
             TasteScore    = _tasteScore,
+            OverallScore  = _overallScore,
+            Tags          = string.IsNullOrWhiteSpace(_tags) ? null : _tags.Trim(),
+            IsBestLoaf    = _isBestLoaf,
         };
 
         var resp = await Http.PutAsJsonAsync($"/api/bakes/{BakeId}/outcome", dto);

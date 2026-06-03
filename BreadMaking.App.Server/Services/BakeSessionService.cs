@@ -69,6 +69,9 @@ public class BakeSessionService(AppDbContext db) : IBakeSessionService
             OvenSpringPct = b.Outcome?.OvenSpringPct,
             CrumbOpenness = b.Outcome?.CrumbOpenness,
             HydrationPct  = b.HydrationPct,
+            OverallScore  = b.Outcome?.OverallScore,
+            Tags          = b.Outcome?.Tags,
+            IsBestLoaf    = b.Outcome?.IsBestLoaf ?? false,
         }).ToList();
     }
 
@@ -133,6 +136,9 @@ public class BakeSessionService(AppDbContext db) : IBakeSessionService
         bake.Outcome.CrumbOpenness = dto.CrumbOpenness;
         bake.Outcome.CrustScore    = dto.CrustScore;
         bake.Outcome.TasteScore    = dto.TasteScore;
+        bake.Outcome.OverallScore  = dto.OverallScore;
+        bake.Outcome.Tags          = dto.Tags;
+        bake.Outcome.IsBestLoaf    = dto.IsBestLoaf;
 
         await db.SaveChangesAsync();
         return true;

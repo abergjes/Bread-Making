@@ -49,6 +49,9 @@ internal static class DtoMapper
             CrustScore    = bake.Outcome.CrustScore,
             TasteScore    = bake.Outcome.TasteScore,
             PhotoPath     = bake.Outcome.PhotoPath,
+            OverallScore  = bake.Outcome.OverallScore,
+            Tags          = bake.Outcome.Tags,
+            IsBestLoaf    = bake.Outcome.IsBestLoaf,
         },
     };
 

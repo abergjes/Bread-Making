@@ -1186,6 +1186,138 @@ body {
     color: var(--text-muted);
     margin: 0;
 }
+/* ===== Outcome rating / tags / best-loaf (M12) ===== */
+.outcome-best-loaf {
+    display: inline-block;
+    font-size: .82rem;
+    font-weight: 700;
+    color: #8a6100;
+    background: #fff4cc;
+    border: 1px solid #e8c840;
+    border-radius: 20px;
+    padding: 3px 10px;
+    margin-bottom: 8px;
+}
+.outcome-stars {
+    display: flex;
+    gap: 3px;
+    margin-bottom: 6px;
+}
+.star-filled { color: #e8a000; font-size: 1.1rem; }
+.star-empty  { color: var(--border); font-size: 1.1rem; }
+.outcome-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+.outcome-tag {
+    font-size: .78rem;
+    padding: 2px 9px;
+    border-radius: 12px;
+    background: var(--panel-dark);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+}
+
+/* ===== OutcomeSheet rating (M12) ===== */
+.os-rating-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 0 4px;
+}
+.os-star {
+    background: none;
+    border: none;
+    font-size: 1.6rem;
+    color: var(--border);
+    cursor: pointer;
+    padding: 0 2px;
+    line-height: 1;
+    transition: color .1s, transform .1s;
+}
+.os-star:hover,
+.os-star-filled { color: #e8a000; }
+.os-star:hover  { transform: scale(1.15); }
+.os-rating-label {
+    font-size: .82rem;
+    color: var(--text-muted);
+    margin-left: 4px;
+}
+.os-tag-row { margin: 6px 0 4px; }
+.os-tag-input {
+    width: 100%;
+    padding: 8px 10px;
+    font-size: .88rem;
+    font-family: inherit;
+    color: var(--text);
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    box-sizing: border-box;
+}
+.os-tag-input:focus { outline: none; border-color: var(--accent); }
+.os-best-loaf-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: .88rem;
+    color: var(--text);
+    cursor: pointer;
+    padding: 4px 0 8px;
+}
+.os-best-loaf-row input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; }
+
+/* ===== History rating / tags / best-loaf (M12) ===== */
+.bake-item-badges {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+.bake-best-badge  { font-size: 1rem; }
+.bake-rating-badge {
+    font-size: .78rem;
+    font-weight: 700;
+    color: #8a6100;
+    background: #fff4cc;
+    border: 1px solid #e8c840;
+    border-radius: 12px;
+    padding: 1px 7px;
+}
+.bake-item-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    padding: 4px 0 6px;
+}
+.bake-tag {
+    font-size: .76rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    background: var(--panel-dark);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+}
+.filter-toggle {
+    padding: 6px 14px;
+    font-size: .85rem;
+    font-family: inherit;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--panel);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background .15s, color .15s, border-color .15s;
+}
+.filter-toggle:hover        { background: var(--panel-dark); }
+.filter-toggle-active {
+    background: #fff4cc;
+    color: #8a6100;
+    border-color: #e8c840;
+}
+
 .outcome-photo {
     width: 100%;
     max-height: 220px;
