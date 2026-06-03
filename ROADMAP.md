@@ -1,8 +1,8 @@
 # Bread-Making App — Roadmap
 
-## Current state (v5, June 2026)
+## Current state (v6, June 2026)
 
-All milestones M0–M8 are complete. The app is a hosted Blazor WASM solution with a full ASP.NET Core backend, EF Core + SQLite persistence, live bake execution, measurements, visualisations, history, SignalR notifications, and a three-tier overrun warning system with audible alerts. The original advisor flow is preserved unchanged.
+All milestones M0–M9 are complete. The app is a hosted Blazor WASM solution with a full ASP.NET Core backend, EF Core + SQLite persistence, live bake execution, measurements, visualisations, history, SignalR notifications, a three-tier overrun warning system with audible alerts, and a full bake outcome capture UI. The original advisor flow is preserved unchanged.
 
 ## Vision
 
@@ -31,6 +31,7 @@ Before any milestone work begins, the solution is converted from a standalone WA
 | M6 | History & comparison | `/history` list, grain comparison view, CSV/JSON export, clone-bake | — | ✅ Complete |
 | M7 | Notifications (optional) | SignalR hub, 30-min fold reminders, bulk-50% push, cross-device alerts | — | ✅ Complete |
 | M8 | Live bake UX enhancements | Duration/total time display; three-tier overrun visualisation; audible alerts with toggle | — | ✅ Complete |
+| M9 | Outcome capture UI | BakeOutcomeDto, PUT /api/bakes/{id}/outcome, OutcomeSheet + OutcomeField components, chips on live bake page | — | ✅ Complete |
 
 ---
 
@@ -169,6 +170,24 @@ Scope:
 - **Sound toggle** — 🔔/🔕 radio pill in the bake page header; silences future beeps without affecting visual indicators
 
 **Success criteria:** A running step that exceeds its planned duration shows orange; continuing past the recipe maximum turns it red and fires a double beep. Pressing 🔕 stops future beeps. Completing an over-time step shows the actual duration in orange or red in the compact row.
+
+**Implemented:** 2026-06-03
+
+---
+
+### M9 — Outcome capture UI
+
+**Goal:** Let the baker record what the finished loaf looked like, felt like, and tasted like — closing the loop from execution back to history.
+
+Scope:
+- **`BakeOutcomeDto`** — new shared DTO (LoafHeightCm, OvenSpringPct, InternalTempC, WeightLossPct, CrumbOpenness, CrustScore, TasteScore)
+- **`PUT /api/bakes/{id}/outcome`** — upsert endpoint; creates on first call, replaces on subsequent calls
+- **`SaveOutcomeAsync`** in `BakeSessionService` — 1:1 upsert against the `BakeOutcome` entity
+- **`OutcomeField.razor`** — reusable ± stepper row with null / set / clear states and sensible per-field defaults (loaf 10 cm, oven spring 20%, weight loss 12%, internal temp 95 °C, scores 5/10)
+- **`OutcomeSheet.razor`** — bottom-sheet modal (mirrors MeasurementSheet pattern) with MEASUREMENTS and SCORES sections
+- **`LiveBake.razor`** — Outcome section after Notes: outcome chips (one per set field) when recorded; empty-state hint + "Log outcome" button when not; button becomes "Edit" after first save and reopens the sheet pre-filled
+
+**Success criteria:** Baker can log outcome after completing a bake; outcome chips appear on the live bake page; "✓" checkmark and metric summary visible in the history list; `PUT /api/bakes/{id}/outcome` returns 204 on create and update.
 
 **Implemented:** 2026-06-03
 
