@@ -8,4 +8,5 @@ public class LogFeedRequest
     public double? AmbientTempC     { get; set; }
     public double? PeakHours        { get; set; }
     public bool?   FloatTestPassed  { get; set; }
+    public string? FeedRatio        { get; set; }
 }

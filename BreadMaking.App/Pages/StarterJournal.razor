@@ -137,6 +137,10 @@
                                                     <option value="false">✗ Failed</option>
                                                 </select>
                                             </div>
+                                            <div class="feed-form-field">
+                                                <label>Ratio (s:f:w)</label>
+                                                <input placeholder="e.g. 1:2:2" @bind="_feedRatio" />
+                                            </div>
                                         </div>
                                         <div class="feed-form-actions">
                                             <button class="ms-btn ms-btn-cancel"
@@ -163,6 +167,10 @@
                                                 <span class="feed-date">@feed.FedAt.ToLocalTime().ToString("d MMM HH:mm")</span>
                                                 <span class="feed-amounts">@feed.FlourGrams g flour · @feed.WaterGrams g water · @feed.PrevStarterGrams g starter</span>
                                                 <div class="feed-metrics">
+                                                    @if (!string.IsNullOrEmpty(feed.FeedRatio))
+                                                    {
+                                                        <span class="feed-metric feed-ratio-chip">@feed.FeedRatio</span>
+                                                    }
                                                     @if (feed.AmbientTempC.HasValue)
                                                     {
                                                         <span class="feed-metric">🌡 @feed.AmbientTempC.Value.ToString("F0")°C</span>
@@ -216,6 +224,7 @@
     private double? _feedTemp  = null;
     private double? _feedPeak  = null;
     private string  _feedFloat = "";
+    private string  _feedRatio = "";
     private bool    _feedSaving = false;
 
     protected override async Task OnInitializedAsync()
@@ -237,7 +246,7 @@
     {
         _feedFormStarterId = _feedFormStarterId == starterId ? null : starterId;
         _feedFlour = 50; _feedWater = 50; _feedPrev = 10;
-        _feedTemp = null; _feedPeak = null; _feedFloat = "";
+        _feedTemp = null; _feedPeak = null; _feedFloat = ""; _feedRatio = "";
     }
 
     private async Task AddStarter()
@@ -276,6 +285,7 @@
             AmbientTempC     = _feedTemp,
             PeakHours        = _feedPeak,
             FloatTestPassed  = _feedFloat switch { "true" => true, "false" => false, _ => null },
+            FeedRatio        = string.IsNullOrWhiteSpace(_feedRatio) ? null : _feedRatio.Trim(),
         };
 
         var resp = await Http.PostAsJsonAsync($"/api/starters/{starterId}/feeds", req);

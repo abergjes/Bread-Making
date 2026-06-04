@@ -53,6 +53,7 @@ public class StarterService(AppDbContext db) : IStarterService
             AmbientTempC     = req.AmbientTempC,
             PeakHours        = req.PeakHours,
             FloatTestPassed  = req.FloatTestPassed,
+            FeedRatio        = req.FeedRatio?.Trim(),
         };
         db.StarterFeedLogs.Add(feed);
         await db.SaveChangesAsync();
@@ -104,5 +105,6 @@ public class StarterService(AppDbContext db) : IStarterService
         AmbientTempC     = f.AmbientTempC,
         PeakHours        = f.PeakHours,
         FloatTestPassed  = f.FloatTestPassed,
+        FeedRatio        = f.FeedRatio,
     };
 }
