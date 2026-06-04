@@ -32,7 +32,7 @@ Before any milestone work begins, the solution is converted from a standalone WA
 | M7 | Notifications (optional) | SignalR hub, 30-min fold reminders, bulk-50% push, cross-device alerts | — | ✅ Complete |
 | M8 | Live bake UX enhancements | Duration/total time display; three-tier overrun visualisation; audible alerts with toggle | — | ✅ Complete |
 | M9 | Outcome capture UI | BakeOutcomeDto, PUT /api/bakes/{id}/outcome, OutcomeSheet + OutcomeField components, chips + photo on live bake page | — | ✅ Complete |
-| M10 | Formula & extended inputs | Persist hydration %, starter activity, flour weight, salt %, inoculation % on every bake | M15 | 📋 Planned |
+| M10 | Formula & extended inputs | Persist hydration %, starter activity, flour weight, salt %, inoculation % on every bake | M15 | ✅ Complete |
 | M11 | Per-step notes | Notes field on BakeStepLog; inline auto-save in StepCard; 📝 indicator on collapsed card | — | 📋 Planned |
 | M12 | Ratings & tags | Overall score (1–5 stars), free-form tags, best-loaf flag on BakeOutcome | M15 | 📋 Planned |
 | M13 | Starter journal | Starter + StarterFeedLog entities; /starter page; link bake to feed log entry | M15 | 📋 Planned |
