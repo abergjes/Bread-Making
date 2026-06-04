@@ -149,6 +149,9 @@ else
             AmbientTempC     = Inputs.KitchenTemperatureC,
             HydrationPct     = Inputs.HydrationPercent,
             StarterActivity  = (int)Inputs.StarterActivity,
+            TotalFlourGrams  = Inputs.TotalFlourGrams,
+            SaltPct          = Inputs.SaltPct,
+            InoculationPct   = Inputs.InoculationPct,
             StarterFeedLogId = int.TryParse(_linkedFeedId, out var fid) ? fid : null,
         };
 

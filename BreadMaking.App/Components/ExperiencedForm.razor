@@ -96,6 +96,41 @@
                 </button>
             </div>
         </div>
+
+        <!-- Formula -->
+        <div class="input-group">
+            <label class="input-label">
+                Flour Weight
+                <span class="flour-display">@Inputs.TotalFlourGrams g</span>
+            </label>
+            <input type="range" min="300" max="2000" step="50"
+                   value="@Inputs.TotalFlourGrams"
+                   @oninput="OnFlourGramsChange"
+                   class="bakery-slider" />
+            <div class="slider-labels">
+                <span>300 g</span>
+                <span>2000 g</span>
+            </div>
+        </div>
+
+        <div class="input-group formula-row">
+            <div class="formula-field">
+                <label class="input-label">Salt</label>
+                <div class="formula-stepper">
+                    <button class="stepper-btn" @onclick="@(() => AdjustSalt(-0.1))">−</button>
+                    <span class="formula-value">@Inputs.SaltPct.ToString("F1")%</span>
+                    <button class="stepper-btn" @onclick="@(() => AdjustSalt(+0.1))">+</button>
+                </div>
+            </div>
+            <div class="formula-field">
+                <label class="input-label">Inoculation</label>
+                <div class="formula-stepper">
+                    <button class="stepper-btn" @onclick="@(() => AdjustInoculation(-5))">−</button>
+                    <span class="formula-value">@Inputs.InoculationPct.ToString("F0")%</span>
+                    <button class="stepper-btn" @onclick="@(() => AdjustInoculation(+5))">+</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Right panel: recommendation + timeline + blend guide -->
@@ -122,6 +157,16 @@
             if (clone.AmbientTempC.HasValue)
                 Inputs.KitchenTemperatureC = clone.AmbientTempC.Value;
             Inputs.FlourType = GrainNameToFlourType(clone.GrainName);
+            if (clone.HydrationPct.HasValue)
+                Inputs.HydrationPercent = (int)clone.HydrationPct.Value;
+            if (clone.StarterActivity.HasValue)
+                Inputs.StarterActivity = (StarterActivity)clone.StarterActivity.Value;
+            if (clone.TotalFlourGrams.HasValue)
+                Inputs.TotalFlourGrams = (int)clone.TotalFlourGrams.Value;
+            if (clone.SaltPct.HasValue)
+                Inputs.SaltPct = clone.SaltPct.Value;
+            if (clone.InoculationPct.HasValue)
+                Inputs.InoculationPct = clone.InoculationPct.Value;
         }
         UpdateRecommendation();
     }
@@ -152,6 +197,18 @@
             Inputs.HydrationPercent = v;
         UpdateRecommendation();
     }
+
+    private void OnFlourGramsChange(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var v))
+            Inputs.TotalFlourGrams = v;
+    }
+
+    private void AdjustSalt(double delta) =>
+        Inputs.SaltPct = Math.Round(Math.Clamp(Inputs.SaltPct + delta, 1.0, 3.5), 1);
+
+    private void AdjustInoculation(double delta) =>
+        Inputs.InoculationPct = Math.Clamp(Inputs.InoculationPct + delta, 5, 50);
 
     private void UpdateRecommendation() => _recommendation = Advisor.GetRecommendation(Inputs);
 

@@ -27,4 +27,9 @@ public class BreadInputs
         || (IsBlend && SecondaryFlourType is FlourType.Rye or FlourType.WholeGrain && SecondaryFlourPercent >= 30);
 
     public bool HasSourdoughStarter => StarterActivity != StarterActivity.NotAvailable;
+
+    // Formula fields (M10)
+    public int    TotalFlourGrams { get; set; } = 900;
+    public double SaltPct         { get; set; } = 2.0;
+    public double InoculationPct  { get; set; } = 20.0;
 }

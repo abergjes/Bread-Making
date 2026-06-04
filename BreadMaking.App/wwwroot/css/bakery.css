@@ -406,6 +406,30 @@ body {
 .flavour-card-large h4 { font-family: var(--font-heading); color: var(--text); font-size: 1.05rem; }
 .flavour-card-large p { color: var(--text-muted); font-size: .85rem; }
 
+/* ===== Formula inputs ===== */
+.flour-display {
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--accent);
+    margin-left: 8px;
+}
+.formula-row { display: flex; gap: 16px; }
+.formula-field { flex: 1; }
+.formula-stepper {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 6px;
+}
+.formula-value {
+    flex: 1;
+    text-align: center;
+    font-weight: 700;
+    font-size: .95rem;
+    color: var(--text);
+}
+
 /* ===== Hydration Zones ===== */
 .hydration-zones {
     display: flex;
