@@ -103,15 +103,16 @@ Colour coding:
 
 | Entity | Key fields |
 |--------|-----------|
+| `GrainProfile` | `Name`, `Icon`, `FlavorNotes` (nullable), `NutritionHighlights` (nullable), `UsageNotes` (nullable), `HistoricalOrigin` (nullable) — descriptive fields seeded from baker's guide §15 |
 | `Recipe` | `Method` (autolyse/fermentolyse/other), `GrainProfileId`, `TargetDoughTempC`, `FrictionFactorC`, `IsUserDefined`, `CreatedByLabel` |
 | `RecipeStep` | `Order`, `Name`, `Phase`, `DefaultDurationMin`, `MinDurationMin`, `MaxDurationMin`, `StepMin`, `TargetTempC` |
 | `RecipeFormula` | `RecipeId`, `FlourWeightG`, `WaterPct`, `SaltPct`, `StarterPct`, `Notes` |
 | `Bake` | `RecipeId`, `StartedAt`, `EndedAt`, `AmbientTempC`, `AmbientHumidityPct`, `FlourBatch`, `Notes`, `HydrationPct`, `StarterActivity`, `TotalFlourGrams`, `SaltPct`, `InoculationPct`, `StarterFeedLogId` (nullable FK) |
 | `BakeStepLog` | `PlannedDurationMin`, `StartedAt`, `EndedAt`, `Status` (enum), `ActualDurationMin` (derived), `Notes` |
 | `Measurement` | `BakeStepLogId`, `MeasurementTypeId`, `Value`, `Unit`, `RecordedAt` (server-stamped) |
-| `BakeOutcome` | `LoafHeightCm`, `OvenSpringPct`, `InternalTempC`, `WeightLossPct`, `CrumbOpenness`, `CrustScore`, `TasteScore`, `PhotoPath`, `OverallScore`, `Tags`, `IsBestLoaf` |
+| `BakeOutcome` | `LoafHeightCm`, `OvenSpringPct`, `InternalTempC`, `WeightLossPct`, `CrumbOpenness`, `CrustScore`, `TasteScore`, `PhotoPath`, `OverallScore`, `Tags`, `IsBestLoaf`, `CrumbNotes` (nullable free-form crumb observation) |
 | `Starter` | `Id`, `Name`, `HydrationPct`, `FlourBlend`, `CreatedAt`, `Notes` |
-| `StarterFeedLog` | `Id`, `StarterId`, `FedAt`, `FlourGrams`, `WaterGrams`, `PrevStarterGrams`, `AmbientTempC`, `PeakHours`, `FloatTestPassed` |
+| `StarterFeedLog` | `Id`, `StarterId`, `FedAt`, `FlourGrams`, `WaterGrams`, `PrevStarterGrams`, `AmbientTempC`, `PeakHours`, `FloatTestPassed`, `FeedRatio` (nullable, e.g. `"1:2:2"`) |
 
 ---
 
@@ -227,6 +228,10 @@ When the client calls `POST /api/bakes`, it sends `StartBakeRequest` containing 
 The server holds the step-generation and default-duration logic. The client does not send a step list — it sends inputs, and the server generates the steps from the seeded recipe. This keeps step defaults authoritative and versioned in the database.
 
 **Autolyse vs. fermentolyse:** The step name changes ("Autolyse rest" vs. "Fermentolyse rest"), and fermentolyse skips the separate "Add salt + starter" step (salt and starter go in at mix time). This is handled by having two seeded `Recipe` rows per grain: one per method.
+
+**Cold retard fermentolyse (baker's guide §16):** When `bake.AmbientTempC < 13`, `BakeSessionService` should treat the fermentolyse rest as a cold retard — substantially longer (hours, not minutes) and producing sharper acetic acidity. The Q10 rule means fermentation rate roughly halves per 8–10 °C of cooling: a rest that takes 50 min at 22 °C takes ~175 min at 13 °C and ~6–12 h at 5–7 °C (fridge). At fridge temperature yeast is dormant but bacteria and enzymes continue, making this a deliberate flavour tool, not simply a slower version of the same process. See DEVELOPMENT.md § M1 for the per-band duration table.
+
+**Preferments (baker's guide §19.4):** A sourdough levain is the primary preferment in this app. If commercial-yeast preferments (Poolish, Biga, Pâte fermentée) are added in future, a `PrefermentType` enum on `Recipe` distinguishes them; the rest step and mix step names would change accordingly. This is deferred beyond M16.
 
 ---
 

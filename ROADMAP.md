@@ -39,6 +39,8 @@ Before any milestone work begins, the solution is converted from a standalone WA
 | M14 | Recipe library | User-created recipes with baker's %-formula; save-from-advisor flow; IsUserDefined flag | — | 📋 Planned |
 | M15 | Analytics & trends | Scatter correlations, personal bests, season trend, bake-to-bake diff view | — | 📋 Planned |
 | M16 | PWA & offline | Service worker, offline step progression via IndexedDB queue, app manifest | — | 📋 Planned |
+| M17 | Grain encyclopedia | FlavorNotes / NutritionHighlights / UsageNotes / HistoricalOrigin on GrainProfile; 9 new grain seeds; profile cards on comparison page | M15 | 📋 Planned |
+| M18 | Crumb reading & troubleshooting | CrumbNotes on BakeOutcome; OutcomeSheet textarea; proofing-result enum; history card excerpt | M9, M15 | 📋 Planned |
 
 ---
 
@@ -252,16 +254,17 @@ Scope:
 **Goal:** Track the health of each sourdough starter over time and link it to the bakes it launches. Starter state is the single most important variable in sourdough timing and is currently invisible in the record.
 
 Scope:
-- New entities: `Starter` (Id, Name, HydrationPct, FlourBlend, CreatedAt, Notes), `StarterFeedLog` (Id, StarterId, FedAt, FlourGrams, WaterGrams, PrevStarterGrams, AmbientTempC, PeakHours, FloatTestPassed)
+- New entities: `Starter` (Id, Name, HydrationPct, FlourBlend, CreatedAt, Notes), `StarterFeedLog` (Id, StarterId, FedAt, FlourGrams, WaterGrams, PrevStarterGrams, AmbientTempC, PeakHours, FloatTestPassed, **FeedRatio**)
+- `FeedRatio` — nullable string, e.g. `"1:2:2"` (starter:flour:water by weight); used to compute peak estimates and display a ratio history chip row on the `/starter` page
 - `Bake` entity: add `StarterFeedLogId` (nullable FK to `StarterFeedLog`) — "which feed launched this bake"
 - New migrations: `AddStarterJournal`, `AddStarterFeedLinkToBake`
 - New API endpoints: `GET/POST /api/starters`, `POST /api/starters/{id}/feeds`, `GET /api/starters/{id}/feeds`
-- New page `/starter`: list starters, log a feed entry (amounts, ambient temp), see peak-hours trend chart per starter
+- New page `/starter`: list starters; log a feed entry (amounts, ambient temp, feed ratio); see peak-hours trend chart per starter; health indicator chips (🟢 Active / 🟡 Hungry / 🔴 Discard) derived from `Notes` and feed age
 - Advisor start sheet: optional "Link starter feed" selector showing the 3 most recent feed log entries
 - History list bake card: "fed X h ago" badge when a feed is linked
 - `BakeDto`: expose `StarterFeedLog` summary (fed at, hours before bake)
 
-**Success criteria:** Add a starter, log a feed, start a bake and link it to that feed. History shows "fed 4 h ago" on the bake card.
+**Success criteria:** Add a starter, log a feed with ratio `"1:2:2"`, start a bake and link it to that feed. History shows "fed 4 h ago" on the bake card. `/starter` page shows the feed ratio chip and the peak-hours chart.
 
 ---
 
@@ -316,6 +319,37 @@ Scope:
 
 ---
 
+### M17 — Grain encyclopedia
+
+**Goal:** Surface the character of each grain — taste, nutrition, history — so the baker can choose not just by gluten budget but by flavour intent.
+
+Scope:
+- Add `FlavorNotes`, `NutritionHighlights`, `UsageNotes`, `HistoricalOrigin` (all `string?`) to `GrainProfile` entity
+- New migration: `AddEncyclopediaFieldsToGrainProfile`
+- Seed all fields from baker's guide §15 for the existing 6 ancient grains + wheat, and add seeded `GrainProfile` rows for 9 further grains: Rye, Barley, Durum/Semolina, Triticale, Oat, Buckwheat, Amaranth, Quinoa, Millet
+- Grain comparison page (`/history/compare`): tapping a grain bar opens a compact profile card showing flavour note, nutrition highlights, usage, and historical origin
+- Grain selection chips in the advisor: long-press or hover reveals a tooltip with the flavour note
+
+**Success criteria:** Tapping "Emmer" on the comparison page shows its flavour note, nutrition highlights, and historical origin. All 15 grains have non-null encyclopedia fields in the database.
+
+---
+
+### M18 — Crumb reading & troubleshooting
+
+**Goal:** Close the feedback loop: help the baker diagnose what went wrong (or right) from the finished loaf, and record that diagnosis against the bake.
+
+Scope:
+- Add `CrumbNotes` (`string?`) to `BakeOutcome` entity
+- New migration: `AddCrumbNotesToBakeOutcome`
+- `OutcomeSheet.razor`: add CRUMB NOTES textarea below the SCORES section; auto-saves on blur; 📋 chip appears on history card when set
+- New API endpoint or extend existing: `PUT /api/bakes/{id}/outcome` already handles the upsert — include `CrumbNotes` in the DTO and `SaveOutcomeAsync`
+- Extend `BakeListItemDto` to expose `CrumbNotes` excerpt (first 80 characters) for history card preview
+- `/history/analytics` (M15): add "poke-test" proofing column to the bake diff table — under-proofed / properly proofed / over-proofed — derived from baker notes or a new `ProofingResult` enum on `BakeOutcome`
+
+**Success criteria:** Log crumb notes on a bake; notes appear on the history card (truncated) and in full on the bake detail view.
+
+---
+
 ## Out of scope for this roadmap
 
 - Bluetooth probe or scale integration (Bluetooth Web API — possible future extension)
@@ -323,3 +357,4 @@ Scope:
 - Multi-user / shared bake sessions
 - Native mobile app (the app is a PWA after M16; keep WASM, focus on responsive CSS)
 - Dark mode (CSS custom properties are already used throughout; a dark theme can be added as a low-priority polish task after M16)
+- Cold retard fermentolyse as a first-class `BakeMethod` — the current `BakeMethod.Other` and `AmbientTempC` capture sufficient data; a dedicated UI is deferred beyond M18

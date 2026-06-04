@@ -171,6 +171,7 @@ Design rules:
 - ± step increments: 0.5 for temperature, 1 for rise %, 0.1 for pH, 1 for TTA
 - Expected-range panel: green tint (`--zone-ideal` at low opacity) when value is in range; terracotta tint when out of range
 - Save button: dark filled (matches Done button on step card); Cancel: outline
+- **Internal temp hint (Bake step):** When `MeasurementType == InternalTempC` and the step is in the Bake phase, append a target line to the expected-range panel: `"Target: ~96 °C lean / ~88 °C enriched"`. This context (from baker's guide §18) is hardcoded in the hint, not derived from the DB, since lean vs enriched is not currently a `Recipe` field.
 
 ---
 
@@ -209,6 +210,20 @@ Three side-by-side ApexCharts bar charts:
 
 Grains on the x-axis; bars computed from all logged `BakeOutcome` records. A placeholder grey bar with "Log more bakes" label is shown for grains with fewer than 3 bakes.
 
+**Grain profile card (M17):** Once `GrainProfile.FlavorNotes` / `NutritionHighlights` / `UsageNotes` are seeded, each grain bar on the comparison page should be tappable, opening a compact detail card:
+
+```
+┌──────────────────────────────────┐
+│  🌾 Emmer                        │
+│  Earthy · nutty · rustic         │
+│  High fibre · iron · magnesium   │
+│  30–50% in sourdough blends      │
+│  Fertile Crescent, ~8000 BC      │
+└──────────────────────────────────┘
+```
+
+Card uses `--panel` background, `--border` border, `--radius` corners. Flavour note in `--accent` italic; nutrition and usage lines in body Lato. Historical origin in muted `--border` colour at the foot.
+
 ---
 
 ## Chart specifications
@@ -221,6 +236,7 @@ All charts use `ApexCharts.Blazor`. They should match the bakery palette and fee
 | Planning Gantt | Horizontal bar | `--accent` solid bar; `--border` thin range extension | Pre-bake on `/bake/{id}` |
 | Run chart | Line | `--accent` line with open circle markers; dashed `--zone-ideal` target line | `/history`, single metric |
 | Grain comparison | Grouped bar | Amber / olive / steel blue per panel | `/history/compare` |
+| Starter activity | Line | `--accent` peak-hours trend per starter | `/starter` per-starter view |
 
 **Global chart theme:** Page background `--bg`, axis labels in `--text` at 60% opacity, faint `--border` horizontal grid lines only, tooltips in `--panel` with a `--border` shadow.
 
@@ -235,6 +251,18 @@ Add below the existing recommendation output:
 - A **Start Bake** button (full-width, primary amber fill, Playfair Display label "Start Bake ▶")
 - A sub-label in body text: "Records your actual durations and measurements"
 - Disabled + tooltip when `RestMethod == Skip` (no timeline steps to run)
+
+### `/starter` page — health indicators
+
+Each feed log entry on the `/starter` page carries a compact health chip derived from the free-form `Notes` field and from `PeakHours` vs `AmbientTempC`:
+
+| Chip | Colour | Trigger |
+|------|--------|---------|
+| `🟢 Active` | `--zone-ideal` | `PeakHours` is set and within expected range for the recorded temp |
+| `🟡 Hungry` | `--zone-warm` | Baker notes "hooch" or entry is >36 h old without a subsequent feed |
+| `🔴 Discard` | `--zone-hot` | Baker notes "pink", "orange", or "mould" in Notes field |
+
+Below the feed timeline, show a **feeding ratio chip row** for the last 5 feeds — `1:2:2`, `1:5:5` etc. displayed as compact pills in chronological order. Tapping a chip opens a tooltip with the computed peak estimate at the recorded `AmbientTempC`.
 
 ### `BakingTimeline.razor`
 
@@ -252,3 +280,4 @@ Add a **Start Bake** CTA at the bottom of the timeline, visually consistent with
 4. **Progressive disclosure.** A NotStarted card is one compact row (~56 px). Only the active card is expanded. Completed cards collapse, showing actual duration in `--zone-ideal` green.
 5. **Monospace digits.** Use `font-variant-numeric: tabular-nums` on the elapsed readout so the layout does not shift as digits increment.
 6. **Accessibility.** Each step card has an `aria-label` including step name and current status. The progress bar uses `role="progressbar"` with `aria-valuenow` / `aria-valuemax`.
+9. **Crumb notes in OutcomeSheet.** Add a `CRUMB NOTES` textarea group below the SCORES section (before PHOTO). Free-form text, auto-saved on blur, bound to `BakeOutcome.CrumbNotes`. Placeholder: `"Open and even? Tight or gummy? Flying crust? Note what you see."` — prompts the baker to apply the crumb-reading framework from baker's guide §20 without prescribing the vocabulary. On the history list, a 📋 chip appears beside the outcome summary when CrumbNotes is set.

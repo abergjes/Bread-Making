@@ -146,6 +146,8 @@ Seed `MeasurementType` (5 records):
 | 4 | TTA | mL | InProcess | 0 | 30 | Bulk |
 | 5 | Internal temp | °C | Outcome | 80 | 110 | Bake |
 
+> **Doneness targets** (baker's guide §18): lean sourdough loaves are done at ~96 °C internal (205 °F); enriched doughs (brioche, challah) at ~88 °C (185–195 °F). The seeded 80–110 °C range accommodates both. `DefaultForPhase = Bake` ensures the measurement sheet pre-selects this type on the covered and uncovered bake steps. Steam should be applied for the first 15–20 minutes of the bake (achieved by baking covered), then vented by removing the lid — this aligns with the existing "Bake covered" / "Bake uncovered" step split in the seed data. Lean loaves need at least 1–2 hours cooling on a rack before slicing; the seeded 120-minute "Cool on rack" default is correct.
+
 Seed `RecipeStep` defaults for wheat/autolyse (RecipeId = 1):
 
 | Order | Name | Default (min) | Min | Max | StepMin | Phase |
@@ -166,6 +168,33 @@ Seed `RecipeStep` defaults for wheat/autolyse (RecipeId = 1):
 For wheat/fermentolyse (RecipeId = 2): step 2 becomes "Fermentolyse rest" (starter added at mix time); step 3 becomes "Add salt only". Bulk default increases slightly (fermentolyse is typically faster once it gets going; adjust per the v3 spec tables).
 
 Per-grain recipes (Einkorn, Emmer, Spelt, Kamut, Teff/Sorghum) are added in M1 as well, using the grain-handling parameters from the spec table (section A4). The bulk duration range, rest duration, and hydration note differ per grain.
+
+**Additional grains (baker's guide §15 — grain encyclopedia):** Nine further grains are documented in the guide. Seed `GrainProfile` + `Recipe` rows for any that the advisor will support:
+
+| Grain | Type | Rest | Hydration vs wheat | Key handling note |
+|-------|------|------|--------------------|-------------------|
+| Rye | Low-gluten | Skip or soaker | +10–20% | Paste-like; no kneading; mix only; ferment cooler/shorter (very high amylase) |
+| Barley | Low-gluten blend | 20–30 min | Slight reduction | Use max 25% in blends; high beta-glucan lifts water absorption |
+| Durum / Semolina | Strong | 30–60 min | Slight reduction | Inextensible (plastic) gluten; slow to hydrate; good for shaping |
+| Triticale | Moderate | 20–30 min | Standard | Very high amylase — ferment cooler and shorter; 30–50% in blends |
+| Oat | GF (binder needed) | Soaker 20–40 min | Standard | Up to 20–25% in GF blends; holds moisture well |
+| Buckwheat | GF (binder needed) | Soaker 20–40 min | Standard | Bold flavour — use 10–30%; 100% loaf needs psyllium |
+| Amaranth | GF (binder needed) | Soaker 20–40 min | Standard | Best up to 25% in GF blends; complete protein, high calcium |
+| Quinoa | GF (binder needed) | Soaker 20–40 min | Standard | Strong flavour — light hand; 15–30% in GF blends |
+| Millet | GF (binder needed) | Soaker 20–40 min | Standard | Mild, neutral; good GF base; binder recommended for raised loaves |
+
+Add `FlavorNotes`, `NutritionHighlights`, `UsageNotes`, and `HistoricalOrigin` (all `string?`) to the `GrainProfile` entity in M1 to support the grain encyclopedia feature (M17). Seed values from baker's guide §15.
+
+**Cold retard fermentolyse (baker's guide §16):** Section 7 covers room-temperature fermentolyse (16–26 °C). The guide also documents a cold retard variant — taking the fermentolyse all the way down to 5–12 °C for 6–48+ hours. The yeast becomes dormant but bacteria and enzymes continue, shifting acidity toward sharp acetic notes and building flavour precursors. Use `bake.AmbientTempC < 13` in `BakeSessionService` to detect cold-retard territory and apply the longer `PlannedDurationMin` values from the table below. Practical bands (baker's guide §16.6):
+
+| Temperature band | Fermentolyse duration | Acid character |
+|---|---|---|
+| 5–7 °C (fridge retard) | 720–2880 min (12–48 h+) | Sharp, vinegary (acetic-dominant) |
+| 8–12 °C (cold cellar) | 480–1440 min (8–24 h) | Balanced, tangy |
+| 13–18 °C (cool room) | 90–180 min | Mild, lactic |
+| 19–26 °C (warm room) | 22–130 min | Mild, yogurty (existing §7.2 range) |
+
+The Q10 rule governs the slowdown: fermentation rate roughly halves for every 8–10 °C drop, so timing becomes geometric, not linear. Dough firmness increases in the cold, making it easier to handle and score.
 
 ### Migration
 
@@ -685,6 +714,7 @@ On the **collapsed** completed card, add a 📝 chip alongside the actual-durati
 public int?    OverallScore { get; set; }   // 1–5
 public string? Tags         { get; set; }   // comma-separated
 public bool    IsBestLoaf   { get; set; }
+public string? CrumbNotes   { get; set; }   // free-form crumb observation (open/tight/gummy/flying crust etc.)
 ```
 
 ```
@@ -747,6 +777,7 @@ public class StarterFeedLog {
     public double? AmbientTempC     { get; set; }
     public double? PeakHours        { get; set; }
     public bool?   FloatTestPassed  { get; set; }
+    public string? FeedRatio        { get; set; }   // e.g. "1:2:2" (starter:flour:water by weight)
 }
 ```
 
@@ -767,6 +798,18 @@ dotnet ef database update --project BreadMaking.App.Server
 ### /starter page
 
 Simple list of starters with an "Add" sheet. Per-starter expanded view shows feed history as a timeline with peak hours plotted (ApexCharts line chart — reuses the existing chart setup).
+
+**Feeding ratio guidance** (baker's guide §19.2): `FeedRatio` is stored as a string (e.g. `"1:2:2"` = starter:flour:water by weight). Display a computed peak estimate beside the ratio chip:
+
+| Ratio | Approx peak at 22 °C | Flavour |
+|-------|----------------------|---------|
+| 1:1:1 | 4–6 h | Tangier, more acidic |
+| 1:2:2 | 6–8 h | Balanced — recommended default |
+| 1:5:5 | 10–14 h | Mildest — overnight builds |
+
+**Health indicators**: The feed list entry should surface the following status chips derived from the `Notes` field (the baker enters these freeform, but the UI should prompt with recognisable states): `🟡 Hungry (hooch)` — harmless, feed sooner; `🟢 Active` — yeasty/mildly sour smell, doubles reliably; `🔴 Discard` — pink/orange streaks or mould. These are display-only labels parsed from notes; no separate `HealthStatus` enum is required.
+
+**Preferments reference**: The guide (§19.4) documents five preferment types. `StarterFeedLog.FeedRatio` covers sourdough levain builds. If the advisor later supports commercial-yeast preferments (Poolish, Biga, Pâte fermentée), a `PrefermentType` enum on `Recipe` would distinguish them; this is deferred to M14+.
 
 ---
 
