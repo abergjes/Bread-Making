@@ -1,0 +1,144 @@
+@page "/safety"
+@inject NavigationManager Nav
+
+<div class="safety-page">
+
+    <div class="safety-header">
+        <button class="back-btn" @onclick='() => Nav.NavigateTo("/")'>← Home</button>
+        <div class="safety-title-group">
+            <h2 class="safety-title">Food safety &amp; shelf life</h2>
+            <p class="safety-subtitle">Baker's guide §49</p>
+        </div>
+    </div>
+
+    <!-- Temperature ladder -->
+    <div class="safety-section">
+        <h3 class="section-title">Temperature ladder</h3>
+        <div class="safety-ladder">
+            <div class="ladder-bar ladder-cold">
+                <div class="ladder-inner">
+                    <span class="ladder-label">Safe cold</span>
+                    <span class="ladder-range">&lt; 5 °C</span>
+                </div>
+                <span class="ladder-note">Fridge stales fastest (retrogradation peak). Freezer nearly halts staling.</span>
+            </div>
+            <div class="ladder-bar ladder-danger">
+                <div class="ladder-inner">
+                    <span class="ladder-label">Danger zone</span>
+                    <span class="ladder-range">5 – 60 °C</span>
+                </div>
+                <span class="ladder-note">Rope spores germinate; mould spreads. Never store bread in this range long-term.</span>
+            </div>
+            <div class="ladder-bar ladder-crust">
+                <div class="ladder-inner">
+                    <span class="ladder-label">Crust formation</span>
+                    <span class="ladder-range">140 – 180 °C</span>
+                </div>
+                <span class="ladder-note">Maillard reaction and caramelisation. Lethal to surface pathogens.</span>
+            </div>
+            <div class="ladder-bar ladder-bake">
+                <div class="ladder-inner">
+                    <span class="ladder-label">Full bake</span>
+                    <span class="ladder-range">&gt; 180 °C</span>
+                </div>
+                <span class="ladder-note">Interior reaches 96–99 °C; Bacillus spores can survive — cool fast after baking.</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fault cards -->
+    <div class="safety-section">
+        <h3 class="section-title">Spoilage fault cards</h3>
+
+        <div class="fault-card">
+            <div class="fault-card-header">
+                <span class="fault-icon">🧵</span>
+                <h4 class="fault-name">Rope</h4>
+                <span class="fault-severity fault-severity--high">Discard</span>
+            </div>
+            <dl class="fault-details">
+                <dt>Cause</dt>
+                <dd>Bacillus subtilis spores (soil → flour → oven survives). Germinate 20–40 °C in low-acid bread.</dd>
+                <dt>Symptoms</dt>
+                <dd>Sticky, web-like interior; unpleasant sweet-melon or overripe smell within 1–2 days.</dd>
+                <dt>Prevention</dt>
+                <dd>Use sourdough (pH &lt; 4.5 inhibits growth). Cool loaves quickly. Keep work surfaces clean.</dd>
+                <dt>Response</dt>
+                <dd>Discard the entire loaf. Sanitise cutting boards, cloths, and any surfaces it touched.</dd>
+            </dl>
+        </div>
+
+        <div class="fault-card">
+            <div class="fault-card-header">
+                <span class="fault-icon">🟢</span>
+                <h4 class="fault-name">Mould</h4>
+                <span class="fault-severity fault-severity--high">Discard whole loaf</span>
+            </div>
+            <dl class="fault-details">
+                <dt>Source</dt>
+                <dd>Airborne spores land after baking — on cut surfaces, hands, or contaminated storage.</dd>
+                <dt>Types</dt>
+                <dd>Penicillium (blue-green), Rhizopus (black pin mould), Aspergillus (white-grey). All produce mycotoxins below the surface.</dd>
+                <dt>Rule</dt>
+                <dd>Never cut off the mouldy section and eat the rest. Discard the whole loaf.</dd>
+                <dt>Prevention</dt>
+                <dd>Lower crust moisture before bagging. Sourdough acidity helps. Freeze slices if not consumed within 3 days.</dd>
+            </dl>
+        </div>
+
+        <div class="fault-card">
+            <div class="fault-card-header">
+                <span class="fault-icon">🥖</span>
+                <h4 class="fault-name">Staling</h4>
+                <span class="fault-severity fault-severity--low">Quality issue</span>
+            </div>
+            <dl class="fault-details">
+                <dt>Cause</dt>
+                <dd>Retrogradation — starch recrystallises as the loaf cools, making the crumb firm and dry.</dd>
+                <dt>Fridge rule</dt>
+                <dd>Fridge temperature (4 °C) is the retrogradation peak — bread stales up to 6× faster than at room temperature. Avoid unless it must last &gt; 5 days.</dd>
+                <dt>Freezer</dt>
+                <dd>Freezing nearly halts retrogradation. Slice before freezing so individual pieces can be toasted straight from frozen.</dd>
+                <dt>Refresh</dt>
+                <dd>Wrap in foil and heat at 60 °C / 10 min (or blast at 180 °C / 5 min). Reheat refreshes once only — the crumb stales faster after the second bake.</dd>
+            </dl>
+        </div>
+    </div>
+
+    <!-- Storage quick guide -->
+    <div class="safety-section">
+        <h3 class="section-title">Storage quick guide</h3>
+        <table class="safety-table">
+            <thead>
+                <tr>
+                    <th>Bread type</th>
+                    <th>Best storage</th>
+                    <th>Shelf life</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Sourdough (active starter)</td>
+                    <td>Cloth or paper bag, room temp</td>
+                    <td>3–5 days</td>
+                </tr>
+                <tr>
+                    <td>Sourdough (lower activity)</td>
+                    <td>Cloth or paper bag, room temp</td>
+                    <td>2–3 days</td>
+                </tr>
+                <tr>
+                    <td>Commercial yeast loaf</td>
+                    <td>Cloth bag or wrapped, room temp</td>
+                    <td>2–3 days</td>
+                </tr>
+                <tr>
+                    <td>Any loaf — extended</td>
+                    <td>Sliced, wrapped, freezer</td>
+                    <td>3 months</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>

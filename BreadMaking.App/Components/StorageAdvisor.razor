@@ -1,0 +1,65 @@
+@* StorageAdvisor — inline chip shown in LiveBake outcome after a bake ends (M20) *@
+
+@{
+    var advice = GetAdvice();
+}
+
+<div class="storage-advisor">
+    <button class="storage-chip zone-ideal" @onclick="ToggleExpanded" aria-expanded="@_expanded">
+        <span class="storage-chip-icon">🧺</span>
+        <span class="storage-chip-text">@advice.Medium · @advice.ShelfLifeDays days</span>
+        <span class="storage-chip-caret">@(_expanded ? "▲" : "▼")</span>
+    </button>
+    @if (_expanded)
+    {
+        <div class="storage-detail">
+            <p class="storage-note">@advice.Note</p>
+            <div class="storage-ladder">
+                <div class="ladder-bar ladder-cold">
+                    <span class="ladder-label">Safe cold</span>
+                    <span class="ladder-range">&lt; 5 °C</span>
+                    <span class="ladder-note">Stales fastest — freezer halts staling</span>
+                </div>
+                <div class="ladder-bar ladder-danger">
+                    <span class="ladder-label">Danger zone</span>
+                    <span class="ladder-range">5 – 60 °C</span>
+                    <span class="ladder-note">Rope &amp; mould grow here</span>
+                </div>
+                <div class="ladder-bar ladder-crust">
+                    <span class="ladder-label">Crust formation</span>
+                    <span class="ladder-range">140 – 180 °C</span>
+                    <span class="ladder-note">Baking range</span>
+                </div>
+            </div>
+            <a class="storage-safety-link" href="/safety">Full food safety guide →</a>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public BakeMethod Method { get; set; }
+    [Parameter] public int? StarterActivity { get; set; }
+
+    private bool _expanded;
+
+    private void ToggleExpanded() => _expanded = !_expanded;
+
+    private record StorageAdvice(string Medium, string ShelfLifeDays, string Note);
+
+    private StorageAdvice GetAdvice()
+    {
+        bool isSourdough = Method is BakeMethod.Autolyse or BakeMethod.Fermentolyse;
+        bool highActivity = StarterActivity is 2 or 3; // AtPeak or PastPeak
+
+        if (isSourdough && highActivity)
+            return new("Room temp · cloth or paper", "3–5",
+                "Sourdough acidity inhibits rope &amp; mould. Keep away from direct sun.");
+
+        if (isSourdough)
+            return new("Room temp · cloth or paper", "2–3",
+                "Lower starter acidity; consume within 2–3 days or freeze.");
+
+        return new("Room temp · cloth or paper", "2–3",
+            "No sourdough acidity barrier. Consume within 2–3 days or slice &amp; freeze.");
+    }
+}

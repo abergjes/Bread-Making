@@ -228,6 +228,11 @@ else
             }
         </div>
 
+        @if (_bake.EndedAt.HasValue)
+        {
+            <StorageAdvisor Method="@_bake.Method" StarterActivity="@_bake.StarterActivity" />
+        }
+
         <OutcomeSheet BakeId="Id"
                       ExistingOutcome="_bake.Outcome"
                       IsVisible="_showOutcomeSheet"
