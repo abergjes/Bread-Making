@@ -13,6 +13,11 @@ public class Recipe
     public double TargetDoughTempC { get; set; }
     public double FrictionFactorC { get; set; }
 
-    public ICollection<RecipeStep> Steps { get; set; } = new List<RecipeStep>();
-    public ICollection<Bake> Bakes { get; set; } = new List<Bake>();
+    // M14 — user-defined recipes
+    public bool    IsUserDefined  { get; set; }
+    public string? CreatedByLabel { get; set; }
+
+    public ICollection<RecipeStep>  Steps   { get; set; } = new List<RecipeStep>();
+    public ICollection<Bake>        Bakes   { get; set; } = new List<Bake>();
+    public RecipeFormula?           Formula { get; set; }
 }

@@ -42,6 +42,7 @@ app.MapStepLogEndpoints();
 app.MapGrainEndpoints();
 app.MapStarterEndpoints();
 app.MapCalculatorEndpoints();
+app.MapRecipeEndpoints();
 app.MapHub<BakeHub>("/hubs/bake");
 
 app.MapFallbackToFile("index.html");

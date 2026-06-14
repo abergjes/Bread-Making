@@ -1,5 +1,6 @@
 @using BreadMaking.App.Models
 @using BreadMaking.App.Services
+@inject HttpClient Http
 
 <div class="two-panel-layout">
     <!-- Left panel: inputs -->
@@ -8,6 +9,22 @@
             <button class="back-btn" @onclick="OnBack">← Change experience level</button>
             <h2>Your Bake Conditions</h2>
         </div>
+
+        <!-- Saved recipes -->
+        @if (_savedRecipes.Count > 0)
+        {
+            <div class="input-group saved-recipes-group">
+                <label class="input-label">Saved recipes</label>
+                <div class="saved-recipe-chips">
+                    @foreach (var r in _savedRecipes)
+                    {
+                        <button class="saved-recipe-chip" @onclick="() => LoadRecipe(r)" title="@r.Notes">
+                            @r.Name
+                        </button>
+                    }
+                </div>
+            </div>
+        }
 
         <!-- Temperature -->
         <div class="input-group">
@@ -148,8 +165,9 @@
 
     private BreadInputs Inputs { get; set; } = new() { Experience = BakerExperience.Experienced };
     private BreadRecommendation? _recommendation;
+    private List<UserRecipeDto>  _savedRecipes = [];
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         var clone = CloneState.TakeAndClear();
         if (clone is not null)
@@ -168,6 +186,22 @@
             if (clone.InoculationPct.HasValue)
                 Inputs.InoculationPct = clone.InoculationPct.Value;
         }
+        UpdateRecommendation();
+
+        try
+        {
+            _savedRecipes = await Http.GetFromJsonAsync<List<UserRecipeDto>>("/api/recipes") ?? [];
+        }
+        catch { /* degrade silently */ }
+    }
+
+    private void LoadRecipe(UserRecipeDto r)
+    {
+        Inputs.FlourType        = GrainNameToFlourType(r.GrainName);
+        Inputs.HydrationPercent = (int)r.HydrationPct;
+        Inputs.TotalFlourGrams  = (int)r.FlourWeightG;
+        Inputs.SaltPct          = r.SaltPct;
+        Inputs.InoculationPct   = r.StarterPct;
         UpdateRecommendation();
     }
 

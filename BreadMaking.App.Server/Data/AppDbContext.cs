@@ -6,6 +6,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 {
     public DbSet<GrainProfileEntity> GrainProfiles   => Set<GrainProfileEntity>();
     public DbSet<Recipe>             Recipes          => Set<Recipe>();
+    public DbSet<RecipeFormula>      RecipeFormulas   => Set<RecipeFormula>();
     public DbSet<RecipeStep>         RecipeSteps      => Set<RecipeStep>();
     public DbSet<Bake>               Bakes            => Set<Bake>();
     public DbSet<BakeStepLog>        BakeStepLogs     => Set<BakeStepLog>();
@@ -39,6 +40,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .WithMany()
             .HasForeignKey(b => b.StarterFeedLogId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        // RecipeFormula 1:1 with Recipe
+        modelBuilder.Entity<RecipeFormula>()
+            .HasOne(f => f.Recipe)
+            .WithOne(r => r.Formula)
+            .HasForeignKey<RecipeFormula>(f => f.RecipeId)
+            .OnDelete(DeleteBehavior.Cascade);
 
         // Seed data
         modelBuilder.Entity<GrainProfileEntity>().HasData(SeedData.GrainProfiles);

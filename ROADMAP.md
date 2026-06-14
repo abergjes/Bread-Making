@@ -2,7 +2,7 @@
 
 ## Current state (v8, June 2026)
 
-Milestones M0–M10, M13, M19, and M20 are complete. The app is a hosted Blazor WASM solution with a full ASP.NET Core backend, EF Core + SQLite persistence, live bake execution, measurements, visualisations, history, SignalR notifications, audible alerts, outcome capture with photo upload, formula fields on every bake, a starter journal, a six-tab baker's calculators page, and a food safety reference page with StorageAdvisor chip. Baker's guide v23 (2026-06-10) added §§48–54; §§48–49 and §54.3 are implemented in M19–M20. Sections §50–§53 define milestones M21–M23. Milestones M11–M18 and M21–M23 remain planned.
+Milestones M0–M14 and M19–M20 are complete (M16 deferred). The app is a hosted Blazor WASM solution with a full ASP.NET Core backend, EF Core + SQLite persistence, live bake execution, per-step notes, measurements, visualisations, history with star ratings and tags, SignalR notifications, audible alerts, outcome capture with photo upload, formula fields on every bake, a starter journal, a user recipe library with save-from-advisor flow, a six-tab baker's calculators page, and a food safety reference page with StorageAdvisor chip. Milestones M15–M18 and M21–M23 remain planned (M16 deferred).
 
 ## Vision
 
@@ -33,10 +33,10 @@ Before any milestone work begins, the solution is converted from a standalone WA
 | M8 | Live bake UX enhancements | Duration/total time display; three-tier overrun visualisation; audible alerts with toggle | — | ✅ Complete |
 | M9 | Outcome capture UI | BakeOutcomeDto, PUT /api/bakes/{id}/outcome, OutcomeSheet + OutcomeField components, chips + photo on live bake page | — | ✅ Complete |
 | M10 | Formula & extended inputs | Persist hydration %, starter activity, flour weight, salt %, inoculation % on every bake | M15 | ✅ Complete |
-| M11 | Per-step notes | Notes field on BakeStepLog; inline auto-save in StepCard; 📝 indicator on collapsed card | — | 📋 Planned |
-| M12 | Ratings & tags | Overall score (1–5 stars), free-form tags, best-loaf flag on BakeOutcome | M15 | 📋 Planned |
+| M11 | Per-step notes | Notes field on BakeStepLog; inline auto-save in StepCard; 📝 indicator on collapsed card | — | ✅ Complete |
+| M12 | Ratings & tags | Overall score (1–5 stars), free-form tags, best-loaf flag on BakeOutcome | M15 | ✅ Complete |
 | M13 | Starter journal | Starter + StarterFeedLog entities; /starter page; link bake to feed log entry | M15 | ✅ Complete |
-| M14 | Recipe library | User-created recipes with baker's %-formula; save-from-advisor flow; IsUserDefined flag | — | 📋 Planned |
+| M14 | Recipe library | User-created recipes with baker's %-formula; save-from-advisor flow; IsUserDefined flag | — | ✅ Complete |
 | M15 | Analytics & trends | Scatter correlations, personal bests, season trend, bake-to-bake diff view | — | 📋 Planned |
 | M16 | PWA & offline | Service worker, offline step progression via IndexedDB queue, app manifest | — | 📋 Planned |
 | M17 | Grain encyclopedia | FlavorNotes / NutritionHighlights / UsageNotes / HistoricalOrigin on GrainProfile; 9 new grain seeds; profile cards on comparison page | M15 | 📋 Planned |

@@ -114,6 +114,30 @@ else
                     @(_starting ? "Starting…" : "Start Bake ▶")
                 </button>
                 <p class="start-bake-hint">Records your actual durations and measurements</p>
+
+                @if (!_showSaveRecipe && _savedStatus is null)
+                {
+                    <button class="btn-save-recipe" @onclick="() => { _showSaveRecipe = true; _recipeName = DefaultRecipeName(); }">
+                        📌 Save as recipe
+                    </button>
+                }
+                @if (_showSaveRecipe)
+                {
+                    <div class="save-recipe-row">
+                        <input class="save-recipe-input" placeholder="Recipe name"
+                               @bind="_recipeName" @bind:event="oninput" maxlength="80" />
+                        <button class="btn-save-recipe-confirm @(_saving ? "btn-loading" : "")"
+                                disabled="@(_saving || string.IsNullOrWhiteSpace(_recipeName))"
+                                @onclick="SaveRecipe">
+                            @(_saving ? "Saving…" : "Save")
+                        </button>
+                        <button class="btn-save-recipe-cancel" @onclick="() => _showSaveRecipe = false">✕</button>
+                    </div>
+                }
+                @if (_savedStatus is not null)
+                {
+                    <p class="save-recipe-status">@_savedStatus</p>
+                }
             </div>
         }
     </div>
@@ -123,9 +147,15 @@ else
     [Parameter] public BreadRecommendation? Recommendation { get; set; }
     [Parameter] public BreadInputs?         Inputs         { get; set; }
 
-    private bool _starting;
+    private bool   _starting;
     private List<StarterFeedLogDto> _recentFeeds = [];
     private string _linkedFeedId = "";
+
+    // Save-as-recipe state (M14)
+    private bool    _showSaveRecipe;
+    private bool    _saving;
+    private string  _recipeName     = "";
+    private string? _savedStatus;
 
     protected override async Task OnInitializedAsync()
     {
@@ -215,5 +245,35 @@ else
         if (hours < 1)   return "just fed";
         if (hours < 24)  return $"{(int)hours}h ago";
         return $"{(int)(hours / 24)}d ago";
+    }
+
+    private string DefaultRecipeName()
+    {
+        if (Inputs is null || Recommendation is null) return "";
+        var grain  = ToGrainName(Inputs.DominantFlourType);
+        var method = ToMethodName(Recommendation.Method);
+        return $"{grain} — {method} {Inputs.HydrationPercent}%";
+    }
+
+    private async Task SaveRecipe()
+    {
+        if (Inputs is null || Recommendation is null || string.IsNullOrWhiteSpace(_recipeName)) return;
+        _saving = true;
+
+        var req = new SaveRecipeRequest
+        {
+            Name         = _recipeName.Trim(),
+            GrainName    = ToGrainName(Inputs.DominantFlourType),
+            Method       = ToMethodName(Recommendation.Method),
+            HydrationPct = Inputs.HydrationPercent,
+            FlourWeightG = Inputs.TotalFlourGrams,
+            SaltPct      = Inputs.SaltPct,
+            StarterPct   = Inputs.InoculationPct,
+        };
+
+        var response = await Http.PostAsJsonAsync("/api/recipes", req);
+        _saving = false;
+        _showSaveRecipe = false;
+        _savedStatus = response.IsSuccessStatusCode ? "✅ Recipe saved" : "❌ Save failed";
     }
 }
