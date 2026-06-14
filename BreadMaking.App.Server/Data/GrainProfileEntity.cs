@@ -10,5 +10,11 @@ public class GrainProfileEntity
     public int MaxAutolyseMinutes { get; set; }
     public bool NeedsBinder { get; set; }
 
+    // M17 — grain encyclopedia
+    public string? FlavorNotes         { get; set; }
+    public string? NutritionHighlights { get; set; }
+    public string? UsageNotes          { get; set; }
+    public string? HistoricalOrigin    { get; set; }
+
     public ICollection<Recipe> Recipes { get; set; } = new List<Recipe>();
 }

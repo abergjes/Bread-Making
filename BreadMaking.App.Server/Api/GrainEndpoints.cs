@@ -8,6 +8,27 @@ public static class GrainEndpoints
 {
     public static IEndpointRouteBuilder MapGrainEndpoints(this IEndpointRouteBuilder app)
     {
+        // GET /api/grains/profiles — encyclopedia data for all grain profiles (M17)
+        app.MapGet("/api/grains/profiles", async (AppDbContext db) =>
+        {
+            var profiles = await db.GrainProfiles
+                .OrderBy(g => g.Id)
+                .Select(g => new GrainProfileDto
+                {
+                    Id                  = g.Id,
+                    Name                = g.Name,
+                    Ploidy              = g.Ploidy,
+                    GlutenStrength      = g.GlutenStrength,
+                    NeedsBinder         = g.NeedsBinder,
+                    FlavorNotes         = g.FlavorNotes,
+                    NutritionHighlights = g.NutritionHighlights,
+                    UsageNotes          = g.UsageNotes,
+                    HistoricalOrigin    = g.HistoricalOrigin,
+                })
+                .ToListAsync();
+            return Results.Ok(profiles);
+        });
+
         app.MapGet("/api/grains/comparison", async (AppDbContext db) =>
         {
             var bakes = await db.Bakes

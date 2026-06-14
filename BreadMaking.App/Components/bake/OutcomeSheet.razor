@@ -41,6 +41,42 @@
                     <span>🏆 Mark as best loaf</span>
                 </label>
 
+                <div class="os-group-label" style="margin-top:12px">CRUMB NOTES</div>
+
+                <div class="os-crumb-group">
+                    <textarea class="os-crumb-textarea"
+                              placeholder="Describe the crumb: open/closed, gummy, dense, tunnels…"
+                              rows="3"
+                              @bind="_crumbNotes"
+                              @bind:event="oninput"></textarea>
+
+                    <div class="os-proofing-label">Proofing result</div>
+                    <div class="os-proofing-radios">
+                        @foreach (var (label, icon, val) in new[]
+                        {
+                            ("Under-proofed",    "🔽", 1),
+                            ("Properly proofed", "✅", 2),
+                            ("Over-proofed",     "🔼", 3),
+                        })
+                        {
+                            var v = val;
+                            <label class="os-proofing-option @(_proofingResult == v ? "os-proofing-selected" : "")">
+                                <input type="radio"
+                                       name="proofing-@BakeId"
+                                       value="@v"
+                                       checked="@(_proofingResult == v)"
+                                       @onchange="() => _proofingResult = v" />
+                                <span>@icon @label</span>
+                            </label>
+                        }
+                        @if (_proofingResult.HasValue)
+                        {
+                            <button type="button" class="os-proofing-clear"
+                                    @onclick="() => _proofingResult = null">✕</button>
+                        }
+                    </div>
+                </div>
+
                 <div class="os-group-label" style="margin-top:12px">PHOTO</div>
 
                 <div class="os-photo-row">
@@ -125,6 +161,8 @@
     private int?          _overallScore;
     private string?       _tags;
     private bool          _isBestLoaf;
+    private string?       _crumbNotes;
+    private int?          _proofingResult;
     private IBrowserFile? _pendingPhoto;
     private string?       _photoPreviewUrl;
     private bool          _saving;
@@ -148,6 +186,8 @@
         _overallScore    = ExistingOutcome?.OverallScore;
         _tags            = ExistingOutcome?.Tags;
         _isBestLoaf      = ExistingOutcome?.IsBestLoaf ?? false;
+        _crumbNotes      = ExistingOutcome?.CrumbNotes;
+        _proofingResult  = ExistingOutcome?.ProofingResult;
         _pendingPhoto    = null;
         _photoPreviewUrl = null;
         _error           = null;
@@ -181,6 +221,8 @@
             OverallScore  = _overallScore,
             Tags          = string.IsNullOrWhiteSpace(_tags) ? null : _tags.Trim(),
             IsBestLoaf    = _isBestLoaf,
+            CrumbNotes    = string.IsNullOrWhiteSpace(_crumbNotes) ? null : _crumbNotes.Trim(),
+            ProofingResult = _proofingResult,
         };
 
         var resp = await Http.PutAsJsonAsync($"/api/bakes/{BakeId}/outcome", dto);

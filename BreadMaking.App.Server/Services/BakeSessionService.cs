@@ -78,6 +78,9 @@ public class BakeSessionService(AppDbContext db) : IBakeSessionService
             OverallScore  = b.Outcome?.OverallScore,
             Tags          = b.Outcome?.Tags,
             IsBestLoaf    = b.Outcome?.IsBestLoaf ?? false,
+            CrumbNotes    = b.Outcome?.CrumbNotes is { Length: > 80 } s
+                                ? s[..80] + "…"
+                                : b.Outcome?.CrumbNotes,
         }).ToList();
     }
 
@@ -146,6 +149,8 @@ public class BakeSessionService(AppDbContext db) : IBakeSessionService
         bake.Outcome.OverallScore  = dto.OverallScore;
         bake.Outcome.Tags          = dto.Tags;
         bake.Outcome.IsBestLoaf    = dto.IsBestLoaf;
+        bake.Outcome.CrumbNotes    = dto.CrumbNotes;
+        bake.Outcome.ProofingResult = dto.ProofingResult;
 
         await db.SaveChangesAsync();
         return true;

@@ -21,4 +21,7 @@ public class BakeListItemDto
     public int?    OverallScore { get; set; }
     public string? Tags         { get; set; }
     public bool    IsBestLoaf   { get; set; }
+
+    // M18 — crumb notes excerpt
+    public string? CrumbNotes { get; set; }
 }

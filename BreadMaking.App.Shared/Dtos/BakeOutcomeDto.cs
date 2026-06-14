@@ -15,4 +15,8 @@ public class BakeOutcomeDto
     public int?    OverallScore  { get; set; }
     public string? Tags          { get; set; }
     public bool    IsBestLoaf    { get; set; }
+
+    // M18 — crumb reading
+    public string? CrumbNotes     { get; set; }
+    public int?    ProofingResult { get; set; }   // 1=UnderProofed 2=ProperlyProofed 3=OverProofed
 }

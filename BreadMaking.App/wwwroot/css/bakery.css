@@ -3249,3 +3249,192 @@ body {
     margin-top: 4px;
     color: var(--text-muted);
 }
+
+/* ─── M17: Grain encyclopedia cards (GrainComparison.razor) ─── */
+
+.grain-profiles-section {
+    margin-top: 32px;
+    padding: 0 4px;
+}
+
+.grain-profiles-heading {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 2px;
+}
+
+.grain-profiles-subtitle {
+    font-size: .82rem;
+    color: var(--text-muted);
+    margin: 0 0 16px;
+}
+
+.grain-profile-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.grain-profile-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color .15s;
+}
+
+.grain-profile-card:hover    { border-color: var(--accent); }
+.grain-profile-card-open     { border-color: var(--accent); }
+
+.grain-profile-card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+}
+
+.grain-profile-name {
+    font-size: .95rem;
+    font-weight: 600;
+    color: var(--text);
+    flex: 1;
+}
+
+.grain-profile-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.grain-tag {
+    font-size: .7rem;
+    padding: 2px 7px;
+    border-radius: 20px;
+    font-weight: 600;
+    letter-spacing: .01em;
+}
+
+.grain-tag-ploidy  { background: #e8e0d4; color: #5c4a2a; }
+.grain-tag-gluten  { background: #d9ead3; color: #2e5e38; }
+.grain-tag-binder  { background: #fce8d4; color: #7a3c10; }
+
+.grain-profile-chevron {
+    font-size: .75rem;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.grain-profile-body {
+    padding: 0 14px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-top: 1px solid var(--border);
+}
+
+.grain-profile-row {
+    display: grid;
+    grid-template-columns: 80px 1fr;
+    gap: 8px;
+    align-items: baseline;
+    padding-top: 8px;
+}
+
+.grain-profile-label {
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--text-muted);
+}
+
+.grain-profile-value {
+    font-size: .88rem;
+    color: var(--text);
+    line-height: 1.5;
+}
+
+/* ─── M18: Crumb notes (OutcomeSheet.razor) ─── */
+
+.os-crumb-group {
+    padding: 0 0 4px;
+}
+
+.os-crumb-textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--text);
+    font-size: .9rem;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 72px;
+}
+
+.os-crumb-textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.os-proofing-label {
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--text-muted);
+    margin-top: 12px;
+    margin-bottom: 6px;
+}
+
+.os-proofing-radios {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+}
+
+.os-proofing-option {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: .85rem;
+    color: var(--text);
+    background: var(--panel);
+    transition: border-color .12s, background .12s;
+}
+
+.os-proofing-option input[type=radio] { display: none; }
+
+.os-proofing-selected {
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 10%, var(--panel));
+    font-weight: 600;
+}
+
+.os-proofing-clear {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: .75rem;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: var(--radius-sm);
+}
+
+.os-proofing-clear:hover { color: var(--danger); }
+
+/* ─── M18: Crumb notes badge (History.razor) ─── */
+
+.bake-crumb-badge {
+    font-size: 1rem;
+    cursor: default;
+}

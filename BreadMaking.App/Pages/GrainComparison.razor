@@ -1,6 +1,7 @@
 @page "/history/compare"
 @inject HttpClient Http
 @inject NavigationManager Nav
+@using BreadMaking.App.Shared.Dtos
 
 <div class="comparison-page">
 
@@ -70,11 +71,82 @@
         </p>
     }
 
+    @if (_profiles.Count > 0)
+    {
+        <div class="grain-profiles-section">
+            <h3 class="grain-profiles-heading">Grain encyclopedia</h3>
+            <p class="grain-profiles-subtitle">Tap a card to expand details</p>
+
+            <div class="grain-profile-grid">
+                @foreach (var p in _profiles)
+                {
+                    var pid = p.Id;
+                    <div class="grain-profile-card @(_expandedId == pid ? "grain-profile-card-open" : "")"
+                         @onclick="() => _expandedId = (_expandedId == pid ? (int?)null : pid)">
+
+                        <div class="grain-profile-card-header">
+                            <span class="grain-profile-name">@p.Name</span>
+                            <div class="grain-profile-tags">
+                                @if (!string.IsNullOrEmpty(p.Ploidy))
+                                {
+                                    <span class="grain-tag grain-tag-ploidy">@p.Ploidy</span>
+                                }
+                                <span class="grain-tag grain-tag-gluten">@p.GlutenStrength</span>
+                                @if (p.NeedsBinder)
+                                {
+                                    <span class="grain-tag grain-tag-binder">needs binder</span>
+                                }
+                            </div>
+                            <span class="grain-profile-chevron">@(_expandedId == pid ? "▲" : "▼")</span>
+                        </div>
+
+                        @if (_expandedId == pid)
+                        {
+                            <div class="grain-profile-body">
+                                @if (!string.IsNullOrEmpty(p.FlavorNotes))
+                                {
+                                    <div class="grain-profile-row">
+                                        <span class="grain-profile-label">Flavour</span>
+                                        <span class="grain-profile-value">@p.FlavorNotes</span>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrEmpty(p.NutritionHighlights))
+                                {
+                                    <div class="grain-profile-row">
+                                        <span class="grain-profile-label">Nutrition</span>
+                                        <span class="grain-profile-value">@p.NutritionHighlights</span>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrEmpty(p.UsageNotes))
+                                {
+                                    <div class="grain-profile-row">
+                                        <span class="grain-profile-label">Usage</span>
+                                        <span class="grain-profile-value">@p.UsageNotes</span>
+                                    </div>
+                                }
+                                @if (!string.IsNullOrEmpty(p.HistoricalOrigin))
+                                {
+                                    <div class="grain-profile-row">
+                                        <span class="grain-profile-label">Origin</span>
+                                        <span class="grain-profile-value">@p.HistoricalOrigin</span>
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
 </div>
 
 @code {
     private bool _loading = true;
-    private List<GrainComparisonDto> _data = [];
+    private List<GrainComparisonDto> _data     = [];
+    private List<GrainProfileDto>    _profiles  = [];
+    private int?                     _expandedId;
 
     private record GrainBar(string Name, decimal Value, bool IsPlaceholder);
 
@@ -90,7 +162,11 @@
     {
         try
         {
-            _data = await Http.GetFromJsonAsync<List<GrainComparisonDto>>("/api/grains/comparison") ?? [];
+            var compTask     = Http.GetFromJsonAsync<List<GrainComparisonDto>>("/api/grains/comparison");
+            var profilesTask = Http.GetFromJsonAsync<List<GrainProfileDto>>("/api/grains/profiles");
+            await Task.WhenAll(compTask, profilesTask);
+            _data     = compTask.Result     ?? [];
+            _profiles = profilesTask.Result ?? [];
             BuildChartData();
         }
         finally { _loading = false; }

@@ -105,6 +105,10 @@
                                 {
                                     <span class="bake-rating-badge">@bake.OverallScore★</span>
                                 }
+                                @if (!string.IsNullOrEmpty(bake.CrumbNotes))
+                                {
+                                    <span class="bake-crumb-badge" title="@bake.CrumbNotes">📋</span>
+                                }
                                 @if (bake.HasOutcome)
                                 {
                                     <span class="bake-outcome-check" title="Outcome recorded">✓</span>

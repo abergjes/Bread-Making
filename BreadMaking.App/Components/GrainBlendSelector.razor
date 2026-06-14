@@ -11,6 +11,7 @@
             @if (IsCompact)
             {
                 <button class="flour-card @(PrimaryFlour == flour ? "selected" : "")"
+                        title="@profile.Description"
                         @onclick="@(() => SetPrimary(flour))">
                     <span class="flour-icon">@profile.Icon</span>
                     <span class="flour-name">@profile.DisplayName</span>
@@ -71,6 +72,7 @@
                 @if (IsCompact)
                 {
                     <button class="flour-card @(SecondaryFlour == flour ? "selected" : "")"
+                            title="@profile.Description"
                             @onclick="@(() => SetSecondary(flour))">
                         <span class="flour-icon">@profile.Icon</span>
                         <span class="flour-name">@profile.DisplayName</span>
