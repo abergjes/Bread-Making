@@ -368,3 +368,167 @@ Add a **Start Bake** CTA at the bottom of the timeline, visually consistent with
 5. **Monospace digits.** Use `font-variant-numeric: tabular-nums` on the elapsed readout so the layout does not shift as digits increment.
 6. **Accessibility.** Each step card has an `aria-label` including step name and current status. The progress bar uses `role="progressbar"` with `aria-valuenow` / `aria-valuemax`.
 9. **Crumb notes in OutcomeSheet.** Add a `CRUMB NOTES` textarea group below the SCORES section (before PHOTO). Free-form text, auto-saved on blur, bound to `BakeOutcome.CrumbNotes`. Placeholder: `"Open and even? Tight or gummy? Flying crust? Note what you see."` — prompts the baker to apply the crumb-reading framework from baker's guide §20 without prescribing the vocabulary. On the history list, a 📋 chip appears beside the outcome summary when CrumbNotes is set.
+
+---
+
+### `/safety` — Food safety & shelf life (M20)
+
+A reference page (no data, no auth). Three fault cards + a temperature ladder.
+
+```
+┌──────────────────────────────────────────────────┐
+│  ← Back    Food safety & shelf life             │
+│  Baker's guide §49                              │
+│                                                  │
+│  [Temperature ladder — inline bar]               │
+│  ░░ < 5 °C  Safe cold (stales fastest)          │
+│  ▓▓ 5–60 °C  Danger zone  (rope / mould grow)  │
+│  ░░ > 140 °C  Crust formation                   │
+│                                                  │
+│  ┌── Rope ──────────────────────────────────┐   │
+│  │  Cause: Bacillus subtilis (soil spores)  │   │
+│  │  Symptoms: sticky centre, melon smell    │   │
+│  │  Fix: acidify (sourdough); cool fast;    │   │
+│  │       discard + sanitise surfaces        │   │
+│  └──────────────────────────────────────────┘   │
+│                                                  │
+│  ┌── Mould ─────────────────────────────────┐   │
+│  │  Lands after baking (air, hands, cut)    │   │
+│  │  Never cut off — discard whole loaf      │   │
+│  │  Defence: lower crust moisture; acidity  │   │
+│  └──────────────────────────────────────────┘   │
+│                                                  │
+│  ┌── Staling ───────────────────────────────┐   │
+│  │  Fridge is worst (retrogradation peak)   │   │
+│  │  Freezer nearly halts staling            │   │
+│  │  Refresh once (60 °C / 10 min); stales   │   │
+│  │  faster after second bake                │   │
+│  └──────────────────────────────────────────┘   │
+└──────────────────────────────────────────────────┘
+```
+
+**StorageAdvisor chip** (inline in outcome section of `LiveBake.razor`):
+
+```
+┌────────────────────────────────────────────┐
+│  🧺  Room temp · cloth or paper · 3–5 days │
+│  ↳ Sourdough acidity inhibits rope & mould │
+└────────────────────────────────────────────┘
+```
+
+Tap/hover expands to show the temperature ladder. Use `.zone-ideal` (green) background for the chip — signals safe storage, not a warning.
+
+---
+
+### `/kit` — Equipment & kit guide (M21)
+
+Four accordion sections. Default: first section open, rest collapsed.
+
+```
+┌──────────────────────────────────────────────────┐
+│  ← Back    Equipment & kit guide                │
+│  Baker's guide §50 + §51                        │
+├──────────────────────────────────────────────────┤
+│  ▼ Oven preheat calculator                      │
+│  Oven type   ○ Conventional  ● Convection  ○ Gas │
+│  Surface     ● Steel  ○ Stone  ○ Bare tray       │
+│                                                  │
+│  Preheat for  45 min                            │
+│  (Heat steel to full thermal mass before loading)│
+├──────────────────────────────────────────────────┤
+│  ▶ Steam methods                                 │
+├──────────────────────────────────────────────────┤
+│  ▶ Buying guide (Starter / Serious / Semi-pro)   │
+├──────────────────────────────────────────────────┤
+│  ▶ Scoring & shaping tools                      │
+└──────────────────────────────────────────────────┘
+```
+
+**Steam methods section (expanded):**
+
+```
+┌──────────────────────────────────────────────────┐
+│  ★★★★★  Dutch oven / combo cooker               │
+│          Lid on 20 min → lid off 15–25 min       │
+│  ★★★★☆  Cast-iron + lava rocks                  │
+│  ★★★☆☆  Steam pan                               │
+│  ★★☆☆☆  Ice cubes                               │
+│  ★☆☆☆☆  Spray bottle                            │
+└──────────────────────────────────────────────────┘
+```
+
+**Tiered buying guide section (expanded):**
+
+```
+┌──────────────────────────────────────────────────┐
+│  STARTER                                         │
+│  ✓ Digital scale (0.1 g)   ✓ Dutch oven         │
+│  ✓ Bench knife             ✓ Banneton           │
+│  ✓ Lame / razor            ✓ Probe thermometer  │
+│                                                  │
+│  SERIOUS                                         │
+│  □ Baking steel            □ Stand mixer        │
+│  □ Oven thermometer        □ Couche             │
+│  □ Proofing box                                 │
+│                                                  │
+│  SEMI-PRO                                        │
+│  □ Deck / steam-injection oven                  │
+│  □ Spiral mixer            □ pH meter           │
+│  □ Dedicated retarder      □ Wire racks         │
+└──────────────────────────────────────────────────┘
+```
+
+Checkboxes persist in `localStorage` (key `kit-owned-{itemSlug}`). Checked items render with `--zone-ideal` text; unchecked with `--text-muted`.
+
+---
+
+### Steamed bake — Live Bake additions (M22)
+
+**Steam step note** — rendered inside `StepCard.razor` when `Step.Phase == "Bake"` and method is Steamed:
+
+```
+┌──────────────────────────────────────────────────┐
+│  ⚠ Steam protocol                               │
+│  Line lid with a cloth — condensation drops     │
+│  cause wrinkles on the skin.                    │
+│  Do not open lid for first 10 min.              │
+│  Rest 2–3 min with lid ajar before removing.   │
+└──────────────────────────────────────────────────┘
+```
+
+Uses `.zone-warm` (amber) background — a caution, not an error. Same pattern as the overrun badge.
+
+**Outcome troubleshooting selector** (new section in `OutcomeSheet.razor` when method is Steamed):
+
+| Symptom chip | Cause shown | Fix shown |
+|---|---|---|
+| Wrinkles | Over-proof or lid shock | Proof less; keep lid closed |
+| Dense crumb | Under-proof or wrong flour | Proof longer; use low-protein flour |
+| Yellow tinge | Too much yeast | Reduce yeast; proof cooler |
+| Rough skin | Steam too vigorous / lid drips | Cloth-line lid; lower heat slightly |
+
+---
+
+### Enriched dough — Advisor & Live Bake additions (M23)
+
+**Advisor enrichment panel** (appears when `BakeMethod == Enriched`):
+
+```
+┌──────────────────────────────────────────────────┐
+│  Enrichment                                      │
+│  Butter  [10]%   Egg    [10]%   Sugar  [10]%    │
+│  Milk    [60]%   Milk powder  [ 3]% (optional)  │
+│  [✓] Use Tangzhong (roux pre-gelatinisation)     │
+│      Roux flour share  [ 6]%                    │
+└──────────────────────────────────────────────────┘
+```
+
+The "Use Tangzhong" toggle calls `/api/calculators/roux` on change (client-side, debounced 400 ms) and shows a live preview: `"Tangzhong: 30 g flour + 150 g milk"`.
+
+**Live Bake formula summary line** (M23 additions to existing pattern):
+
+```
+78% · 500 g flour · 2% salt · 10% butter · 10% sugar  [Pullman tin]
+```
+
+`[Pullman tin]` badge uses `.zone-cool` (steel blue) — a neutral descriptor, not a warning.

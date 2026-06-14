@@ -39,7 +39,7 @@ The **Server project** is the host: it serves the WASM bundle as static files an
 ### BreadMaking.App.Client (Blazor WASM)
 
 - All existing components and pages (unchanged)
-- New pages: `LiveBake.razor` (`/bake/{id}`), `History.razor` (`/history`), `GrainComparison.razor` (`/history/compare`), `Calculators.razor` (`/calculators`)
+- New pages: `LiveBake.razor` (`/bake/{id}`), `History.razor` (`/history`), `GrainComparison.razor` (`/history/compare`), `Calculators.razor` (`/calculators`), `KitGuide.razor` (`/kit`, M21), `SafetyPanel.razor` (component, M20)
 - New components: `StepCard.razor`, `MeasurementSheet.razor`, `PlanningGantt.razor`, `RiseCurveChart.razor`, `RunChart.razor`
 - `BreadAdvisorService` stays here — it is pure C# with no I/O and generates the step list sent to the server
 - `HttpClient` factory configured with the server base address
@@ -82,7 +82,7 @@ GrainProfile (1) ──< Recipe (1) ──< RecipeStep
                      BakeOutcome (0..1)
 ```
 
-### Extended diagram (M10–M14, planned additions)
+### Extended diagram (M10–M14 + M22–M23, planned additions)
 
 ```
 Starter (1) ──< StarterFeedLog
@@ -105,13 +105,14 @@ Colour coding:
 | Entity | Key fields |
 |--------|-----------|
 | `GrainProfile` | `Name`, `Icon`, `FlavorNotes` (nullable), `NutritionHighlights` (nullable), `UsageNotes` (nullable), `HistoricalOrigin` (nullable) — descriptive fields seeded from baker's guide §15 |
-| `Recipe` | `Method` (autolyse/fermentolyse/other), `GrainProfileId`, `TargetDoughTempC`, `FrictionFactorC`, `IsUserDefined`, `CreatedByLabel` |
+| `Recipe` | `Method` (autolyse/fermentolyse/steamed/enriched/other), `GrainProfileId`, `TargetDoughTempC`, `FrictionFactorC`, `IsUserDefined`, `CreatedByLabel` — `Steamed` added by M22; `Enriched` added by M23 |
 | `RecipeStep` | `Order`, `Name`, `Phase`, `DefaultDurationMin`, `MinDurationMin`, `MaxDurationMin`, `StepMin`, `TargetTempC` |
 | `RecipeFormula` | `RecipeId`, `FlourWeightG`, `WaterPct`, `SaltPct`, `StarterPct`, `Notes` |
 | `Bake` | `RecipeId`, `StartedAt`, `EndedAt`, `AmbientTempC`, `AmbientHumidityPct`, `FlourBatch`, `Notes`, `HydrationPct`, `StarterActivity`, `TotalFlourGrams`, `SaltPct`, `InoculationPct`, `StarterFeedLogId` (nullable FK) |
 | `BakeStepLog` | `PlannedDurationMin`, `StartedAt`, `EndedAt`, `Status` (enum), `ActualDurationMin` (derived), `Notes` |
 | `Measurement` | `BakeStepLogId`, `MeasurementTypeId`, `Value`, `Unit`, `RecordedAt` (server-stamped) |
-| `BakeOutcome` | `LoafHeightCm`, `OvenSpringPct`, `InternalTempC`, `WeightLossPct`, `CrumbOpenness`, `CrustScore`, `TasteScore`, `PhotoPath`, `OverallScore`, `Tags`, `IsBestLoaf`, `CrumbNotes` (nullable free-form crumb observation) |
+| `BakeOutcome` | `LoafHeightCm`, `OvenSpringPct`, `InternalTempC`, `WeightLossPct`, `CrumbOpenness`, `CrustScore`, `TasteScore`, `PhotoPath`, `OverallScore`, `Tags`, `IsBestLoaf`, `CrumbNotes` (nullable free-form crumb observation), `ProofingResult` (enum: UnderProofed/Correct/OverProofed — M18) |
+| `Bake` (M23 enriched fields) | `ButterPct`, `EggPct`, `SugarPct`, `MilkPct`, `MilkPowderPct` (all nullable), `IsPullmanTin` (bool) |
 | `Starter` | `Id`, `Name`, `HydrationPct`, `FlourBlend`, `CreatedAt`, `Notes` |
 | `StarterFeedLog` | `Id`, `StarterId`, `FedAt`, `FlourGrams`, `WaterGrams`, `PrevStarterGrams`, `AmbientTempC`, `PeakHours`, `FloatTestPassed`, `FeedRatio` (nullable, e.g. `"1:2:2"`) |
 
@@ -212,12 +213,14 @@ DELETE /api/recipes/{id}                       Delete user recipe → 204       
 GET    /api/analytics/correlations             Scatter data: outcome vs factor → point[]     (M15)
 GET    /api/analytics/personal-bests           Best score per grain per metric → summary[]   (M15)
 
-POST   /api/calculators/scale                  Baker's % scaling → ScaleResult               (M19)
-POST   /api/calculators/batch                  Batch scaling with yield/loss → BatchResult   (M19)
-POST   /api/calculators/ddt                    DDT water temperature → DdtResult             (M19)
-POST   /api/calculators/hydration              Levain split & true hydration → HydrationResult (M19)
-POST   /api/calculators/cost                   Cost per loaf → CostResult                    (M19)
-POST   /api/calculators/roux                   Tangzhong/Yudane roux fold → RouxResult       (M19)
+POST   /api/calculators/scale                  Baker's % scaling → ScaleResult               (M19 ✅)
+POST   /api/calculators/batch                  Batch scaling with yield/loss → BatchResult   (M19 ✅)
+POST   /api/calculators/ddt                    DDT water temperature → DdtResult             (M19 ✅)
+POST   /api/calculators/hydration              Levain split & true hydration → HydrationResult (M19 ✅)
+POST   /api/calculators/cost                   Cost per loaf → CostResult                    (M19 ✅)
+POST   /api/calculators/roux                   Tangzhong/Yudane roux fold → RouxResult       (M19 ✅)
+
+GET    /api/kit/preheat?ovenType=&surface=     Preheat time recommendation → PreheatResult  (M21)
 ```
 
 All `/api/calculators/*` endpoints are stateless pure-math operations — no database access, no auth, no EF context. Backed by a single `CalculatorService` on the server holding the C# functions from baker's guide §48 and §54.

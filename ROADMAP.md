@@ -2,7 +2,7 @@
 
 ## Current state (v8, June 2026)
 
-Milestones M0–M9 are complete, including photo upload for bake outcomes (M9 extension). M10 (formula fields) and M13 (starter journal) are also complete. The app is a hosted Blazor WASM solution with a full ASP.NET Core backend, EF Core + SQLite persistence, live bake execution, measurements, visualisations, history, SignalR notifications, a three-tier overrun warning system with audible alerts, a full bake outcome capture UI with photo upload, formula fields on every bake, and a starter journal. Milestones M11–M19 are planned — they address gaps identified by a senior baker assessment and extend the app from a capable bake tracker into a full data-driven baking companion, culminating in the baker's calculators derived from the v23 baker's guide (§48 and §54).
+Milestones M0–M10, M13, and M19 are complete. The app is a hosted Blazor WASM solution with a full ASP.NET Core backend, EF Core + SQLite persistence, live bake execution, measurements, visualisations, history, SignalR notifications, audible alerts, outcome capture with photo upload, formula fields on every bake, a starter journal, and a six-tab baker's calculators page. Baker's guide v23 (2026-06-10) added §§48–54; §48 (calculators) and §54.3 (water-roux) are implemented in M19. Sections §49–§53 define four new milestones (M20–M23). Milestones M11–M18 and M20–M23 remain planned.
 
 ## Vision
 
@@ -42,6 +42,10 @@ Before any milestone work begins, the solution is converted from a standalone WA
 | M17 | Grain encyclopedia | FlavorNotes / NutritionHighlights / UsageNotes / HistoricalOrigin on GrainProfile; 9 new grain seeds; profile cards on comparison page | M15 | 📋 Planned |
 | M18 | Crumb reading & troubleshooting | CrumbNotes on BakeOutcome; OutcomeSheet textarea; proofing-result enum; history card excerpt | M9, M15 | 📋 Planned |
 | M19 | Baker's calculators | `/calculators` page: baker's-% scaling, batch scaling with yield/loss, DDT water-temperature, levain split & true hydration, cost-per-loaf, tangzhong/yudane roux fold — all from baker's guide §48 + §54 | M14 | ✅ Done |
+| M20 | Food safety & shelf life | Temperature ladder reference; rope/mould fault cards; storage recommendations on bake outcome (§49) | — | 📋 Planned |
+| M21 | Equipment & kit guide | `/kit` reference page: tiered buying guide, steam-method comparison, preheat calculator, scoring tips (§50 + §51) | — | 📋 Planned |
+| M22 | Steamed breads | Mantou/baozi support: new `BakeMethod.Steamed`, steaming step defaults, low-protein flour guidance, steam-time advisor (§52) | M1 | 📋 Planned |
+| M23 | Enriched dough & milk breads | Shokupan/hokkaido support: enriched formula fields (butter %, egg %, sugar %), pullman-tin flag, milk-bread timeline, integrates roux from M19 (§53) | M19 | 📋 Planned |
 
 ---
 
@@ -401,6 +405,131 @@ POST /api/calculators/roux           RouxRequest   → RouxResult
 All request/result types live in `BreadMaking.App.Shared/Dtos/Calculators/`.
 
 **Success criteria:** Navigate to `/calculators`; select the DDT tab; enter kitchen temp 22 °C, flour temp 20 °C, method "hand-folds"; result shows ~31 °C water. Select the roux tab; enter 500 g flour, 70% hydration, Tangzhong 6%; result shows roux flour 30 g, roux liquid 150 g, dough flour 470 g, dough liquid 200 g with totals preserved.
+
+---
+
+---
+
+### M20 — Food safety, shelf life & storage (§49)
+
+**Goal:** Surface the baker's guide §49 safety rules at the right moment — when a bake ends and the baker is deciding how to store or share the loaf.
+
+Scope:
+- **StorageAdvisor component** — appears in the Outcome section of `LiveBake.razor` once a bake is marked complete; shows: recommended storage medium, expected shelf life, and one-line rationale based on `BakeMethod` and `StarterActivity`
+  - Sourdough (any method): room-temperature cloth/paper, 3–5 days; freezer up to 3 months
+  - Enriched / milk bread (M23): wrapped, 4–6 days room temp (higher fat slows staling)
+  - Steamed bread (M22): room temp 1–2 days, fridge 4–5 days (no crust to protect)
+- **Fault reference cards** — three compact cards in a `/safety` route (or collapsible panel on `/history`):
+  - Rope: symptoms (stringy centre, melon/pineapple smell), cause, prevention, disposal
+  - Mould: never cut off, discard whole loaf; surface moisture control
+  - Staling: counter-intuitive fridge rule, freezer guidance, one-time refreshing
+- **Temperature ladder graphic** — a static SVG/HTML element (no chart library needed) showing the danger zone (5–60 °C), crumb-set band, and crust-formation zone; referenced from the StorageAdvisor tooltip
+- No new EF entities required — all logic is pure client-side or minimal server logic
+
+**Success criteria:** Complete a bake; the outcome section shows a storage chip ("Room temp · 3–5 days") with a tap-to-expand fault card. The `/safety` page (or panel) renders all three fault cards with correct symptoms and fixes.
+
+---
+
+### M21 — Equipment & kit guide (§50 + §51)
+
+**Goal:** Give the baker a tiered, opinionated reference for buying and using equipment — anchored to the same guide sections that inform the DDT calculator and step timings.
+
+Scope:
+- **`/kit` page** — single-page reference, no new API or DB needed
+  - **Oven & preheat calculator** — input: oven type (conventional/convection/gas), surface (steel/stone/tray); output: recommended preheat time (§50.1–50.2). Stateless; client-side math.
+  - **Steam method selector** — radio group (Dutch oven / combo cooker / lava rocks / spray / steam pan); shows effectiveness rating and protocol note for each (§50.3)
+  - **Tiered buying guide** — three collapsible tiers (Starter / Serious / Semi-pro) with items, why-buy rationale, and skip-if note (§51.5)
+  - **Measuring priority ranking** — a ranked list (scale → probe → IR gun → pH meter) with acceptable ranges for each (§51.1)
+  - **Scoring guide** — blade angle (30–45° ear vs 90° split) diagram and lame note (§51.3)
+- Nav link: add **Kit** button to History page header alongside Starters and Calculators
+- All content is static (seeded from the guide); no DB access
+
+**Success criteria:** Navigate to `/kit`; the preheat calculator returns 60 min for a conventional oven with baking steel. The tiered buying guide shows three distinct tiers. The steam method selector highlights Dutch oven as top-rated.
+
+---
+
+### M22 — Steamed breads — Mantou & Baozi (§52)
+
+**Goal:** Extend the advisor and bake tracker to cover the steamed-bread tradition — an entirely different heat path (no crust, no Maillard) with its own flour choice, timing, and troubleshooting.
+
+Scope:
+- **New `BakeMethod.Steamed`** enum value and advisor branch
+- **New `GrainProfile` + `Recipe` rows** for low-protein white wheat (9–11%) and Mantou/Baozi variants
+- **New `RecipeStep` defaults** for the steamed method:
+
+  | Order | Name | Default (min) | Phase |
+  |-------|------|--------------|-------|
+  | 1 | Mix flour + water | 10 | Mix |
+  | 2 | Bulk (until doubled) | 60 | Bulk |
+  | 3 | Knock back + portion | 10 | Shape |
+  | 4 | Final shape | 15 | Shape |
+  | 5 | Final proof | 20 | Proof |
+  | 6 | Steam | 15 | Bake |
+  | 7 | Rest in steamer (lid off) | 3 | Bake |
+  | 8 | Cool on rack | 15 | Cool |
+
+- **Steam-time advisor** — a note on the Live Bake page when `BakeMethod == Steamed`: "Vigorous simmer throughout; lid lined to prevent condensation drips; do not open lid during first 10 min"
+- **Low-protein formula advisor branch** in `BreadAdvisorService` — if grain is low-protein white wheat + method is Steamed, suppress autolyse/fermentolyse radio and show the shorter Mantou timeline
+- **Migration**: `AddSteamedBreadSeeds`
+- **Troubleshooting** for Steamed bakes in the outcome flow: wrinkles (over-proof), density (under-proof or wrong flour), yellow tinge (too much yeast), rough skin (steam too vigorous)
+
+**Dependencies:** M1 (recipe/step data model already in place)
+
+**Success criteria:** Choose "Steamed" in the advisor; receive a Mantou timeline; start the bake; the Steam step shows the lid-protocol note. The `/history` list labels the bake as Steamed. Outcome troubleshooting offers steam-specific fault options.
+
+---
+
+### M23 — Enriched dough & milk breads — Shokupan (§53)
+
+**Goal:** Support enriched doughs (milk, butter, egg, sugar) culminating in the Japanese shokupan workflow — uses the roux calculation already built in M19 and the enriched-formula concept from §53.
+
+Scope:
+- **Enriched formula fields** on `Bake` entity: `ButterPct` (nullable), `EggPct` (nullable), `SugarPct` (nullable), `MilkPct` (nullable), `MilkPowderPct` (nullable), `IsPullmanTin` (bool, default false)
+- **Migration**: `AddEnrichedFormulaFieldsToBake`
+- **New `BakeMethod.Enriched`** enum value; new seeded `Recipe` for Shokupan (tangzhong variant):
+
+  | Order | Name | Default (min) | Phase |
+  |-------|------|--------------|-------|
+  | 1 | Prepare Tangzhong | 10 | Mix |
+  | 2 | Cool Tangzhong | 30 | Rest |
+  | 3 | Mix dough (autolyse) | 15 | Mix |
+  | 4 | Add butter (window-pane) | 15 | Mix |
+  | 5 | Bulk (until doubled) | 60 | Bulk |
+  | 6 | Divide + pre-shape | 10 | Shape |
+  | 7 | Bench rest | 15 | Shape |
+  | 8 | Final shape + tin | 15 | Shape |
+  | 9 | Final proof (to 80–90% tin height) | 60 | Proof |
+  | 10 | Bake (lidded pullman: 190 °C) | 30 | Bake |
+  | 11 | Cool on rack | 60 | Cool |
+
+- **Advisor UI additions**: when method is Enriched, show enrichment inputs (butter %, egg %, sugar %); a "Use Tangzhong?" toggle pre-populates the roux split from M19 calculator
+- **Formula summary line** on Live Bake header: extend existing `live-bake-formula` to show butter/egg/sugar when set
+- **Roux integration**: when `IsPullmanTin` is true, the step notes for the Tangzhong step pull the roux-fold result from M19 and show the pre-computed flour/liquid split
+- **Outcome troubleshooting for Enriched bakes**: dense crumb (mix too short / butter added too early), collapses after bake (over-proof), stales fast (insufficient roux or low hydration)
+
+**Dependencies:** M19 (roux arithmetic already implemented)
+
+**Success criteria:** Start an Enriched/Shokupan bake with butter 10%, sugar 10%, pullman tin; formula summary shows these values; step 1 shows the Tangzhong quantities from the roux calculator. History card labels the bake "Enriched". Outcome sheet offers enriched troubleshooting options.
+
+---
+
+## Milestone priority order
+
+Ordered by value/effort ratio — implement top-to-bottom where possible:
+
+| Priority | Milestone | Rationale |
+|----------|-----------|-----------|
+| 1 | **M11** — Per-step notes | Smallest scope; highest daily-use value for active bakers |
+| 2 | **M12** — Ratings & tags | Enriches history immediately; unlocks M15 analytics |
+| 3 | **M17** — Grain encyclopedia | Content-only seeding; FlavorNotes fields already on the entity plan |
+| 4 | **M18** — Crumb reading | One DB field + textarea; closes the feedback loop after every bake |
+| 5 | **M20** — Food safety & storage | No new DB entities; immediate safety value after M19 calculators |
+| 6 | **M14** — Recipe library | Moderate scope; save-from-advisor flow the most-requested feature |
+| 7 | **M15** — Analytics & trends | Needs M12 star data for full value; large but high payoff |
+| 8 | **M21** — Equipment guide | Static content page; low effort; natural companion to M19 calculators |
+| 9 | **M22** — Steamed breads | New bread paradigm; significant but self-contained scope |
+| 10 | **M23** — Enriched dough | Builds on M19 roux; requires enriched-formula entity changes |
+| 11 | **M16** — PWA & offline | Infrastructure; high effort; defer until core feature set is stable |
 
 ---
 

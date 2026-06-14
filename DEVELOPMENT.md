@@ -30,9 +30,10 @@ Bread-Making.sln
 │   │   ├── LiveBake.razor          ← /bake/{id}
 │   │   ├── History.razor           ← /history
 │   │   ├── GrainComparison.razor   ← /history/compare
-│   │   ├── StarterJournal.razor    ← /starter                        (M13, planned)
+│   │   ├── StarterJournal.razor    ← /starter                        (M13 ✅)
 │   │   ├── Analytics.razor         ← /history/analytics              (M15, planned)
-│   │   └── Calculators.razor       ← /calculators                    (M19 ✅)
+│   │   ├── Calculators.razor       ← /calculators                    (M19 ✅)
+│   │   └── KitGuide.razor          ← /kit                            (M21, planned)
 │   └── wwwroot/
 │       ├── css/bakery.css
 │       ├── js/audio.js             ← Web Audio API alerts (M8)
@@ -45,16 +46,18 @@ Bread-Making.sln
 │   │   ├── BakeEndpoints.cs
 │   │   ├── StepLogEndpoints.cs
 │   │   ├── GrainEndpoints.cs
-│   │   ├── StarterEndpoints.cs     ← (M13, planned)
+│   │   ├── StarterEndpoints.cs     ← (M13 ✅)
 │   │   ├── RecipeEndpoints.cs      ← (M14, planned)
 │   │   ├── AnalyticsEndpoints.cs   ← (M15, planned)
-│   │   └── CalculatorEndpoints.cs  ← (M19 ✅)
+│   │   ├── CalculatorEndpoints.cs  ← (M19 ✅)
+│   │   └── KitEndpoints.cs         ← (M21, planned)
 │   ├── Services/
 │   │   ├── TimerService.cs
 │   │   ├── MeasurementService.cs
 │   │   ├── BakeSessionService.cs
-│   │   ├── StarterService.cs       ← (M13, planned)
-│   │   └── CalculatorService.cs    ← (M19 ✅)
+│   │   ├── StarterService.cs       ← (M13 ✅)
+│   │   ├── CalculatorService.cs    ← (M19 ✅)
+│   │   └── KitService.cs           ← preheat + steam advisor (M21, planned)
 │   ├── Data/
 │   │   ├── AppDbContext.cs
 │   │   ├── Migrations/
@@ -639,6 +642,32 @@ From spec section C7:
 - [ ] Re-enable network → queued actions replay; step status updates correctly
 - [ ] App can be installed from the browser (manifest + service worker registered)
 
+**M20:**
+- [ ] Complete a sourdough bake → outcome section shows "Room temp · cloth/paper · 3–5 days" storage chip
+- [ ] Storage chip expands to show temperature ladder and rationale
+- [ ] `/safety` page (or panel) renders Rope, Mould, and Staling fault cards with symptoms and fixes
+- [ ] Rope card: lists stringy centre + melon smell as symptoms; recommends acidify and discard
+
+**M21:**
+- [ ] `/kit` page loads; preheat calculator returns 60 min for conventional oven + baking steel
+- [ ] Preheat calculator returns 45 min for conventional oven + baking stone
+- [ ] Steam method selector marks Dutch oven as top-rated; shows lid-on 20 min / lid-off 15 min protocol
+- [ ] Tiered buying guide renders three tiers; Starter tier lists scale, Dutch oven, bench knife, banneton, lame, probe
+- [ ] Kit nav button added to History page header
+
+**M22:**
+- [ ] Advisor shows steamed-bread option; selecting it presents the Mantou timeline
+- [ ] Live bake shows steam-step note with lid protocol
+- [ ] History labels bake as "Steamed"
+- [ ] Outcome troubleshooting offers wrinkles / density / yellow tinge options
+
+**M23:**
+- [ ] Enriched method branch visible in advisor; butter/egg/sugar inputs appear
+- [ ] Formula summary on Live Bake header shows enrichment values
+- [ ] "Use Tangzhong?" toggle pre-populates step 1 quantities from M19 roux calculator
+- [ ] History labels bake as "Enriched"
+- [ ] Outcome troubleshooting offers enriched-specific options (dense crumb, collapses, stales fast)
+
 ---
 
 ## M10 — Formula & extended bake inputs
@@ -1131,3 +1160,168 @@ Pre-fill the baker's-% scaling tab with a default wheat sourdough formula (flour
 The DDT tab pre-fills with mix method "hand-folds" selected and `FrictionC = 2`. Changing the radio updates the friction field in real time; the custom option shows a numeric input.
 
 The roux tab shows a Tangzhong / Yudane radio. Tangzhong sets `RouxRatio = 5`; Yudane sets `RouxRatio = 1`. The result card shows a two-row table (Roux row / Dough row) and a Totals check row in green.
+
+---
+
+## M20 — Food safety, shelf life & storage (§49)
+
+### StorageAdvisor component
+
+Pure client-side component; no API or DB required. Add to `BreadMaking.App/Components/StorageAdvisor.razor`.
+
+Logic table (stored as a `static readonly` lookup in the component):
+
+| BakeMethod | StarterActivity | StorageMedium | ShelfLifeDays | Notes |
+|---|---|---|---|---|
+| Autolyse / Fermentolyse | AtPeak / PastPeak | Cloth or paper bag | 3–5 | Sourdough acidity extends shelf life |
+| Autolyse / Fermentolyse | JustFed / NotAvailable | Cloth or paper bag | 2–3 | Lower acidity; consume sooner |
+| Steamed (M22) | any | Airtight container or fridge | 1–2 room / 4–5 fridge | No crust barrier; moisture loss fast |
+| Enriched (M23) | any | Wrapped, room temp | 4–6 | Fat content slows staling |
+
+Render in `LiveBake.razor` after the outcome section when `_bake.EndedAt != null`:
+
+```razor
+<StorageAdvisor Method="@_bake.Method" StarterActivity="@_bake.StarterActivity" />
+```
+
+### /safety route
+
+Add `BreadMaking.App/Pages/Safety.razor` with three fault cards (no DB, no API):
+
+```
+Rope       → symptoms, cause, control, when-to-discard
+Mould      → types, never-cut-off rule, defences
+Staling    → retrogradation, fridge-is-worst rule, freezer guidance, one-time refresh
+```
+
+Each card follows the `.calc-form` panel style from `bakery.css` (reuse existing CSS variables). Add a **Safety** link to the History header alongside Calculators and Starters.
+
+### Temperature ladder
+
+Inline SVG or CSS-grid bar in `Safety.razor`:
+
+| Zone | Range | Colour |
+|---|---|---|
+| Safe cold | < 5 °C | `--zone-cold` (blue-grey) |
+| Danger zone | 5–60 °C | `--zone-hot` (terracotta) |
+| Crust formation | 140–180 °C | `--zone-warm` (amber) |
+| Full bake | > 180 °C | `--accent` |
+
+---
+
+## M21 — Equipment & kit guide (§50 + §51)
+
+### KitService.cs (server — static, no DB)
+
+```csharp
+public static class KitService
+{
+    // §50.1–50.2: returns recommended preheat time in minutes
+    public static int PreheatMinutes(string ovenType, string surface) => (ovenType, surface) switch
+    {
+        ("convection", "steel")  => 45,
+        ("convection", "stone")  => 40,
+        ("conventional", "steel") => 60,
+        ("conventional", "stone") => 55,
+        ("gas", "steel")         => 55,
+        ("gas", "stone")         => 50,
+        _                        => 45,   // bare tray fallback
+    };
+}
+```
+
+### KitEndpoints.cs
+
+```csharp
+group.MapGet("/preheat", (string ovenType, string surface) =>
+    Results.Ok(new { Minutes = KitService.PreheatMinutes(ovenType, surface) }));
+```
+
+### KitGuide.razor (/kit)
+
+Four sections as accordion cards (collapse/expand with `@_open` bool — no library):
+
+1. **Preheat calculator** — two radio groups (oven type, surface) → "Preheat for N minutes"
+2. **Steam methods** — ranked list (Dutch oven / combo cooker / lava rocks / spray / pan); each row: method name, effectiveness rating (1–5 stars), one-line protocol
+3. **Tiered buying guide** — three tiers; each tier is a `<ul>` of items with a ✓ (own) or □ (buy next) checkbox driven by local `localStorage` flags
+4. **Scoring guide** — static diagram and blade-angle rule
+
+Nav: add `🔧 Kit` button to History header after `🧮 Calculators`.
+
+---
+
+## M22 — Steamed breads — Mantou & Baozi (§52)
+
+### Entity + enum changes
+
+Add `BakeMethod.Steamed` to the existing `BakeMethod` enum in `BreadMaking.App.Shared/Enums/`.
+
+### Migration + seed data
+
+```
+dotnet ef migrations add AddSteamedBreadSeeds --project BreadMaking.App.Server
+```
+
+Seed new `GrainProfile` (low-protein wheat), `Recipe` (method = Steamed), and `RecipeStep` rows per the ROADMAP.md step table. Use `IsUserDefined = false`.
+
+### Advisor branch
+
+In `BreadAdvisorService.GetRecommendation()`, add a `BakeMethod.Steamed` branch:
+- Suppresses the autolyse/fermentolyse radio (steamed bakes do not use either)
+- Returns a shorter timeline (no cold proof, no scoring)
+- Adds a `SteamNote` field to the result: `"Vigorous simmer; cloth-lined lid; do not open for first 10 min"`
+
+### LiveBake steam step note
+
+In `StepCard.razor`, when `Step.Phase == "Bake"` and `_bake.Method == BakeMethod.Steamed`, render a `.step-steam-note` panel below the timer:
+
+```
+⚠ Steam protocol: line lid with a cloth to catch condensation drops. Do not lift the lid
+for the first 10 min — temperature shock causes wrinkling. Rest 2–3 min with lid ajar
+before removing entirely.
+```
+
+---
+
+## M23 — Enriched dough & milk breads — Shokupan (§53)
+
+### Entity changes
+
+```csharp
+// Bake.cs (additions for M23)
+public double? ButterPct      { get; set; }
+public double? EggPct         { get; set; }
+public double? SugarPct       { get; set; }
+public double? MilkPct        { get; set; }
+public double? MilkPowderPct  { get; set; }
+public bool    IsPullmanTin   { get; set; }
+```
+
+```
+dotnet ef migrations add AddEnrichedFormulaFieldsToBake --project BreadMaking.App.Server
+```
+
+Seed new `Recipe` rows for Shokupan (BakeMethod = Enriched; grain = strong white wheat) with the 11-step timeline from ROADMAP.md § M23.
+
+### Advisor UI additions
+
+In `ExperiencedForm.razor`, after the existing method radio group, add an `@if (Method == Enriched)` section:
+- Input fields: butter %, egg %, sugar %, milk %, milk powder % (all default 0)
+- "Use Tangzhong?" toggle (bool) — when true, on start-bake, calls `/api/calculators/roux` client-side and persists the roux quantities as step notes on step 1 and step 2
+
+### Formula summary
+
+Extend the existing `live-bake-formula` paragraph in `LiveBake.razor`:
+
+```razor
+@if (_bake.ButterPct.HasValue)
+    { <span class="meta-sep">·</span><span>@_bake.ButterPct.Value.ToString("F0")% butter</span> }
+@if (_bake.SugarPct.HasValue)
+    { <span class="meta-sep">·</span><span>@_bake.SugarPct.Value.ToString("F0")% sugar</span> }
+```
+
+### Roux integration
+
+When `IsPullmanTin` and `UseTangzhong` are both true:
+1. On `POST /api/bakes`, compute the roux split client-side using `RouxRequest { TotalFlour = req.TotalFlourGrams, HydrationPct = req.HydrationPct, RouxFlourSharePct = 6, RouxRatio = 5 }` — call `/api/calculators/roux` before submitting
+2. Attach the result as `InitialNotes` on step 1 ("Tangzhong: Xg flour + Yg liquid") and step 2 ("Cool to room temp before mixing into dough — aim for DDT of 25 °C")
