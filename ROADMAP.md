@@ -39,8 +39,8 @@ Before any milestone work begins, the solution is converted from a standalone WA
 | M14 | Recipe library | User-created recipes with baker's %-formula; save-from-advisor flow; IsUserDefined flag | — | ✅ Complete |
 | M15 | Analytics & trends | Scatter correlations, personal bests, season trend, bake-to-bake diff view | — | 📋 Planned |
 | M16 | PWA & offline | Service worker, offline step progression via IndexedDB queue, app manifest | — | 📋 Planned |
-| M17 | Grain encyclopedia | FlavorNotes / NutritionHighlights / UsageNotes / HistoricalOrigin on GrainProfile; 9 new grain seeds; profile cards on comparison page | M15 | 📋 Planned |
-| M18 | Crumb reading & troubleshooting | CrumbNotes on BakeOutcome; OutcomeSheet textarea; proofing-result enum; history card excerpt | M9, M15 | 📋 Planned |
+| M17 | Grain encyclopedia | FlavorNotes / NutritionHighlights / UsageNotes / HistoricalOrigin on GrainProfile; 17 grain seeds; profile cards on comparison page | M15 | ✅ Done |
+| M18 | Crumb reading & troubleshooting | CrumbNotes on BakeOutcome; OutcomeSheet textarea; proofing-result enum; history card excerpt | M9, M15 | ✅ Done |
 | M19 | Baker's calculators | `/calculators` page: baker's-% scaling, batch scaling with yield/loss, DDT water-temperature, levain split & true hydration, cost-per-loaf, tangzhong/yudane roux fold — all from baker's guide §48 + §54 | M14 | ✅ Done |
 | M20 | Food safety & shelf life | Temperature ladder reference; rope/mould fault cards; storage recommendations on bake outcome (§49) | — | ✅ Complete |
 | M21 | Equipment & kit guide | `/kit` reference page: tiered buying guide, steam-method comparison, preheat calculator, scoring tips (§50 + §51) | — | 📋 Planned |
