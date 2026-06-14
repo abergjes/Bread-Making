@@ -1,8 +1,8 @@
 # Bread-Making App — Roadmap
 
-## Current state (v7, June 2026)
+## Current state (v8, June 2026)
 
-Milestones M0–M9 are complete, including photo upload for bake outcomes (M9 extension). The app is a hosted Blazor WASM solution with a full ASP.NET Core backend, EF Core + SQLite persistence, live bake execution, measurements, visualisations, history, SignalR notifications, a three-tier overrun warning system with audible alerts, and a full bake outcome capture UI with photo upload. Milestones M10–M16 are planned — they address gaps identified by a senior baker assessment and extend the app from a capable bake tracker into a full data-driven baking companion.
+Milestones M0–M9 are complete, including photo upload for bake outcomes (M9 extension). M10 (formula fields) and M13 (starter journal) are also complete. The app is a hosted Blazor WASM solution with a full ASP.NET Core backend, EF Core + SQLite persistence, live bake execution, measurements, visualisations, history, SignalR notifications, a three-tier overrun warning system with audible alerts, a full bake outcome capture UI with photo upload, formula fields on every bake, and a starter journal. Milestones M11–M19 are planned — they address gaps identified by a senior baker assessment and extend the app from a capable bake tracker into a full data-driven baking companion, culminating in the baker's calculators derived from the v23 baker's guide (§48 and §54).
 
 ## Vision
 
@@ -41,6 +41,7 @@ Before any milestone work begins, the solution is converted from a standalone WA
 | M16 | PWA & offline | Service worker, offline step progression via IndexedDB queue, app manifest | — | 📋 Planned |
 | M17 | Grain encyclopedia | FlavorNotes / NutritionHighlights / UsageNotes / HistoricalOrigin on GrainProfile; 9 new grain seeds; profile cards on comparison page | M15 | 📋 Planned |
 | M18 | Crumb reading & troubleshooting | CrumbNotes on BakeOutcome; OutcomeSheet textarea; proofing-result enum; history card excerpt | M9, M15 | 📋 Planned |
+| M19 | Baker's calculators | `/calculators` page: baker's-% scaling, batch scaling with yield/loss, DDT water-temperature, levain split & true hydration, cost-per-loaf, tangzhong/yudane roux fold — all from baker's guide §48 + §54 | M14 | ✅ Done |
 
 ---
 
@@ -347,6 +348,59 @@ Scope:
 - `/history/analytics` (M15): add "poke-test" proofing column to the bake diff table — under-proofed / properly proofed / over-proofed — derived from baker notes or a new `ProofingResult` enum on `BakeOutcome`
 
 **Success criteria:** Log crumb notes on a bake; notes appear on the history card (truncated) and in full on the bake detail view.
+
+---
+
+### M19 — Baker's calculators
+
+**Goal:** Give the baker a set of purpose-built numeric tools derived directly from baker's guide §48 and §54. These are stateless, server-side pure-math endpoints that need no database — they convert inputs to outputs and return results. All six calculators live on a single `/calculators` page with a tabbed or accordion layout so the baker can jump between them.
+
+Scope:
+
+**Calculator 1 — Baker's % scaling (§48.1)**
+- Input: target dough weight (g) + a formula table (ingredient name, baker's %)
+- Output: grams of each ingredient; total formula % as a cross-check
+- The client ships a pre-filled wheat/sourdough formula that the baker can edit
+
+**Calculator 2 — Batch scaling with yield & loss (§48.2)**
+- Input: desired loaf count, target baked weight (g), bake-loss % (default 12%), scaling-loss % (default 2%)
+- Output: required batch-dough weight → then feeds Calculator 1 to split into ingredients
+- Bake-loss and scaling-loss are editable fields with informational hints
+
+**Calculator 3 — DDT water temperature (§48.3)**
+- Input: desired dough temperature (DDT), flour temp, room temp, friction factor (preset by mix method: hand-folds 2 °C, hand-knead 3 °C, stand mixer 10 °C, spiral mixer 14 °C, intensive mixer 24 °C), optional preferment temp
+- Output: required water temperature in °C
+- Friction factor shown as a radio selector (method → °C), with a "custom" option for bakers who have measured their own
+- Friction-factor presets sourced from baker's guide §50.4
+
+**Calculator 4 — Levain split & true hydration (§48.4)**
+- Input: total flour (g), target overall hydration %, levain weight (g), levain hydration % (default 100%)
+- Output: levain flour, levain water (the split), final-dough flour, final-dough water; overall hydration as a check
+- Supports stiff levains (e.g. 50%) and liquid levains (100%)
+
+**Calculator 5 — Cost per loaf (§48.5)**
+- Input: batch dough (from Calculator 1/2), ingredient price per 100 g for each, energy cost (£), labour (£), packaging (£), overhead (£), number of saleable loaves
+- Output: total cost and cost per loaf, with a breakdown card (ingredients / overhead / labour)
+- All cost fields default to zero so the baker only fills what they track
+
+**Calculator 6 — Water-roux fold (§54.3, tangzhong / yudane)**
+- Input: total flour (g), target hydration %, roux type (Tangzhong 1:5 or Yudane 1:1), roux flour share % (default 6%)
+- Output: roux flour (g), roux liquid (g), remaining dough flour (g), remaining dough liquid (g); totals check confirms formula hydration is preserved
+- A note explains each method: Tangzhong is cooked to ~65 °C; Yudane is scalded with boiling water and rested
+
+API endpoints (all `POST`, all return 200 with the result DTO; no DB access):
+```
+POST /api/calculators/scale          ScaleRequest  → ScaleResult
+POST /api/calculators/batch          BatchRequest  → BatchResult + ScaleResult
+POST /api/calculators/ddt            DdtRequest    → DdtResult
+POST /api/calculators/hydration      HydrationRequest → HydrationResult
+POST /api/calculators/cost           CostRequest   → CostResult
+POST /api/calculators/roux           RouxRequest   → RouxResult
+```
+
+All request/result types live in `BreadMaking.App.Shared/Dtos/Calculators/`.
+
+**Success criteria:** Navigate to `/calculators`; select the DDT tab; enter kitchen temp 22 °C, flour temp 20 °C, method "hand-folds"; result shows ~31 °C water. Select the roux tab; enter 500 g flour, 70% hydration, Tangzhong 6%; result shows roux flour 30 g, roux liquid 150 g, dough flour 470 g, dough liquid 200 g with totals preserved.
 
 ---
 

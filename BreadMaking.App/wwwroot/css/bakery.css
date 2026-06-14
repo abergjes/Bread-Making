@@ -2536,3 +2536,385 @@ body {
     .comparison-charts { flex-direction: column; }
     .comparison-panel  { width: 100%; }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   Baker's Calculators  (/calculators)
+   ═══════════════════════════════════════════════════════════════ */
+
+.calc-page {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 24px 16px 60px;
+}
+
+/* Header */
+.calc-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.calc-title-group { flex: 1; }
+
+.calc-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 2px;
+}
+
+.calc-subtitle {
+    font-size: .8rem;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+/* Tab strip */
+.calc-tabs {
+    display: flex;
+    gap: 4px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    margin-bottom: 20px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.calc-tabs::-webkit-scrollbar { display: none; }
+
+.calc-tab {
+    flex-shrink: 0;
+    padding: 8px 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--panel);
+    color: var(--text-muted);
+    font-size: .88rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background .15s, color .15s, border-color .15s;
+    white-space: nowrap;
+}
+
+.calc-tab:hover {
+    background: var(--panel-dark);
+    color: var(--text);
+}
+
+.calc-tab--active {
+    background: var(--accent);
+    border-color: var(--accent-dark);
+    color: #fff;
+}
+
+/* Form layout */
+.calc-form {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+}
+
+.calc-section-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 6px;
+}
+
+.calc-hint {
+    font-size: .85rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin: 0 0 20px;
+}
+
+.calc-hint-inline {
+    font-size: .8rem;
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
+.calc-field {
+    margin-bottom: 16px;
+}
+
+.calc-field-row {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.calc-field-row .calc-field {
+    flex: 1;
+    min-width: 140px;
+    margin-bottom: 0;
+}
+
+.calc-label {
+    display: block;
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+}
+
+.calc-input {
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--text);
+    font-size: .9rem;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color .15s;
+}
+
+.calc-input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.calc-input--short { max-width: 120px; width: 100%; }
+.calc-input--pct   { max-width: 90px;  width: 100%; }
+.calc-input--name  { flex: 1; }
+
+.calc-input-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.calc-unit {
+    font-size: .85rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+/* Formula table (ingredient list) */
+.calc-formula-table {
+    background: var(--panel-dark);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    margin-bottom: 16px;
+}
+
+.calc-formula-header {
+    display: grid;
+    grid-template-columns: 1fr 120px 32px;
+    gap: 8px;
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    padding: 0 0 8px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 8px;
+}
+
+.calc-formula-row {
+    display: grid;
+    grid-template-columns: 1fr 120px 32px;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.calc-formula-row--cost {
+    grid-template-columns: 1fr 90px 130px 32px;
+}
+
+.calc-row-remove {
+    width: 28px;
+    height: 28px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: .75rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .15s, color .15s;
+}
+
+.calc-row-remove:hover {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: #fff;
+}
+
+.calc-row-add {
+    font-size: .82rem;
+    color: var(--accent);
+    background: transparent;
+    border: 1px dashed var(--accent);
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    cursor: pointer;
+    width: 100%;
+    text-align: center;
+    transition: background .15s;
+    margin-top: 4px;
+}
+
+.calc-row-add:hover { background: var(--panel); }
+
+/* Calculate button */
+.calc-calculate-btn {
+    margin-top: 8px;
+    width: 100%;
+}
+
+/* Error */
+.calc-error {
+    font-size: .85rem;
+    color: var(--danger);
+    background: #fff0f0;
+    border: 1px solid var(--danger);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    margin-bottom: 12px;
+}
+
+/* Result card */
+.calc-result-card {
+    margin-top: 20px;
+    background: var(--panel-dark);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+}
+
+.calc-result-summary {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+    font-size: .9rem;
+    color: var(--text);
+    margin-bottom: 14px;
+}
+
+.calc-result-primary {
+    font-size: 1.05rem;
+    color: var(--text);
+    margin: 0 0 8px;
+}
+
+.calc-result-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .88rem;
+}
+
+.calc-result-table th {
+    text-align: left;
+    font-size: .78rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    padding: 0 8px 8px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.calc-result-table td {
+    padding: 6px 8px 6px 0;
+    color: var(--text);
+    border-bottom: 1px solid var(--border);
+}
+
+.calc-result-table tbody tr:last-child td { border-bottom: none; }
+
+.calc-result-totals td {
+    font-weight: 700;
+    color: var(--text);
+    padding-top: 10px;
+    border-top: 2px solid var(--border);
+}
+
+.calc-num { text-align: right; padding-right: 0; }
+.calc-num--bold { font-weight: 700; }
+
+.calc-check-ok   { color: var(--success); }
+.calc-check-warn { color: var(--warn); }
+
+/* DDT friction pills */
+.calc-radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.calc-radio-pill {
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: var(--panel);
+    color: var(--text-muted);
+    font-size: .83rem;
+    cursor: pointer;
+    transition: background .15s, color .15s, border-color .15s;
+    white-space: nowrap;
+}
+
+.calc-radio-pill:hover {
+    background: var(--panel-dark);
+    color: var(--text);
+}
+
+.calc-radio-pill--active {
+    background: var(--amber);
+    border-color: var(--accent);
+    color: var(--text);
+    font-weight: 600;
+}
+
+.calc-friction-display {
+    display: block;
+    margin-top: 4px;
+}
+
+.calc-custom-friction {
+    margin-top: 8px;
+    align-items: center;
+    gap: 8px;
+}
+
+.calc-custom-friction .calc-label {
+    margin-bottom: 0;
+    white-space: nowrap;
+}
+
+/* Cost extras row */
+.calc-cost-extras { margin-top: 4px; }
+
+/* Mobile */
+@media (max-width: 600px) {
+    .calc-form { padding: 16px; }
+
+    .calc-formula-header,
+    .calc-formula-row {
+        grid-template-columns: 1fr 80px 28px;
+    }
+
+    .calc-formula-row--cost {
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: auto auto;
+    }
+
+    .calc-formula-row--cost .calc-row-remove {
+        grid-column: 2;
+        justify-self: end;
+    }
+
+    .calc-field-row { flex-direction: column; gap: 12px; }
+    .calc-field-row .calc-field { min-width: 0; }
+}

@@ -242,6 +242,93 @@ All charts use `ApexCharts.Blazor`. They should match the bakery palette and fee
 
 ---
 
+### `/calculators` — Baker's calculators page (M19)
+
+Six stateless calculators on one page. No data persisted; all results are ephemeral.
+
+**Layout — desktop (≥768 px):**
+
+```
+┌──────────────────────────────────────────────────────────────────┐
+│  ← Back    Baker's calculators                                   │
+│  Derived from baker's guide §48 + §54                           │
+├────────────────┬─────────────────────────────────────────────────┤
+│  ■ Scaling     │  BAKER'S PERCENTAGE SCALING                     │
+│  ○ Batch       │  Target dough weight  [______] g                │
+│  ○ DDT         │                                                  │
+│  ○ Hydration   │  Ingredient     Baker's %                       │
+│  ○ Cost        │  Flour          100%                            │
+│  ○ Water roux  │  Water          [72]%                           │
+│                │  Levain         [20]%                           │
+│                │  Salt           [ 2]%                           │
+│                │  [+ Add ingredient]   [Calculate]               │
+│                ├─────────────────────────────────────────────────┤
+│                │  RESULT                                          │
+│                │  Flour  457 g  ·  Water  329 g                  │
+│                │  Levain  91 g  ·  Salt    9 g                   │
+│                │  Total formula %: 194%  ·  Sum: 886 g ✓         │
+└────────────────┴─────────────────────────────────────────────────┘
+```
+
+**Layout — mobile:** Tabs collapse to a horizontal scrolling chip row above the form area.
+
+**DDT tab:**
+
+```
+┌──────────────────────────────────────────────────┐
+│  DESIRED DOUGH TEMPERATURE                       │
+│  Target DDT    [25]  °C                          │
+│  Flour temp    [20]  °C                          │
+│  Room temp     [22]  °C                          │
+│  Mix method                                      │
+│  ● Hand folds  ○ Hand knead  ○ Stand mixer       │
+│  ○ Spiral      ○ Intensive   ○ Custom [__] °C    │
+│  Preferment temp  [──]  °C  (leave blank if none)│
+│                                                  │
+│  [Calculate]                                     │
+│                                                  │
+│  ┌── Result ─────────────────────────────────┐   │
+│  │  Water temperature: 31 °C                │   │
+│  │  (3 factors: flour, room, water + 2°C    │   │
+│  │   friction; add preferment for 4-factor) │   │
+│  └───────────────────────────────────────────┘   │
+└──────────────────────────────────────────────────┘
+```
+
+**Water-roux tab:**
+
+```
+┌──────────────────────────────────────────────────┐
+│  WATER-ROUX FOLD (§54)                           │
+│  Total flour     [500]  g                        │
+│  Target hydration [ 70]  %                       │
+│  Roux flour share [  6]  %                       │
+│  Method  ● Tangzhong (1:5)  ○ Yudane (1:1)       │
+│                                                  │
+│  [Calculate]                                     │
+│                                                  │
+│  ┌── Result ─────────────────────────────────┐   │
+│  │           Flour    Liquid                │   │
+│  │  Roux      30 g    150 g                 │   │
+│  │  Dough    470 g    200 g                 │   │
+│  │  ─────────────────────────               │   │
+│  │  Totals   500 g    350 g  ✓ (70%)        │   │
+│  └───────────────────────────────────────────┘   │
+│  Tangzhong: cook flour + liquid to ~65 °C        │
+│  Yudane: scald with boiling water; rest overnight│
+└──────────────────────────────────────────────────┘
+```
+
+Design rules for the calculators page:
+- Input fields use the standard `--border` outline style; focused field has `--accent` amber border.
+- Result cards use `--panel` background with a thin `--zone-ideal` left border to signal success.
+- Error states (negative values, hydration > 200%, water temp below 0 °C) show a `--zone-hot` terracotta inline hint below the affected field — no toast or modal.
+- "Totals check" rows use `--zone-ideal` text colour when balanced; `--zone-hot` if there is a rounding discrepancy > 1 g.
+- Each calculator result card has a **Copy to clipboard** icon (📋) that serialises the result as plain text for pasting into notes.
+- Navigation entry: add a **Calculators** link to the app nav alongside **History** and **Starter**.
+
+---
+
 ## Changes to existing components
 
 ### `RecommendationPanel.razor`

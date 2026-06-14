@@ -39,7 +39,7 @@ The **Server project** is the host: it serves the WASM bundle as static files an
 ### BreadMaking.App.Client (Blazor WASM)
 
 - All existing components and pages (unchanged)
-- New pages: `LiveBake.razor` (`/bake/{id}`), `History.razor` (`/history`), `GrainComparison.razor` (`/history/compare`)
+- New pages: `LiveBake.razor` (`/bake/{id}`), `History.razor` (`/history`), `GrainComparison.razor` (`/history/compare`), `Calculators.razor` (`/calculators`)
 - New components: `StepCard.razor`, `MeasurementSheet.razor`, `PlanningGantt.razor`, `RiseCurveChart.razor`, `RunChart.razor`
 - `BreadAdvisorService` stays here — it is pure C# with no I/O and generates the step list sent to the server
 - `HttpClient` factory configured with the server base address
@@ -63,6 +63,7 @@ The **Server project** is the host: it serves the WASM bundle as static files an
 - DTOs used by both client and server: `BakeDto`, `BakeStepLogDto`, `MeasurementDto`, `BakeOutcomeDto`, `BakeListItemDto`
 - Enum mirror types: `StepStatus`, `BakeMethod`
 - Request models: `StartBakeRequest`, `AddMeasurementRequest`
+- Calculator request/result types (M19) under `Dtos/Calculators/`: `ScaleRequest`, `ScaleResult`, `BatchRequest`, `BatchResult`, `DdtRequest`, `DdtResult`, `HydrationRequest`, `HydrationResult`, `CostRequest`, `CostResult`, `RouxRequest`, `RouxResult`
 - No EF Core, no ASP.NET Core, no Blazor references — plain `net10.0` class library
 
 ---
@@ -193,7 +194,7 @@ POST   /api/bakes/{id}/outcome/photo           Upload outcome photo (multipart) 
 GET    /api/grains/comparison                  Aggregated outcomes by grain → GrainComparisonDto[]
 ```
 
-### Planned (M11–M15)
+### Planned (M11–M19)
 
 ```
 PATCH  /api/steplogs/{id}/notes                Update step-level notes → 204                  (M11)
@@ -210,7 +211,16 @@ DELETE /api/recipes/{id}                       Delete user recipe → 204       
 
 GET    /api/analytics/correlations             Scatter data: outcome vs factor → point[]     (M15)
 GET    /api/analytics/personal-bests           Best score per grain per metric → summary[]   (M15)
+
+POST   /api/calculators/scale                  Baker's % scaling → ScaleResult               (M19)
+POST   /api/calculators/batch                  Batch scaling with yield/loss → BatchResult   (M19)
+POST   /api/calculators/ddt                    DDT water temperature → DdtResult             (M19)
+POST   /api/calculators/hydration              Levain split & true hydration → HydrationResult (M19)
+POST   /api/calculators/cost                   Cost per loaf → CostResult                    (M19)
+POST   /api/calculators/roux                   Tangzhong/Yudane roux fold → RouxResult       (M19)
 ```
+
+All `/api/calculators/*` endpoints are stateless pure-math operations — no database access, no auth, no EF context. Backed by a single `CalculatorService` on the server holding the C# functions from baker's guide §48 and §54.
 
 All endpoints return `DateTimeOffset` values in ISO 8601 UTC. The client formats them for display using the browser's local timezone.
 
@@ -229,7 +239,7 @@ The server holds the step-generation and default-duration logic. The client does
 
 **Autolyse vs. fermentolyse:** The step name changes ("Autolyse rest" vs. "Fermentolyse rest"), and fermentolyse skips the separate "Add salt + starter" step (salt and starter go in at mix time). This is handled by having two seeded `Recipe` rows per grain: one per method.
 
-**Cold retard fermentolyse (baker's guide §16):** When `bake.AmbientTempC < 13`, `BakeSessionService` should treat the fermentolyse rest as a cold retard — substantially longer (hours, not minutes) and producing sharper acetic acidity. The Q10 rule means fermentation rate roughly halves per 8–10 °C of cooling: a rest that takes 50 min at 22 °C takes ~175 min at 13 °C and ~6–12 h at 5–7 °C (fridge). At fridge temperature yeast is dormant but bacteria and enzymes continue, making this a deliberate flavour tool, not simply a slower version of the same process. See DEVELOPMENT.md § M1 for the per-band duration table.
+**Cold retard fermentolyse (baker's guide §16):** When `bake.AmbientTempC < 13`, `BakeSessionService` should treat the fermentolyse rest as a cold retard — substantially longer (hours, not minutes) and producing sharper acetic acidity. Baker's guide §16.5 provides a full per-degree reference table from 5 °C to 26 °C: at 5 °C the fermentation activity is ~19% of its 26 °C baseline (time multiplier 5.2×, acetic share 75%); at 13 °C it reaches ~36% (2.8×, 39%). At fridge temperature the yeast is dormant but bacteria and enzymes continue, making this a deliberate flavour tool, not simply a slower version of the same process. See DEVELOPMENT.md § M1 for the full per-degree table and the four practical working bands.
 
 **Preferments (baker's guide §19.4):** A sourdough levain is the primary preferment in this app. If commercial-yeast preferments (Poolish, Biga, Pâte fermentée) are added in future, a `PrefermentType` enum on `Recipe` distinguishes them; the rest step and mix step names would change accordingly. This is deferred beyond M16.
 

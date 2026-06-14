@@ -15,7 +15,7 @@ This is the implementation reference for developers building the milestones desc
 
 ---
 
-## Solution structure (M9 complete, M10–M16 additions noted)
+## Solution structure (M10 + M13 + M19 complete, M11–M18 additions noted)
 
 ```
 Bread-Making.sln
@@ -31,7 +31,8 @@ Bread-Making.sln
 │   │   ├── History.razor           ← /history
 │   │   ├── GrainComparison.razor   ← /history/compare
 │   │   ├── StarterJournal.razor    ← /starter                        (M13, planned)
-│   │   └── Analytics.razor         ← /history/analytics              (M15, planned)
+│   │   ├── Analytics.razor         ← /history/analytics              (M15, planned)
+│   │   └── Calculators.razor       ← /calculators                    (M19 ✅)
 │   └── wwwroot/
 │       ├── css/bakery.css
 │       ├── js/audio.js             ← Web Audio API alerts (M8)
@@ -46,12 +47,14 @@ Bread-Making.sln
 │   │   ├── GrainEndpoints.cs
 │   │   ├── StarterEndpoints.cs     ← (M13, planned)
 │   │   ├── RecipeEndpoints.cs      ← (M14, planned)
-│   │   └── AnalyticsEndpoints.cs   ← (M15, planned)
+│   │   ├── AnalyticsEndpoints.cs   ← (M15, planned)
+│   │   └── CalculatorEndpoints.cs  ← (M19 ✅)
 │   ├── Services/
 │   │   ├── TimerService.cs
 │   │   ├── MeasurementService.cs
 │   │   ├── BakeSessionService.cs
-│   │   └── StarterService.cs       ← (M13, planned)
+│   │   ├── StarterService.cs       ← (M13, planned)
+│   │   └── CalculatorService.cs    ← (M19 ✅)
 │   ├── Data/
 │   │   ├── AppDbContext.cs
 │   │   ├── Migrations/
@@ -99,6 +102,7 @@ No external packages. `<TargetFramework>net10.0</TargetFramework>` only.
 ---
 
 ## Conventions
+
 
 **DTOs vs. entities.** EF Core entity classes live in `Server/Data/` and are never referenced by the client project. All API responses use DTO types from `BreadMaking.App.Shared/Dtos/`.
 
@@ -185,16 +189,45 @@ Per-grain recipes (Einkorn, Emmer, Spelt, Kamut, Teff/Sorghum) are added in M1 a
 
 Add `FlavorNotes`, `NutritionHighlights`, `UsageNotes`, and `HistoricalOrigin` (all `string?`) to the `GrainProfile` entity in M1 to support the grain encyclopedia feature (M17). Seed values from baker's guide §15.
 
-**Cold retard fermentolyse (baker's guide §16):** Section 7 covers room-temperature fermentolyse (16–26 °C). The guide also documents a cold retard variant — taking the fermentolyse all the way down to 5–12 °C for 6–48+ hours. The yeast becomes dormant but bacteria and enzymes continue, shifting acidity toward sharp acetic notes and building flavour precursors. Use `bake.AmbientTempC < 13` in `BakeSessionService` to detect cold-retard territory and apply the longer `PlannedDurationMin` values from the table below. Practical bands (baker's guide §16.6):
+**Cold retard fermentolyse (baker's guide §16):** Section 7 covers room-temperature fermentolyse (16–26 °C). Baker's guide §16 documents a cold retard variant — taking the fermentolyse all the way down to 5 °C for 12–48+ hours. The yeast becomes dormant below ~8 °C, but lactic acid bacteria and flour enzymes continue, shifting acidity toward sharp acetic notes and building flavour precursors. Use `bake.AmbientTempC < 13` in `BakeSessionService` to detect cold-retard territory and apply the longer `PlannedDurationMin` values.
 
-| Temperature band | Fermentolyse duration | Acid character |
+**Per-degree reference (baker's guide §16.5)** — modelled values, Q10 ≈ 2.2, anchored to measured points at 4 °C, 10 °C and 18 °C:
+
+| Dough temp | Activity (rel. to 26 °C) | Time × | Acetic share | Acid character | Yeast gas |
+|---|---|---|---|---|---|
+| 5 °C | 19% | 5.2× | 75% | Sharp, vinegary | Near-dormant |
+| 6 °C | 21% | 4.8× | 70% | Sharp, vinegary | Near-dormant |
+| 7 °C | 22% | 4.5× | 65% | Sharp, vinegary | Near-dormant |
+| 8 °C | 24% | 4.1× | 60% | Balanced, tangy | Near-dormant |
+| 9 °C | 26% | 3.8× | 55% | Balanced, tangy | Slow |
+| 10 °C | 28% | 3.5× | 50% | Balanced, tangy | Slow |
+| 11 °C | 31% | 3.3× | 46% | Balanced, tangy | Slow |
+| 12 °C | 33% | 3.0× | 42% | Mild-tangy | Slow |
+| 13 °C | 36% | 2.8× | 39% | Mild-tangy | Slow |
+| 14 °C | 39% | 2.6× | 35% | Mild-tangy | Slow |
+| 15 °C | 42% | 2.4× | 31% | Mild-tangy | Slow |
+| 16 °C | 45% | 2.2× | 28% | Mild-tangy | Moderate |
+| 17 °C | 49% | 2.0× | 24% | Mild, yogurty | Moderate |
+| 18 °C | 53% | 1.9× | 20% | Mild, yogurty | Moderate |
+| 19 °C | 58% | 1.7× | 19% | Mild, yogurty | Moderate |
+| 20 °C | 62% | 1.6× | 18% | Mild, yogurty | Moderate |
+| 21 °C | 67% | 1.5× | 17% | Mild, yogurty | Moderate |
+| 22 °C | 73% | 1.4× | 16% | Mild, yogurty | Brisk |
+| 23 °C | 79% | 1.3× | 15% | Mild, yogurty | Brisk |
+| 24 °C | 85% | 1.2× | 14% | Mild, yogurty | Brisk |
+| 25 °C | 92% | 1.1× | 13% | Mild, yogurty | Brisk |
+| 26 °C | 100% | 1.0× | 12% | Mild, yogurty | Brisk |
+
+**Four practical working bands (baker's guide §16.6):**
+
+| Band | Duration | Acid character |
 |---|---|---|
 | 5–7 °C (fridge retard) | 720–2880 min (12–48 h+) | Sharp, vinegary (acetic-dominant) |
 | 8–12 °C (cold cellar) | 480–1440 min (8–24 h) | Balanced, tangy |
 | 13–18 °C (cool room) | 90–180 min | Mild, lactic |
-| 19–26 °C (warm room) | 22–130 min | Mild, yogurty (existing §7.2 range) |
+| 19–26 °C (warm room) | 22–130 min | Mild, yogurty |
 
-The Q10 rule governs the slowdown: fermentation rate roughly halves for every 8–10 °C drop, so timing becomes geometric, not linear. Dough firmness increases in the cold, making it easier to handle and score.
+Use the per-degree Time × multiplier relative to the 26 °C baseline (≈ 50 min at 22 °C → ~175 min at 13 °C) when computing `PlannedDurationMin` in `BakeSessionService`. Dough firmness increases in the cold, making it easier to handle and score.
 
 ### Migration
 
@@ -588,6 +621,18 @@ From spec section C7:
 - [ ] Bake diff: select two bakes → table shows all inputs + outcomes side-by-side
 - [ ] Personal bests list shows one bake per grain
 
+**M19:**
+- [ ] `/calculators` page loads; all six tabs / accordion sections are present
+- [ ] Baker's % scaling: enter flour 100%, water 72%, levain 20%, salt 2% + 900 g target → flour 457 g, water 329 g, levain 91 g, salt 9 g (sum = 900 g)
+- [ ] Batch scaling: 20 loaves × 500 g baked @ 12% bake loss, 2% scale loss → batch dough ~11 592 g; ingredients feed through from scaling calculator
+- [ ] DDT calculator: DDT 25 °C, flour 20 °C, room 22 °C, friction "hand-folds" (2 °C), no preferment → water temp ~31 °C
+- [ ] DDT with preferment: DDT 25 °C, flour 20 °C, room 22 °C, preferment 24 °C, friction 2 °C → correct 5-factor result
+- [ ] Hydration calculator: 500 g flour, 75% hydration, 100 g levain @ 100% → levain split 50/50; dough flour 450 g, dough water 325 g; overall hydration = 75%
+- [ ] Cost per loaf: leave energy/labour/packaging/overhead at zero → result equals ingredient cost / loaf count
+- [ ] Roux fold (Tangzhong, 6%): 500 g flour, 70% hydration → roux 30 g flour + 150 g liquid; dough 470 g flour + 200 g liquid; totals 500 g / 350 g preserved
+- [ ] Roux fold (Yudane, 1:1, 6%): roux 30 g flour + 30 g liquid; dough 470 g flour + 320 g liquid; totals preserved
+- [ ] All endpoints return 400 on invalid input (e.g. negative weight, hydration > 200%)
+
 **M16:**
 - [ ] Disable network in DevTools → offline banner appears in `LiveBake`
 - [ ] Start/pause/complete a step while offline → no error shown
@@ -928,3 +973,161 @@ window.breadOffline = { enqueue };
 ```
 
 Add `<link rel="manifest" href="manifest.json" />` to `index.html`.
+
+---
+
+## M19 — Baker's calculators
+
+All calculator logic lives in `CalculatorService.cs` on the server. The methods are pure functions — no `DbContext`, no `HttpContext`, no `async`. Each endpoint in `CalculatorEndpoints.cs` is one line: call the service, return the result. Source: baker's guide §48 + §54.
+
+### CalculatorService.cs
+
+```csharp
+public static class CalculatorService
+{
+    // §48.1 — Baker's percentage scaling
+    public static decimal TotalFormulaPct(IEnumerable<IngredientPct> formula)
+        => formula.Sum(i => i.Percent);                    // flour's percent is 100
+
+    public static Dictionary<string, decimal> Scale(
+        IEnumerable<IngredientPct> formula, decimal targetDoughGrams)
+    {
+        var tfp   = TotalFormulaPct(formula) / 100m;
+        var flour = targetDoughGrams / tfp;
+        return formula.ToDictionary(
+            i => i.Name,
+            i => Math.Round(flour * i.Percent / 100m, 1));
+    }
+
+    // §48.2 — Batch scaling with yield/loss
+    public static decimal DoughPerLoaf(decimal bakedG, decimal bakeLossPct)
+        => bakedG / (1 - bakeLossPct / 100m);
+
+    public static decimal BatchDough(int loaves, decimal doughPerLoafG,
+                                     decimal scaleLossPct)
+        => loaves * doughPerLoafG / (1 - scaleLossPct / 100m);
+
+    // §48.3 — DDT water temperature
+    // frictionC: ~2 hand-folds, ~3 hand-knead, ~10 stand mixer, ~14 spiral, ~24 intensive
+    public static decimal WaterTemp(decimal ddt, decimal flourC, decimal roomC,
+                                    decimal frictionC, decimal? prefermentC = null)
+    {
+        var factors = new List<decimal> { flourC, roomC, frictionC };
+        if (prefermentC is decimal p) factors.Add(p);
+        int n = factors.Count + 1;          // +1 for the water term itself
+        return ddt * n - factors.Sum();
+    }
+
+    // §48.4 — Levain split & true hydration
+    public static (decimal flour, decimal water) SplitLevain(
+        decimal levainGrams, decimal levainHydrationPct)
+    {
+        var flour = levainGrams / (1 + levainHydrationPct / 100m);
+        return (Math.Round(flour, 1), Math.Round(levainGrams - flour, 1));
+    }
+
+    public static decimal OverallHydration(decimal doughFlour, decimal doughWater,
+                                           decimal levainGrams, decimal levainHydrationPct)
+    {
+        var (lf, lw) = SplitLevain(levainGrams, levainHydrationPct);
+        return Math.Round((doughWater + lw) / (doughFlour + lf) * 100m, 1);
+    }
+
+    // §48.5 — Cost per loaf
+    public static decimal CostPerLoaf(
+        Dictionary<string, decimal> gramsByIngredient,
+        Dictionary<string, decimal> pricePerGram,
+        decimal energyCost, decimal labourCost,
+        decimal packagingCost, decimal overheadCost,
+        int saleableLoaves)
+    {
+        var ingredients = gramsByIngredient
+            .Sum(kv => kv.Value * pricePerGram.GetValueOrDefault(kv.Key, 0));
+        var batch = ingredients + energyCost + labourCost
+                  + packagingCost + overheadCost;
+        return Math.Round(batch / saleableLoaves, 4);
+    }
+
+    // §54.3 — Water-roux fold (Tangzhong or Yudane)
+    // rouxRatio: 5.0 for Tangzhong (1:5), 1.0 for Yudane (1:1)
+    public static (decimal rouxFlour, decimal rouxLiquid,
+                   decimal doughFlour, decimal doughLiquid)
+    FoldRoux(decimal totalFlour, decimal hydrationPct,
+             decimal rouxFlourSharePct, decimal rouxRatio)
+    {
+        var totalLiquid = totalFlour * hydrationPct / 100m;
+        var rf = Math.Round(totalFlour * rouxFlourSharePct / 100m, 1);
+        var rl = Math.Round(rf * rouxRatio, 1);
+        return (rf, rl, Math.Round(totalFlour - rf, 1),
+                        Math.Round(totalLiquid - rl, 1));
+    }
+}
+```
+
+### CalculatorEndpoints.cs
+
+```csharp
+app.MapGroup("/api/calculators")
+   .MapPost("/scale",     (ScaleRequest req)      => CalculatorService.Scale(req.Formula, req.TargetDoughGrams))
+   .MapPost("/batch",     (BatchRequest req)       => /* DoughPerLoaf → BatchDough → Scale */)
+   .MapPost("/ddt",       (DdtRequest req)         => CalculatorService.WaterTemp(req.Ddt, req.FlourC, req.RoomC, req.FrictionC, req.PrefermentC))
+   .MapPost("/hydration", (HydrationRequest req)   => CalculatorService.OverallHydration(req.DoughFlour, req.DoughWater, req.LevainGrams, req.LevainHydrationPct))
+   .MapPost("/cost",      (CostRequest req)        => CalculatorService.CostPerLoaf(req.GramsByIngredient, req.PricePerGram, req.Energy, req.Labour, req.Packaging, req.Overhead, req.SaleableLoaves))
+   .MapPost("/roux",      (RouxRequest req)        => CalculatorService.FoldRoux(req.TotalFlour, req.HydrationPct, req.RouxFlourSharePct, req.RouxRatio));
+```
+
+### Friction factor presets (baker's guide §50.4)
+
+| Mix method | FrictionC to use |
+|---|---|
+| Hand — folds | 2 °C |
+| Hand — knead | 3 °C |
+| Stand mixer (hook) | 10 °C |
+| Spiral mixer | 14 °C |
+| Intensive (planetary, high) | 24 °C |
+
+Display as a radio pill group on the DDT tab. Include a "Custom" option that unlocks a numeric input.
+
+### Shared DTOs (BreadMaking.App.Shared/Dtos/Calculators/)
+
+```csharp
+// ScaleRequest / ScaleResult
+public record IngredientPct(string Name, decimal Percent);
+public record ScaleRequest(IEnumerable<IngredientPct> Formula, decimal TargetDoughGrams);
+public record ScaleResult(Dictionary<string, decimal> Grams, decimal TotalFormulaPct);
+
+// DdtRequest / DdtResult
+public record DdtRequest(decimal Ddt, decimal FlourC, decimal RoomC,
+                          decimal FrictionC, decimal? PrefermentC);
+public record DdtResult(decimal WaterTempC);
+
+// HydrationRequest / HydrationResult
+public record HydrationRequest(decimal DoughFlour, decimal DoughWater,
+                                decimal LevainGrams, decimal LevainHydrationPct);
+public record HydrationResult(decimal LevainFlour, decimal LevainWater,
+                               decimal FinalDoughFlour, decimal FinalDoughWater,
+                               decimal OverallHydrationPct);
+
+// RouxRequest / RouxResult  (rouxRatio: 5.0 = Tangzhong, 1.0 = Yudane)
+public record RouxRequest(decimal TotalFlour, decimal HydrationPct,
+                           decimal RouxFlourSharePct, decimal RouxRatio);
+public record RouxResult(decimal RouxFlour, decimal RouxLiquid,
+                          decimal DoughFlour, decimal DoughLiquid,
+                          decimal CheckTotalFlour, decimal CheckTotalLiquid);
+```
+
+### Calculators.razor
+
+The page has a two-column layout at ≥768 px: a tab list on the left and the active calculator form on the right. On mobile, tabs collapse to a horizontal scroll strip at the top.
+
+Each calculator form follows the same pattern:
+- Input fields with labels, units and hint text
+- A **Calculate** button (primary, amber fill)
+- A result card that appears below the button once calculated (results never shown until the baker submits)
+- A **Reset** button that clears inputs and hides the result
+
+Pre-fill the baker's-% scaling tab with a default wheat sourdough formula (flour 100%, water 72%, levain 20%, salt 2%) so the page is immediately useful without data entry.
+
+The DDT tab pre-fills with mix method "hand-folds" selected and `FrictionC = 2`. Changing the radio updates the friction field in real time; the custom option shows a numeric input.
+
+The roux tab shows a Tangzhong / Yudane radio. Tangzhong sets `RouxRatio = 5`; Yudane sets `RouxRatio = 1`. The result card shows a two-row table (Roux row / Dough row) and a Totals check row in green.

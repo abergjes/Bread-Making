@@ -1,0 +1,810 @@
+@page "/calculators"
+@inject NavigationManager Nav
+@inject HttpClient Http
+
+<div class="calc-page">
+
+    <!-- ── Header ──────────────────────────────────────────────────────────── -->
+    <div class="calc-header">
+        <button class="back-btn" @onclick='() => Nav.NavigateTo("/")'>← Home</button>
+        <div class="calc-title-group">
+            <h2 class="calc-title">Baker's calculators</h2>
+            <p class="calc-subtitle">Baker's guide §48 · §54</p>
+        </div>
+    </div>
+
+    <!-- ── Tab strip ────────────────────────────────────────────────────────── -->
+    <div class="calc-tabs" role="tablist">
+        @foreach (var tab in _tabs)
+        {
+            <button class="calc-tab @(_activeTab == tab.Id ? "calc-tab--active" : "")"
+                    role="tab"
+                    aria-selected="@(_activeTab == tab.Id)"
+                    @onclick="() => SelectTab(tab.Id)">
+                @tab.Label
+            </button>
+        }
+    </div>
+
+    <!-- ── Tab content ──────────────────────────────────────────────────────── -->
+    <div class="calc-content">
+
+        @* ─── 1. Baker's % Scaling ─────────────────────────────────────────── *@
+        @if (_activeTab == "scale")
+        {
+            <div class="calc-form">
+                <h3 class="calc-section-title">Baker's % scaling</h3>
+                <p class="calc-hint">Enter your formula as baker's percentages (flour = 100%). The result shows grams for any target dough weight.</p>
+
+                <div class="calc-field">
+                    <label class="calc-label">Target dough weight</label>
+                    <div class="calc-input-row">
+                        <input class="calc-input calc-input--short" type="number" min="1"
+                               @bind="_scaleTarget" @bind:event="oninput" />
+                        <span class="calc-unit">g</span>
+                    </div>
+                </div>
+
+                <div class="calc-formula-table">
+                    <div class="calc-formula-header">
+                        <span>Ingredient</span><span>Baker's %</span><span></span>
+                    </div>
+                    @for (int i = 0; i < _scaleFormula.Count; i++)
+                    {
+                        var idx = i;
+                        <div class="calc-formula-row">
+                            <input class="calc-input calc-input--name" type="text"
+                                   placeholder="e.g. Water"
+                                   value="@_scaleFormula[idx].Name"
+                                   @oninput="e => _scaleFormula[idx].Name = e.Value?.ToString() ?? string.Empty" />
+                            <div class="calc-input-row">
+                                <input class="calc-input calc-input--pct" type="number" min="0" step="0.1"
+                                       value="@_scaleFormula[idx].Percent"
+                                       @oninput="e => { if (decimal.TryParse(e.Value?.ToString(), out var v)) _scaleFormula[idx].Percent = v; }" />
+                                <span class="calc-unit">%</span>
+                            </div>
+                            <button class="calc-row-remove" title="Remove" @onclick="() => _scaleFormula.RemoveAt(idx)">✕</button>
+                        </div>
+                    }
+                    <button class="calc-row-add" @onclick="() => _scaleFormula.Add(new IngredientPct())">+ Add ingredient</button>
+                </div>
+
+                @if (_scaleError is not null)
+                {
+                    <p class="calc-error">@_scaleError</p>
+                }
+
+                <button class="btn-primary calc-calculate-btn" @onclick="RunScale" disabled="@_scaleLoading">
+                    @(_scaleLoading ? "Calculating…" : "Calculate")
+                </button>
+
+                @if (_scaleResult is not null)
+                {
+                    <div class="calc-result-card">
+                        <table class="calc-result-table">
+                            <thead><tr><th>Ingredient</th><th>Baker's %</th><th>Weight</th></tr></thead>
+                            <tbody>
+                                @foreach (var row in _scaleResult.Rows)
+                                {
+                                    <tr>
+                                        <td>@row.Name</td>
+                                        <td class="calc-num">@row.Percent.ToString("F1")%</td>
+                                        <td class="calc-num calc-num--bold">@row.Grams.ToString("F1") g</td>
+                                    </tr>
+                                }
+                            </tbody>
+                            <tfoot>
+                                <tr class="calc-result-totals">
+                                    <td>Total</td>
+                                    <td class="calc-num">@_scaleResult.TotalFormulaPct.ToString("F1")%</td>
+                                    <td class="calc-num calc-num--bold @(Math.Abs(_scaleResult.TotalGrams - _scaleTarget) <= 1 ? "calc-check-ok" : "calc-check-warn")">
+                                        @_scaleResult.TotalGrams.ToString("F1") g @(Math.Abs(_scaleResult.TotalGrams - _scaleTarget) <= 1 ? "✓" : "⚠")
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                }
+            </div>
+        }
+
+        @* ─── 2. Batch Scaling ──────────────────────────────────────────────── *@
+        else if (_activeTab == "batch")
+        {
+            <div class="calc-form">
+                <h3 class="calc-section-title">Batch scaling</h3>
+                <p class="calc-hint">Work backwards from finished loaves to the flour and water you need to mix, accounting for oven evaporation and bench loss.</p>
+
+                <div class="calc-field-row">
+                    <div class="calc-field">
+                        <label class="calc-label">Number of loaves</label>
+                        <input class="calc-input calc-input--short" type="number" min="1"
+                               @bind="_batchLoaves" @bind:event="oninput" />
+                    </div>
+                    <div class="calc-field">
+                        <label class="calc-label">Target baked weight</label>
+                        <div class="calc-input-row">
+                            <input class="calc-input calc-input--short" type="number" min="1"
+                                   @bind="_batchBakedWeight" @bind:event="oninput" />
+                            <span class="calc-unit">g</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calc-field-row">
+                    <div class="calc-field">
+                        <label class="calc-label">Bake loss <span class="calc-hint-inline">(evaporation, typical 10–15%)</span></label>
+                        <div class="calc-input-row">
+                            <input class="calc-input calc-input--short" type="number" min="0" max="50" step="0.5"
+                                   @bind="_batchBakeLoss" @bind:event="oninput" />
+                            <span class="calc-unit">%</span>
+                        </div>
+                    </div>
+                    <div class="calc-field">
+                        <label class="calc-label">Scale loss <span class="calc-hint-inline">(bench scraps, typical 1–3%)</span></label>
+                        <div class="calc-input-row">
+                            <input class="calc-input calc-input--short" type="number" min="0" max="20" step="0.5"
+                                   @bind="_batchScaleLoss" @bind:event="oninput" />
+                            <span class="calc-unit">%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calc-formula-table">
+                    <div class="calc-formula-header">
+                        <span>Ingredient</span><span>Baker's %</span><span></span>
+                    </div>
+                    @for (int i = 0; i < _batchFormula.Count; i++)
+                    {
+                        var idx = i;
+                        <div class="calc-formula-row">
+                            <input class="calc-input calc-input--name" type="text" placeholder="e.g. Water"
+                                   value="@_batchFormula[idx].Name"
+                                   @oninput="e => _batchFormula[idx].Name = e.Value?.ToString() ?? string.Empty" />
+                            <div class="calc-input-row">
+                                <input class="calc-input calc-input--pct" type="number" min="0" step="0.1"
+                                       value="@_batchFormula[idx].Percent"
+                                       @oninput="e => { if (decimal.TryParse(e.Value?.ToString(), out var v)) _batchFormula[idx].Percent = v; }" />
+                                <span class="calc-unit">%</span>
+                            </div>
+                            <button class="calc-row-remove" title="Remove" @onclick="() => _batchFormula.RemoveAt(idx)">✕</button>
+                        </div>
+                    }
+                    <button class="calc-row-add" @onclick="() => _batchFormula.Add(new IngredientPct())">+ Add ingredient</button>
+                </div>
+
+                @if (_batchError is not null)
+                {
+                    <p class="calc-error">@_batchError</p>
+                }
+
+                <button class="btn-primary calc-calculate-btn" @onclick="RunBatch" disabled="@_batchLoading">
+                    @(_batchLoading ? "Calculating…" : "Calculate")
+                </button>
+
+                @if (_batchResult is not null)
+                {
+                    <div class="calc-result-card">
+                        <div class="calc-result-summary">
+                            <span>Dough per loaf: <strong>@_batchResult.DoughPerLoafG.ToString("F1") g</strong></span>
+                            <span>Total batch dough: <strong>@_batchResult.BatchDoughG.ToString("F1") g</strong></span>
+                        </div>
+                        <table class="calc-result-table">
+                            <thead><tr><th>Ingredient</th><th>Baker's %</th><th>Weight</th></tr></thead>
+                            <tbody>
+                                @foreach (var row in _batchResult.Scaling.Rows)
+                                {
+                                    <tr>
+                                        <td>@row.Name</td>
+                                        <td class="calc-num">@row.Percent.ToString("F1")%</td>
+                                        <td class="calc-num calc-num--bold">@row.Grams.ToString("F1") g</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+            </div>
+        }
+
+        @* ──�� 3. DDT Water Temperature ──────────────────────────────────────── *@
+        else if (_activeTab == "ddt")
+        {
+            <div class="calc-form">
+                <h3 class="calc-section-title">Desired dough temperature (DDT)</h3>
+                <p class="calc-hint">Find the water temperature that hits your target dough temperature after mixing. Adjust the water; all other factors are measured on the day.</p>
+
+                <div class="calc-field-row">
+                    <div class="calc-field">
+                        <label class="calc-label">Target DDT</label>
+                        <div class="calc-input-row">
+                            <input class="calc-input calc-input--short" type="number" step="0.5"
+                                   @bind="_ddtTarget" @bind:event="oninput" />
+                            <span class="calc-unit">°C</span>
+                        </div>
+                    </div>
+                    <div class="calc-field">
+                        <label class="calc-label">Flour temp</label>
+                        <div class="calc-input-row">
+                            <input class="calc-input calc-input--short" type="number" step="0.5"
+                                   @bind="_ddtFlour" @bind:event="oninput" />
+                            <span class="calc-unit">°C</span>
+                        </div>
+                    </div>
+                    <div class="calc-field">
+                        <label class="calc-label">Room temp</label>
+                        <div class="calc-input-row">
+                            <input class="calc-input calc-input--short" type="number" step="0.5"
+                                   @bind="_ddtRoom" @bind:event="oninput" />
+                            <span class="calc-unit">°C</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calc-field">
+                    <label class="calc-label">Mix method <span class="calc-hint-inline">(sets the friction factor)</span></label>
+                    <div class="calc-radio-group">
+                        @foreach (var method in _frictionMethods)
+                        {
+                            <button class="calc-radio-pill @(_ddtMethodKey == method.Key ? "calc-radio-pill--active" : "")"
+                                    @onclick="() => SelectFrictionMethod(method.Key)">
+                                @method.Label
+                            </button>
+                        }
+                    </div>
+                    @if (_ddtMethodKey == "custom")
+                    {
+                        <div class="calc-input-row calc-custom-friction">
+                            <label class="calc-label">Custom friction</label>
+                            <input class="calc-input calc-input--short" type="number" step="0.5" min="0" max="35"
+                                   @bind="_ddtFrictionCustom" @bind:event="oninput" />
+                            <span class="calc-unit">°C</span>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="calc-hint-inline calc-friction-display">Friction = @_ddtFriction °C</p>
+                    }
+                </div>
+
+                <div class="calc-field">
+                    <label class="calc-label">Preferment temp <span class="calc-hint-inline">(optional — leave blank if mixing straight)</span></label>
+                    <div class="calc-input-row">
+                        <input class="calc-input calc-input--short" type="number" step="0.5"
+                               @bind="_ddtPreferment" @bind:event="oninput" />
+                        <span class="calc-unit">°C</span>
+                    </div>
+                </div>
+
+                @if (_ddtError is not null)
+                {
+                    <p class="calc-error">@_ddtError</p>
+                }
+
+                <button class="btn-primary calc-calculate-btn" @onclick="RunDdt" disabled="@_ddtLoading">
+                    @(_ddtLoading ? "Calculating…" : "Calculate")
+                </button>
+
+                @if (_ddtResult is not null)
+                {
+                    <div class="calc-result-card">
+                        <p class="calc-result-primary">Water temperature: <strong>@_ddtResult.WaterTempC.ToString("F1") °C</strong></p>
+                        <p class="calc-hint">
+                            @_ddtResult.FactorCount-factor formula: DDT × @_ddtResult.FactorCount
+                            − (flour + room@(_ddtPreferment.HasValue ? " + preferment" : "") + friction)
+                        </p>
+                        @if (_ddtResult.WaterTempC < 0)
+                        {
+                            <p class="calc-error">Water temperature is below freezing — consider adding ice or lowering the DDT target.</p>
+                        }
+                        else if (_ddtResult.WaterTempC > 60)
+                        {
+                            <p class="calc-error">Water temperature is very high — check your inputs; scalding water will kill the yeast.</p>
+                        }
+                    </div>
+                }
+            </div>
+        }
+
+        @* ─── 4. Levain & Hydration ─────────────────────────────────────────── *@
+        else if (_activeTab == "hydration")
+        {
+            <div class="calc-form">
+                <h3 class="calc-section-title">Levain split &amp; true hydration</h3>
+                <p class="calc-hint">A preferment carries its own flour and water. This calculator splits the levain into its flour and water components and shows the adjusted final-dough quantities so the overall hydration stays on target.</p>
+
+                <div class="calc-field-row">
+                    <div class="calc-field">
+                        <label class="calc-label">Total flour</label>
+                        <div class="calc-input-row">
+                            <input class="calc-input calc-input--short" type="number" min="1"
+                                   @bind="_hydFlour" @bind:event="oninput" />
+                            <span class="calc-unit">g</span>
+                        </div>
+                    </div>
+                    <div class="calc-field">
+                        <label class="calc-label">Target hydration</label>
+                        <div class="calc-input-row">
+                            <input class="calc-input calc-input--short" type="number" min="40" max="200" step="0.5"
+                                   @bind="_hydHydration" @bind:event="oninput" />
+                            <span class="calc-unit">%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calc-field-row">
+                    <div class="calc-field">
+                        <label class="calc-label">Levain weight</label>
+                        <div class="calc-input-row">
+                            <input class="calc-input calc-input--short" type="number" min="1"
+                                   @bind="_hydLevain" @bind:event="oninput" />
+                            <span class="calc-unit">g</span>
+                        </div>
+                    </div>
+                    <div class="calc-field">
+                        <label class="calc-label">Levain hydration <span class="calc-hint-inline">(100% = equal flour and water)</span></label>
+                        <div class="calc-input-row">
+                            <input class="calc-input calc-input--short" type="number" min="20" max="300" step="5"
+                                   @bind="_hydLevainHydration" @bind:event="oninput" />
+                            <span class="calc-unit">%</span>
+                        </div>
+                    </div>
+                </div>
+
+                @if (_hydError is not null)
+                {
+                    <p class="calc-error">@_hydError</p>
+                }
+
+                <button class="btn-primary calc-calculate-btn" @onclick="RunHydration" disabled="@_hydLoading">
+                    @(_hydLoading ? "Calculating…" : "Calculate")
+                </button>
+
+                @if (_hydResult is not null)
+                {
+                    <div class="calc-result-card">
+                        <table class="calc-result-table">
+                            <thead><tr><th></th><th>Flour</th><th>Water</th></tr></thead>
+                            <tbody>
+                                <tr><td>Levain contains</td>
+                                    <td class="calc-num">@_hydResult.LevainFlour.ToString("F1") g</td>
+                                    <td class="calc-num">@_hydResult.LevainWater.ToString("F1") g</td></tr>
+                                <tr><td>Final dough</td>
+                                    <td class="calc-num calc-num--bold">@_hydResult.FinalDoughFlour.ToString("F1") g</td>
+                                    <td class="calc-num calc-num--bold">@_hydResult.FinalDoughWater.ToString("F1") g</td></tr>
+                            </tbody>
+                            <tfoot>
+                                <tr class="calc-result-totals">
+                                    <td>Overall hydration</td>
+                                    <td colspan="2" class="calc-num @(Math.Abs(_hydResult.OverallHydrationPct - _hydHydration) <= 0.5m ? "calc-check-ok" : "calc-check-warn")">
+                                        @_hydResult.OverallHydrationPct.ToString("F1")% @(Math.Abs(_hydResult.OverallHydrationPct - _hydHydration) <= 0.5m ? "✓" : "⚠")
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                }
+            </div>
+        }
+
+        @* ─── 5. Cost per Loaf ──────────────────────────────────────────────── *@
+        else if (_activeTab == "cost")
+        {
+            <div class="calc-form">
+                <h3 class="calc-section-title">Cost per loaf</h3>
+                <p class="calc-hint">Ingredients are usually the smallest cost. Add energy, labour and overhead to see the full picture.</p>
+
+                <div class="calc-field">
+                    <label class="calc-label">Saleable loaves in this batch</label>
+                    <input class="calc-input calc-input--short" type="number" min="1"
+                           @bind="_costLoaves" @bind:event="oninput" />
+                </div>
+
+                <div class="calc-formula-table">
+                    <div class="calc-formula-header">
+                        <span>Ingredient</span><span>Weight (g)</span><span>Price per 100 g</span><span></span>
+                    </div>
+                    @for (int i = 0; i < _costIngredients.Count; i++)
+                    {
+                        var idx = i;
+                        <div class="calc-formula-row calc-formula-row--cost">
+                            <input class="calc-input calc-input--name" type="text" placeholder="e.g. Flour"
+                                   value="@_costIngredients[idx].Name"
+                                   @oninput="e => _costIngredients[idx].Name = e.Value?.ToString() ?? string.Empty" />
+                            <input class="calc-input calc-input--pct" type="number" min="0" step="1"
+                                   value="@_costIngredients[idx].Grams"
+                                   @oninput="e => { if (decimal.TryParse(e.Value?.ToString(), out var v)) _costIngredients[idx].Grams = v; }" />
+                            <div class="calc-input-row">
+                                <span class="calc-unit">£</span>
+                                <input class="calc-input calc-input--pct" type="number" min="0" step="0.01"
+                                       value="@_costIngredients[idx].PricePer100g"
+                                       @oninput="e => { if (decimal.TryParse(e.Value?.ToString(), out var v)) _costIngredients[idx].PricePer100g = v; }" />
+                            </div>
+                            <button class="calc-row-remove" title="Remove" @onclick="() => _costIngredients.RemoveAt(idx)">✕</button>
+                        </div>
+                    }
+                    <button class="calc-row-add" @onclick="() => _costIngredients.Add(new CostIngredient())">+ Add ingredient</button>
+                </div>
+
+                <div class="calc-field-row calc-cost-extras">
+                    <div class="calc-field">
+                        <label class="calc-label">Energy</label>
+                        <div class="calc-input-row"><span class="calc-unit">£</span>
+                            <input class="calc-input calc-input--short" type="number" min="0" step="0.01" @bind="_costEnergy" @bind:event="oninput" /></div>
+                    </div>
+                    <div class="calc-field">
+                        <label class="calc-label">Labour</label>
+                        <div class="calc-input-row"><span class="calc-unit">£</span>
+                            <input class="calc-input calc-input--short" type="number" min="0" step="0.01" @bind="_costLabour" @bind:event="oninput" /></div>
+                    </div>
+                    <div class="calc-field">
+                        <label class="calc-label">Packaging</label>
+                        <div class="calc-input-row"><span class="calc-unit">£</span>
+                            <input class="calc-input calc-input--short" type="number" min="0" step="0.01" @bind="_costPackaging" @bind:event="oninput" /></div>
+                    </div>
+                    <div class="calc-field">
+                        <label class="calc-label">Overhead</label>
+                        <div class="calc-input-row"><span class="calc-unit">£</span>
+                            <input class="calc-input calc-input--short" type="number" min="0" step="0.01" @bind="_costOverhead" @bind:event="oninput" /></div>
+                    </div>
+                </div>
+
+                @if (_costError is not null)
+                {
+                    <p class="calc-error">@_costError</p>
+                }
+
+                <button class="btn-primary calc-calculate-btn" @onclick="RunCost" disabled="@_costLoading">
+                    @(_costLoading ? "Calculating…" : "Calculate")
+                </button>
+
+                @if (_costResult is not null)
+                {
+                    <div class="calc-result-card">
+                        <table class="calc-result-table">
+                            <tbody>
+                                <tr><td>Ingredient cost</td><td class="calc-num">£@_costResult.IngredientCost.ToString("F2")</td></tr>
+                                <tr><td>Total batch cost</td><td class="calc-num">£@_costResult.TotalBatchCost.ToString("F2")</td></tr>
+                            </tbody>
+                            <tfoot>
+                                <tr class="calc-result-totals">
+                                    <td>Cost per loaf</td>
+                                    <td class="calc-num calc-num--bold calc-check-ok">£@_costResult.CostPerLoaf.ToString("F2")</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                }
+            </div>
+        }
+
+        @* ─── 6. Water Roux ─────────────────────────────────────────────────── *@
+        else if (_activeTab == "roux")
+        {
+            <div class="calc-form">
+                <h3 class="calc-section-title">Water-roux fold</h3>
+                <p class="calc-hint">Pre-gelatinising a small share of the flour lets the dough hold more water and stay soft longer. This calculator subtracts the roux flour and liquid from the formula so the total hydration is preserved.</p>
+
+                <div class="calc-field-row">
+                    <div class="calc-field">
+                        <label class="calc-label">Total flour</label>
+                        <div class="calc-input-row">
+                            <input class="calc-input calc-input--short" type="number" min="1"
+                                   @bind="_rouxFlour" @bind:event="oninput" />
+                            <span class="calc-unit">g</span>
+                        </div>
+                    </div>
+                    <div class="calc-field">
+                        <label class="calc-label">Target hydration</label>
+                        <div class="calc-input-row">
+                            <input class="calc-input calc-input--short" type="number" min="40" max="120" step="0.5"
+                                   @bind="_rouxHydration" @bind:event="oninput" />
+                            <span class="calc-unit">%</span>
+                        </div>
+                    </div>
+                    <div class="calc-field">
+                        <label class="calc-label">Roux flour share <span class="calc-hint-inline">(5–7% typical)</span></label>
+                        <div class="calc-input-row">
+                            <input class="calc-input calc-input--short" type="number" min="1" max="20" step="0.5"
+                                   @bind="_rouxShare" @bind:event="oninput" />
+                            <span class="calc-unit">%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calc-field">
+                    <label class="calc-label">Method</label>
+                    <div class="calc-radio-group">
+                        <button class="calc-radio-pill @(_rouxIsTangzhong ? "calc-radio-pill--active" : "")"
+                                @onclick="() => _rouxIsTangzhong = true">
+                            Tangzhong (1:5)
+                        </button>
+                        <button class="calc-radio-pill @(!_rouxIsTangzhong ? "calc-radio-pill--active" : "")"
+                                @onclick="() => _rouxIsTangzhong = false">
+                            Yudane (1:1)
+                        </button>
+                    </div>
+                    <p class="calc-hint">
+                        @if (_rouxIsTangzhong)
+                        {
+                            <span>Cook flour + liquid to ~65 °C until a smooth paste forms; cool to room temperature before adding to the dough.</span>
+                        }
+                        else
+                        {
+                            <span>Scald flour with boiling water; mix into a stiff paste and rest (often overnight). Chewier and slightly sweeter than Tangzhong.</span>
+                        }
+                    </p>
+                </div>
+
+                @if (_rouxError is not null)
+                {
+                    <p class="calc-error">@_rouxError</p>
+                }
+
+                <button class="btn-primary calc-calculate-btn" @onclick="RunRoux" disabled="@_rouxLoading">
+                    @(_rouxLoading ? "Calculating…" : "Calculate")
+                </button>
+
+                @if (_rouxResult is not null)
+                {
+                    <div class="calc-result-card">
+                        <table class="calc-result-table">
+                            <thead><tr><th></th><th>Flour</th><th>Liquid</th></tr></thead>
+                            <tbody>
+                                <tr>
+                                    <td>Roux (@(_rouxIsTangzhong ? "Tangzhong" : "Yudane"))</td>
+                                    <td class="calc-num calc-num--bold">@_rouxResult.RouxFlour.ToString("F1") g</td>
+                                    <td class="calc-num calc-num--bold">@_rouxResult.RouxLiquid.ToString("F1") g</td>
+                                </tr>
+                                <tr>
+                                    <td>Final dough</td>
+                                    <td class="calc-num calc-num--bold">@_rouxResult.DoughFlour.ToString("F1") g</td>
+                                    <td class="calc-num calc-num--bold">@_rouxResult.DoughLiquid.ToString("F1") g</td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr class="calc-result-totals">
+                                    <td>Totals (check)</td>
+                                    <td class="calc-num @(Math.Abs(_rouxResult.CheckTotalFlour - _rouxFlour) <= 0.5m ? "calc-check-ok" : "calc-check-warn")">
+                                        @_rouxResult.CheckTotalFlour.ToString("F1") g @(Math.Abs(_rouxResult.CheckTotalFlour - _rouxFlour) <= 0.5m ? "✓" : "⚠")
+                                    </td>
+                                    <td class="calc-num @(Math.Abs(_rouxResult.CheckHydrationPct - _rouxHydration) <= 0.5m ? "calc-check-ok" : "calc-check-warn")">
+                                        @_rouxResult.CheckTotalLiquid.ToString("F1") g · @_rouxResult.CheckHydrationPct.ToString("F1")% @(Math.Abs(_rouxResult.CheckHydrationPct - _rouxHydration) <= 0.5m ? "✓" : "⚠")
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                }
+            </div>
+        }
+
+    </div>
+</div>
+
+@code {
+    // ── Tab registry ──────────────────────────────────────────────────────────
+    private record TabDef(string Id, string Label);
+    private readonly TabDef[] _tabs =
+    [
+        new("scale",     "Baker's %"),
+        new("batch",     "Batch"),
+        new("ddt",       "DDT"),
+        new("hydration", "Hydration"),
+        new("cost",      "Cost"),
+        new("roux",      "Water Roux"),
+    ];
+    private string _activeTab = "scale";
+
+    private void SelectTab(string id) { _activeTab = id; }
+
+    // ── 1. Scale state ────────────────────────────────────────────────────────
+    private decimal    _scaleTarget = 800m;
+    private List<IngredientPct> _scaleFormula =
+    [
+        new() { Name = "Flour",  Percent = 100m },
+        new() { Name = "Water",  Percent = 72m  },
+        new() { Name = "Levain", Percent = 20m  },
+        new() { Name = "Salt",   Percent = 2m   },
+    ];
+    private bool        _scaleLoading;
+    private string?     _scaleError;
+    private ScaleResult? _scaleResult;
+
+    private async Task RunScale()
+    {
+        _scaleError  = null;
+        _scaleResult = null;
+        if (_scaleTarget <= 0)           { _scaleError = "Target dough weight must be greater than zero."; return; }
+        if (_scaleFormula.Count == 0)    { _scaleError = "Add at least one ingredient."; return; }
+        if (_scaleFormula.Any(r => r.Percent <= 0)) { _scaleError = "All percentages must be greater than zero."; return; }
+        _scaleLoading = true;
+        try
+        {
+            var req = new ScaleRequest(_scaleFormula, _scaleTarget);
+            var resp = await Http.PostAsJsonAsync("/api/calculators/scale", req);
+            if (resp.IsSuccessStatusCode)
+                _scaleResult = await resp.Content.ReadFromJsonAsync<ScaleResult>();
+            else
+                _scaleError = await resp.Content.ReadAsStringAsync();
+        }
+        finally { _scaleLoading = false; }
+    }
+
+    // ── 2. Batch state ────────────────────────────────────────────────────────
+    private int     _batchLoaves      = 10;
+    private decimal _batchBakedWeight = 500m;
+    private decimal _batchBakeLoss    = 12m;
+    private decimal _batchScaleLoss   = 2m;
+    private List<IngredientPct> _batchFormula =
+    [
+        new() { Name = "Flour",  Percent = 100m },
+        new() { Name = "Water",  Percent = 72m  },
+        new() { Name = "Levain", Percent = 20m  },
+        new() { Name = "Salt",   Percent = 2m   },
+    ];
+    private bool        _batchLoading;
+    private string?     _batchError;
+    private BatchResult? _batchResult;
+
+    private async Task RunBatch()
+    {
+        _batchError  = null;
+        _batchResult = null;
+        if (_batchLoaves <= 0)           { _batchError = "Loaf count must be at least 1."; return; }
+        if (_batchBakedWeight <= 0)      { _batchError = "Baked weight must be greater than zero."; return; }
+        if (_batchFormula.Count == 0)    { _batchError = "Add at least one ingredient."; return; }
+        _batchLoading = true;
+        try
+        {
+            var req = new BatchRequest(_batchLoaves, _batchBakedWeight,
+                                       _batchBakeLoss, _batchScaleLoss, _batchFormula);
+            var resp = await Http.PostAsJsonAsync("/api/calculators/batch", req);
+            if (resp.IsSuccessStatusCode)
+                _batchResult = await resp.Content.ReadFromJsonAsync<BatchResult>();
+            else
+                _batchError = await resp.Content.ReadAsStringAsync();
+        }
+        finally { _batchLoading = false; }
+    }
+
+    // ── 3. DDT state ─────────────────────────────────────────────────────────
+    private record FrictionMethod(string Key, string Label, decimal FrictionC);
+    private readonly FrictionMethod[] _frictionMethods =
+    [
+        new("folds",      "Hand folds",   2m),
+        new("knead",      "Hand knead",   3m),
+        new("stand",      "Stand mixer",  10m),
+        new("spiral",     "Spiral",       14m),
+        new("intensive",  "Intensive",    24m),
+        new("custom",     "Custom",       0m),
+    ];
+    private decimal   _ddtTarget     = 25m;
+    private decimal   _ddtFlour      = 20m;
+    private decimal   _ddtRoom       = 21m;
+    private string    _ddtMethodKey  = "folds";
+    private decimal   _ddtFriction   = 2m;
+    private decimal   _ddtFrictionCustom = 2m;
+    private decimal?  _ddtPreferment = null;
+    private bool      _ddtLoading;
+    private string?   _ddtError;
+    private DdtResult? _ddtResult;
+
+    private void SelectFrictionMethod(string key)
+    {
+        _ddtMethodKey = key;
+        if (key != "custom")
+            _ddtFriction = _frictionMethods.First(m => m.Key == key).FrictionC;
+    }
+
+    private async Task RunDdt()
+    {
+        _ddtError  = null;
+        _ddtResult = null;
+        var friction = _ddtMethodKey == "custom" ? _ddtFrictionCustom : _ddtFriction;
+        var req = new DdtRequest(_ddtTarget, _ddtFlour, _ddtRoom, friction, _ddtPreferment);
+        _ddtLoading = true;
+        try
+        {
+            var resp = await Http.PostAsJsonAsync("/api/calculators/ddt", req);
+            if (resp.IsSuccessStatusCode)
+                _ddtResult = await resp.Content.ReadFromJsonAsync<DdtResult>();
+            else
+                _ddtError = await resp.Content.ReadAsStringAsync();
+        }
+        finally { _ddtLoading = false; }
+    }
+
+    // ── 4. Hydration state ────────────────────────────────────────────────────
+    private decimal  _hydFlour          = 500m;
+    private decimal  _hydHydration      = 72m;
+    private decimal  _hydLevain         = 100m;
+    private decimal  _hydLevainHydration = 100m;
+    private bool     _hydLoading;
+    private string?  _hydError;
+    private HydrationResult? _hydResult;
+
+    private async Task RunHydration()
+    {
+        _hydError  = null;
+        _hydResult = null;
+        if (_hydFlour <= 0)        { _hydError = "Total flour must be greater than zero."; return; }
+        if (_hydLevain <= 0)       { _hydError = "Levain weight must be greater than zero."; return; }
+        if (_hydLevain >= _hydFlour) { _hydError = "Levain weight must be less than total flour."; return; }
+        _hydLoading = true;
+        try
+        {
+            var req = new HydrationRequest(_hydFlour, _hydHydration, _hydLevain, _hydLevainHydration);
+            var resp = await Http.PostAsJsonAsync("/api/calculators/hydration", req);
+            if (resp.IsSuccessStatusCode)
+                _hydResult = await resp.Content.ReadFromJsonAsync<HydrationResult>();
+            else
+                _hydError = await resp.Content.ReadAsStringAsync();
+        }
+        finally { _hydLoading = false; }
+    }
+
+    // ── 5. Cost state ─────────────────────────────────────────────────────────
+    private int     _costLoaves    = 10;
+    private decimal _costEnergy    = 0m;
+    private decimal _costLabour    = 0m;
+    private decimal _costPackaging = 0m;
+    private decimal _costOverhead  = 0m;
+    private List<CostIngredient> _costIngredients =
+    [
+        new() { Name = "Flour",  Grams = 500m, PricePer100g = 0.10m },
+        new() { Name = "Water",  Grams = 360m, PricePer100g = 0m    },
+        new() { Name = "Levain", Grams = 100m, PricePer100g = 0m    },
+        new() { Name = "Salt",   Grams = 10m,  PricePer100g = 0.05m },
+    ];
+    private bool       _costLoading;
+    private string?    _costError;
+    private CostResult? _costResult;
+
+    private async Task RunCost()
+    {
+        _costError  = null;
+        _costResult = null;
+        if (_costLoaves <= 0) { _costError = "Saleable loaves must be at least 1."; return; }
+        _costLoading = true;
+        try
+        {
+            var req = new CostRequest(_costIngredients, _costEnergy, _costLabour,
+                                      _costPackaging, _costOverhead, _costLoaves);
+            var resp = await Http.PostAsJsonAsync("/api/calculators/cost", req);
+            if (resp.IsSuccessStatusCode)
+                _costResult = await resp.Content.ReadFromJsonAsync<CostResult>();
+            else
+                _costError = await resp.Content.ReadAsStringAsync();
+        }
+        finally { _costLoading = false; }
+    }
+
+    // ── 6. Roux state ─────────────────────────────────────────────────────────
+    private decimal _rouxFlour      = 500m;
+    private decimal _rouxHydration  = 70m;
+    private decimal _rouxShare      = 6m;
+    private bool    _rouxIsTangzhong = true;
+    private bool    _rouxLoading;
+    private string? _rouxError;
+    private RouxResult? _rouxResult;
+
+    private async Task RunRoux()
+    {
+        _rouxError  = null;
+        _rouxResult = null;
+        if (_rouxFlour <= 0) { _rouxError = "Total flour must be greater than zero."; return; }
+        _rouxLoading = true;
+        try
+        {
+            var req = new RouxRequest(_rouxFlour, _rouxHydration, _rouxShare,
+                                      _rouxIsTangzhong ? 5m : 1m);
+            var resp = await Http.PostAsJsonAsync("/api/calculators/roux", req);
+            if (resp.IsSuccessStatusCode)
+                _rouxResult = await resp.Content.ReadFromJsonAsync<RouxResult>();
+            else
+                _rouxError = await resp.Content.ReadAsStringAsync();
+        }
+        finally { _rouxLoading = false; }
+    }
+}
