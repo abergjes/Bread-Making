@@ -2,7 +2,7 @@
 
 ## Current state (v8, June 2026)
 
-Milestones M0–M10, M13, and M19 are complete. The app is a hosted Blazor WASM solution with a full ASP.NET Core backend, EF Core + SQLite persistence, live bake execution, measurements, visualisations, history, SignalR notifications, audible alerts, outcome capture with photo upload, formula fields on every bake, a starter journal, and a six-tab baker's calculators page. Baker's guide v23 (2026-06-10) added §§48–54; §48 (calculators) and §54.3 (water-roux) are implemented in M19. Sections §49–§53 define four new milestones (M20–M23). Milestones M11–M18 and M20–M23 remain planned.
+Milestones M0–M10, M13, M19, and M20 are complete. The app is a hosted Blazor WASM solution with a full ASP.NET Core backend, EF Core + SQLite persistence, live bake execution, measurements, visualisations, history, SignalR notifications, audible alerts, outcome capture with photo upload, formula fields on every bake, a starter journal, a six-tab baker's calculators page, and a food safety reference page with StorageAdvisor chip. Baker's guide v23 (2026-06-10) added §§48–54; §§48–49 and §54.3 are implemented in M19–M20. Sections §50–§53 define milestones M21–M23. Milestones M11–M18 and M21–M23 remain planned.
 
 ## Vision
 
@@ -42,7 +42,7 @@ Before any milestone work begins, the solution is converted from a standalone WA
 | M17 | Grain encyclopedia | FlavorNotes / NutritionHighlights / UsageNotes / HistoricalOrigin on GrainProfile; 9 new grain seeds; profile cards on comparison page | M15 | 📋 Planned |
 | M18 | Crumb reading & troubleshooting | CrumbNotes on BakeOutcome; OutcomeSheet textarea; proofing-result enum; history card excerpt | M9, M15 | 📋 Planned |
 | M19 | Baker's calculators | `/calculators` page: baker's-% scaling, batch scaling with yield/loss, DDT water-temperature, levain split & true hydration, cost-per-loaf, tangzhong/yudane roux fold — all from baker's guide §48 + §54 | M14 | ✅ Done |
-| M20 | Food safety & shelf life | Temperature ladder reference; rope/mould fault cards; storage recommendations on bake outcome (§49) | — | 📋 Planned |
+| M20 | Food safety & shelf life | Temperature ladder reference; rope/mould fault cards; storage recommendations on bake outcome (§49) | — | ✅ Complete |
 | M21 | Equipment & kit guide | `/kit` reference page: tiered buying guide, steam-method comparison, preheat calculator, scoring tips (§50 + §51) | — | 📋 Planned |
 | M22 | Steamed breads | Mantou/baozi support: new `BakeMethod.Steamed`, steaming step defaults, low-protein flour guidance, steam-time advisor (§52) | M1 | 📋 Planned |
 | M23 | Enriched dough & milk breads | Shokupan/hokkaido support: enriched formula fields (butter %, egg %, sugar %), pullman-tin flag, milk-bread timeline, integrates roux from M19 (§53) | M19 | 📋 Planned |
