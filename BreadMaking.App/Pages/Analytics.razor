@@ -1,0 +1,322 @@
+@page "/history/analytics"
+@inject HttpClient Http
+@inject NavigationManager Nav
+@using BreadMaking.App.Shared.Dtos
+@using ApexCharts
+
+<div class="analytics-page">
+
+    <div class="comparison-header">
+        <button class="back-btn" @onclick='() => Nav.NavigateTo("/history")'>← History</button>
+        <div>
+            <h2 class="comparison-title">Analytics & trends</h2>
+            <p class="comparison-subtitle">Patterns hidden in your bake history</p>
+        </div>
+    </div>
+
+    <div class="analytics-tabs">
+        <button class="analytics-tab @(_tab == "scatter" ? "analytics-tab-active" : "")"
+                @onclick='() => _tab = "scatter"'>📊 Scatter</button>
+        <button class="analytics-tab @(_tab == "bests" ? "analytics-tab-active" : "")"
+                @onclick='() => _tab = "bests"'>🏆 Best loaves</button>
+        <button class="analytics-tab @(_tab == "trend" ? "analytics-tab-active" : "")"
+                @onclick='() => _tab = "trend"'>📈 Season trend</button>
+    </div>
+
+    @if (_loading)
+    {
+        <p class="comparison-loading">Loading…</p>
+    }
+    else if (_tab == "scatter")
+    {
+        <div class="analytics-controls">
+            <div class="analytics-control-group">
+                <label class="analytics-control-label">Y axis (outcome)</label>
+                <select class="filter-select" @bind="_metric" @bind:after="LoadScatter">
+                    <option value="ovenspring">Oven spring %</option>
+                    <option value="crumb">Crumb openness</option>
+                    <option value="taste">Taste score</option>
+                    <option value="overall">Overall score</option>
+                </select>
+            </div>
+            <div class="analytics-control-group">
+                <label class="analytics-control-label">X axis (factor)</label>
+                <select class="filter-select" @bind="_factor" @bind:after="LoadScatter">
+                    <option value="hydration">Hydration %</option>
+                    <option value="salt">Salt %</option>
+                    <option value="kitchentemp">Kitchen temp °C</option>
+                    <option value="inoculation">Inoculation %</option>
+                </select>
+            </div>
+        </div>
+
+        @if (_scatterLoading)
+        {
+            <p class="comparison-loading">Loading…</p>
+        }
+        else if (_scatterGroups.Count == 0)
+        {
+            <div class="comparison-empty">
+                <p>No bakes with both inputs and outcomes recorded yet.</p>
+                <button class="btn-primary" @onclick='() => Nav.NavigateTo("/")'>Start a bake</button>
+            </div>
+        }
+        else
+        {
+            <div class="comparison-panel">
+                <ApexChart TItem="CorrelationPointDto" Options="_scatterOptions" Height="360">
+                    @foreach (var group in _scatterGroups)
+                    {
+                        <ApexPointSeries TItem="CorrelationPointDto"
+                            Items="group"
+                            Name="@group[0].GrainName"
+                            SeriesType="SeriesType.Scatter"
+                            XValue="@(p => (decimal)p.X)"
+                            YValue="@(p => (decimal)p.Y)" />
+                    }
+                </ApexChart>
+            </div>
+            <p class="comparison-legend-note">Each dot is one bake. Hover for date and grain details.</p>
+        }
+    }
+    else if (_tab == "bests")
+    {
+        @if (_bests.Count == 0)
+        {
+            <div class="comparison-empty">
+                <p>Log outcomes on your bakes to see personal bests per grain.</p>
+                <button class="btn-primary" @onclick='() => Nav.NavigateTo("/")'>Start a bake</button>
+            </div>
+        }
+        else
+        {
+            <div class="pb-grid">
+                @foreach (var pb in _bests)
+                {
+                    <div class="pb-card" role="button" tabindex="0"
+                         @onclick='() => Nav.NavigateTo($"/bake/{pb.BakeId}")'>
+                        @if (pb.PhotoPath is not null)
+                        {
+                            <img class="pb-photo" src="/uploads/@pb.PhotoPath" alt="Best @pb.GrainName loaf" />
+                        }
+                        else
+                        {
+                            <div class="pb-photo-placeholder">🍞</div>
+                        }
+                        <div class="pb-info">
+                            <span class="pb-grain">@pb.GrainName</span>
+                            <span class="pb-date">@pb.Date</span>
+                            <div class="pb-metrics">
+                                @if (pb.OverallScore.HasValue)
+                                {
+                                    <span class="pb-score">@pb.OverallScore★</span>
+                                }
+                                @if (pb.OvenSpringPct.HasValue)
+                                {
+                                    <span class="pb-metric">↑@pb.OvenSpringPct.Value.ToString("F0")%</span>
+                                }
+                                @if (pb.CrumbOpenness.HasValue)
+                                {
+                                    <span class="pb-metric">crumb @pb.CrumbOpenness.Value.ToString("F0")/10</span>
+                                }
+                            </div>
+                            @if (!string.IsNullOrEmpty(pb.Tags))
+                            {
+                                <div class="pb-tags">
+                                    @foreach (var tag in pb.Tags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                                    {
+                                        <span class="bake-tag">@tag</span>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    }
+    else if (_tab == "trend")
+    {
+        @if (_trendData.Count == 0)
+        {
+            <div class="comparison-empty">
+                <p>Log bakes across several months to see a season trend appear.</p>
+                <button class="btn-primary" @onclick='() => Nav.NavigateTo("/")'>Start a bake</button>
+            </div>
+        }
+        else
+        {
+            <div class="comparison-panel">
+                <h3 class="panel-title">Oven spring % — monthly average</h3>
+                <ApexChart TItem="TrendPoint" Options="_springTrendOptions" Height="240">
+                    <ApexPointSeries TItem="TrendPoint"
+                        Items="_trendSpring"
+                        Name="Oven spring %"
+                        SeriesType="SeriesType.Area"
+                        XValue="@(p => p.Month)"
+                        YValue="@(p => p.Value)" />
+                </ApexChart>
+            </div>
+            <div class="comparison-panel" style="margin-top:16px">
+                <h3 class="panel-title">Crumb openness — monthly average</h3>
+                <ApexChart TItem="TrendPoint" Options="_crumbTrendOptions" Height="240">
+                    <ApexPointSeries TItem="TrendPoint"
+                        Items="_trendCrumb"
+                        Name="Crumb openness"
+                        SeriesType="SeriesType.Area"
+                        XValue="@(p => p.Month)"
+                        YValue="@(p => p.Value)" />
+                </ApexChart>
+            </div>
+        }
+    }
+
+</div>
+
+@code {
+    private string _tab    = "scatter";
+    private bool   _loading = true;
+    private bool   _scatterLoading;
+
+    private string _metric = "ovenspring";
+    private string _factor = "hydration";
+
+    private List<List<CorrelationPointDto>> _scatterGroups = [];
+    private List<PersonalBestDto>           _bests         = [];
+    private List<SeasonTrendDto>            _trendData     = [];
+
+    private record TrendPoint(string Month, decimal Value);
+    private List<TrendPoint> _trendSpring = [];
+    private List<TrendPoint> _trendCrumb  = [];
+
+    private ApexChartOptions<CorrelationPointDto> _scatterOptions     = null!;
+    private ApexChartOptions<TrendPoint>          _springTrendOptions = null!;
+    private ApexChartOptions<TrendPoint>          _crumbTrendOptions  = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var scatterTask = Http.GetFromJsonAsync<List<CorrelationPointDto>>(
+                $"/api/analytics/correlations?metric={_metric}&factor={_factor}");
+            var bestsTask   = Http.GetFromJsonAsync<List<PersonalBestDto>>("/api/analytics/personal-bests");
+            var trendTask   = Http.GetFromJsonAsync<List<SeasonTrendDto>>("/api/analytics/season-trend");
+
+            await Task.WhenAll(scatterTask, bestsTask, trendTask);
+
+            BuildScatter(scatterTask.Result ?? []);
+            _bests     = bestsTask.Result  ?? [];
+            _trendData = trendTask.Result  ?? [];
+            BuildTrendSeries();
+        }
+        finally { _loading = false; }
+    }
+
+    private async Task LoadScatter()
+    {
+        _scatterLoading = true;
+        StateHasChanged();
+        var raw = await Http.GetFromJsonAsync<List<CorrelationPointDto>>(
+            $"/api/analytics/correlations?metric={_metric}&factor={_factor}") ?? [];
+        BuildScatter(raw);
+        _scatterLoading = false;
+    }
+
+    private void BuildScatter(List<CorrelationPointDto> raw)
+    {
+        _scatterGroups = raw
+            .GroupBy(p => p.GrainName)
+            .Select(g => g.ToList())
+            .ToList();
+
+        _scatterOptions = new ApexChartOptions<CorrelationPointDto>
+        {
+            Chart = new Chart
+            {
+                Background = "transparent",
+                Toolbar    = new Toolbar { Show = false },
+            },
+            Xaxis = new XAxis
+            {
+                Type  = XAxisType.Numeric,
+                Title = new AxisTitle { Text = FactorLabel },
+                DecimalsInFloat = 1,
+            },
+            Yaxis =
+            [
+                new YAxis
+                {
+                    Title           = new AxisTitle { Text = MetricLabel },
+                    Min             = 0,
+                    DecimalsInFloat = 1,
+                }
+            ],
+            Grid       = new Grid { Show = true, BorderColor = "#e0c9a8", StrokeDashArray = 3 },
+            DataLabels = new DataLabels { Enabled = false },
+            Tooltip    = new Tooltip
+            {
+                // custom tooltip shows grain + date + values
+                Custom = null,
+            },
+            Markers = new Markers { Size = 6 },
+        };
+    }
+
+    private void BuildTrendSeries()
+    {
+        _trendSpring = _trendData
+            .Where(d => d.AvgOvenSpring.HasValue)
+            .Select(d => new TrendPoint(d.Month, (decimal)d.AvgOvenSpring!.Value))
+            .ToList();
+
+        _trendCrumb = _trendData
+            .Where(d => d.AvgCrumbOpenness.HasValue)
+            .Select(d => new TrendPoint(d.Month, (decimal)d.AvgCrumbOpenness!.Value))
+            .ToList();
+
+        _springTrendOptions = MakeTrendOptions("#c2651a", "Oven spring %", yMax: null);
+        _crumbTrendOptions  = MakeTrendOptions("#4a7c59", "Crumb openness", yMax: 10.0);
+    }
+
+    private static ApexChartOptions<TrendPoint> MakeTrendOptions(string color, string yLabel, double? yMax) =>
+        new()
+        {
+            Chart = new Chart
+            {
+                Background = "transparent",
+                Toolbar    = new Toolbar { Show = false },
+            },
+            Colors     = [color],
+            Fill       = new Fill { Opacity = [0.4] },
+            DataLabels = new DataLabels { Enabled = false },
+            Grid       = new Grid { Show = true, BorderColor = "#e0c9a8", StrokeDashArray = 3 },
+            Xaxis      = new XAxis { Type = XAxisType.Category },
+            Yaxis =
+            [
+                new YAxis
+                {
+                    Title           = new AxisTitle { Text = yLabel },
+                    Min             = 0,
+                    Max             = yMax,
+                    DecimalsInFloat = 1,
+                }
+            ],
+            Markers = new Markers { Size = 4 },
+        };
+
+    private string MetricLabel => _metric switch
+    {
+        "crumb"   => "Crumb openness",
+        "taste"   => "Taste score",
+        "overall" => "Overall score",
+        _         => "Oven spring %",
+    };
+
+    private string FactorLabel => _factor switch
+    {
+        "salt"        => "Salt %",
+        "kitchentemp" => "Kitchen temp °C",
+        "inoculation" => "Inoculation %",
+        _             => "Hydration %",
+    };
+}

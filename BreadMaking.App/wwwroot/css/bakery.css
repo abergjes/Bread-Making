@@ -3438,3 +3438,212 @@ body {
     font-size: 1rem;
     cursor: default;
 }
+
+/* ─── M15: Analytics page ─── */
+
+.analytics-page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 16px;
+}
+
+.analytics-tabs {
+    display: flex;
+    gap: 8px;
+    margin: 16px 0;
+    flex-wrap: wrap;
+}
+
+.analytics-tab {
+    padding: 8px 16px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--panel);
+    color: var(--text-muted);
+    font-size: .88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: border-color .12s, color .12s, background .12s;
+}
+
+.analytics-tab:hover        { border-color: var(--accent); color: var(--text); }
+.analytics-tab-active       { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 10%, var(--panel)); color: var(--accent); }
+
+.analytics-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 0 0 16px;
+}
+
+.analytics-control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.analytics-control-label {
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--text-muted);
+}
+
+.analytics-empty {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 32px 16px;
+    font-size: .9rem;
+}
+
+/* Personal bests gallery */
+
+.pb-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+    margin-top: 4px;
+}
+
+.pb-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color .12s;
+}
+
+.pb-card:hover { border-color: var(--accent); }
+
+.pb-photo {
+    width: 100%;
+    height: 130px;
+    object-fit: cover;
+    display: block;
+}
+
+.pb-photo-placeholder {
+    width: 100%;
+    height: 130px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    background: var(--bg);
+}
+
+.pb-info {
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+
+.pb-grain {
+    font-size: .88rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.pb-date {
+    font-size: .75rem;
+    color: var(--text-muted);
+}
+
+.pb-metrics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.pb-score {
+    font-size: .8rem;
+    font-weight: 700;
+    color: var(--accent);
+}
+
+.pb-metric {
+    font-size: .78rem;
+    color: var(--text-muted);
+}
+
+.pb-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+/* ─── M15: Bake diff (GrainComparison.razor) ─── */
+
+.diff-section {
+    margin-top: 32px;
+    padding: 0 4px;
+}
+
+.diff-selectors {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.diff-vs {
+    font-size: .8rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    flex-shrink: 0;
+}
+
+.diff-table-wrap {
+    overflow-x: auto;
+}
+
+.diff-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .87rem;
+}
+
+.diff-table th,
+.diff-table td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+
+.diff-table th {
+    font-size: .75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--text-muted);
+    background: var(--bg);
+}
+
+.diff-date {
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    margin-left: 4px;
+}
+
+.diff-field-col { width: 35%; }
+
+.diff-field {
+    color: var(--text-muted);
+    font-size: .8rem;
+}
+
+.diff-row-changed td {
+    background: color-mix(in srgb, var(--accent) 8%, var(--panel));
+    font-weight: 600;
+}
+
+.diff-row-changed .diff-field {
+    font-weight: 400;
+}

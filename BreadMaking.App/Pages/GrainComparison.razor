@@ -2,6 +2,7 @@
 @inject HttpClient Http
 @inject NavigationManager Nav
 @using BreadMaking.App.Shared.Dtos
+@using BreadMaking.App.Shared
 
 <div class="comparison-page">
 
@@ -70,6 +71,71 @@
             Grey bars = fewer than 3 bakes recorded — log more bakes to see comparison data.
         </p>
     }
+
+    <div class="diff-section">
+        <h3 class="grain-profiles-heading">Bake diff</h3>
+        <p class="grain-profiles-subtitle">Select two bakes to compare inputs and outcomes side-by-side</p>
+
+        @if (_bakeList.Count < 2)
+        {
+            <p class="analytics-empty">Log at least two bakes to use the diff tool.</p>
+        }
+        else
+        {
+            <div class="diff-selectors">
+                <select class="filter-select" @bind="_diffIdA" @bind:after="LoadDiff">
+                    <option value="0">— Bake A —</option>
+                    @foreach (var b in _bakeList)
+                    {
+                        <option value="@b.Id">@b.StartedAt.ToLocalTime().ToString("d MMM yyyy") · @b.GrainName</option>
+                    }
+                </select>
+                <span class="diff-vs">vs</span>
+                <select class="filter-select" @bind="_diffIdB" @bind:after="LoadDiff">
+                    <option value="0">— Bake B —</option>
+                    @foreach (var b in _bakeList)
+                    {
+                        <option value="@b.Id">@b.StartedAt.ToLocalTime().ToString("d MMM yyyy") · @b.GrainName</option>
+                    }
+                </select>
+            </div>
+
+            @if (_diffLoading)
+            {
+                <p class="comparison-loading">Loading diff…</p>
+            }
+            else if (_diffA is not null && _diffB is not null)
+            {
+                <div class="diff-table-wrap">
+                    <table class="diff-table">
+                        <thead>
+                            <tr>
+                                <th class="diff-field-col">Field</th>
+                                <th>Bake @_diffA.BakeId <span class="diff-date">@_diffA.Date</span></th>
+                                <th>Bake @_diffB.BakeId <span class="diff-date">@_diffB.Date</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @DiffRow("Grain",        _diffA.GrainName,      _diffB.GrainName)
+                            @DiffRow("Method",       _diffA.Method,         _diffB.Method)
+                            @DiffRowF("Hydration %", _diffA.HydrationPct,   _diffB.HydrationPct,  "F1")
+                            @DiffRowF("Salt %",      _diffA.SaltPct,        _diffB.SaltPct,       "F2")
+                            @DiffRowF("Inoculation %", _diffA.InoculationPct, _diffB.InoculationPct, "F1")
+                            @DiffRow("Starter",      StarterLabel(_diffA.StarterActivity), StarterLabel(_diffB.StarterActivity))
+                            @DiffRowF("Kitchen temp °C", _diffA.AmbientTempC, _diffB.AmbientTempC, "F1")
+                            @DiffRowF("Oven spring %",   _diffA.OvenSpringPct,  _diffB.OvenSpringPct,  "F0")
+                            @DiffRowI("Crumb openness",  _diffA.CrumbOpenness,  _diffB.CrumbOpenness,  "/10")
+                            @DiffRowI("Overall score",   _diffA.OverallScore,   _diffB.OverallScore,   "★")
+                            @DiffRowI("Taste",           _diffA.TasteScore,     _diffB.TasteScore,     "/10")
+                            @DiffRowI("Crust",           _diffA.CrustScore,     _diffB.CrustScore,     "/10")
+                            @DiffRow("Proofing",     ProofingLabel(_diffA.ProofingResult), ProofingLabel(_diffB.ProofingResult))
+                            @DiffRow("Tags",         _diffA.Tags ?? "—",    _diffB.Tags ?? "—")
+                        </tbody>
+                    </table>
+                </div>
+            }
+        }
+    </div>
 
     @if (_profiles.Count > 0)
     {
@@ -148,6 +214,14 @@
     private List<GrainProfileDto>    _profiles  = [];
     private int?                     _expandedId;
 
+    // Bake diff (M15)
+    private List<BakeListItemDto> _bakeList   = [];
+    private int                   _diffIdA;
+    private int                   _diffIdB;
+    private bool                  _diffLoading;
+    private BakeDiffSideDto?      _diffA;
+    private BakeDiffSideDto?      _diffB;
+
     private record GrainBar(string Name, decimal Value, bool IsPlaceholder);
 
     private List<GrainBar> _ovenBars  = [];
@@ -164,12 +238,31 @@
         {
             var compTask     = Http.GetFromJsonAsync<List<GrainComparisonDto>>("/api/grains/comparison");
             var profilesTask = Http.GetFromJsonAsync<List<GrainProfileDto>>("/api/grains/profiles");
-            await Task.WhenAll(compTask, profilesTask);
+            var bakesTask    = Http.GetFromJsonAsync<List<BakeListItemDto>>("/api/bakes");
+            await Task.WhenAll(compTask, profilesTask, bakesTask);
             _data     = compTask.Result     ?? [];
             _profiles = profilesTask.Result ?? [];
+            _bakeList = (bakesTask.Result   ?? [])
+                .OrderByDescending(b => b.StartedAt)
+                .ToList();
             BuildChartData();
         }
         finally { _loading = false; }
+    }
+
+    private async Task LoadDiff()
+    {
+        if (_diffIdA == 0 || _diffIdB == 0 || _diffIdA == _diffIdB) return;
+        _diffLoading = true;
+        StateHasChanged();
+        var sides = await Http.GetFromJsonAsync<BakeDiffSideDto[]>(
+            $"/api/analytics/bake-diff?a={_diffIdA}&b={_diffIdB}");
+        if (sides is { Length: 2 })
+        {
+            _diffA = sides[0];
+            _diffB = sides[1];
+        }
+        _diffLoading = false;
     }
 
     private void BuildChartData()
@@ -234,4 +327,55 @@
                 }
             ],
         };
+
+    // Diff table helpers
+    private RenderFragment DiffRow(string field, string? a, string? b)
+    {
+        bool changed = !string.Equals(a ?? "", b ?? "", StringComparison.OrdinalIgnoreCase);
+        return @<tr class="@(changed ? "diff-row-changed" : "")">
+            <td class="diff-field">@field</td>
+            <td>@(a ?? "—")</td>
+            <td>@(b ?? "—")</td>
+        </tr>;
+    }
+
+    private RenderFragment DiffRowF(string field, double? a, double? b, string fmt)
+    {
+        string sa = a.HasValue ? a.Value.ToString(fmt) : "—";
+        string sb = b.HasValue ? b.Value.ToString(fmt) : "—";
+        bool changed = sa != sb;
+        return @<tr class="@(changed ? "diff-row-changed" : "")">
+            <td class="diff-field">@field</td>
+            <td>@sa</td>
+            <td>@sb</td>
+        </tr>;
+    }
+
+    private RenderFragment DiffRowI(string field, int? a, int? b, string suffix)
+    {
+        string sa = a.HasValue ? a.Value + suffix : "—";
+        string sb = b.HasValue ? b.Value + suffix : "—";
+        bool changed = sa != sb;
+        return @<tr class="@(changed ? "diff-row-changed" : "")">
+            <td class="diff-field">@field</td>
+            <td>@sa</td>
+            <td>@sb</td>
+        </tr>;
+    }
+
+    private static string? StarterLabel(int? activity) => activity switch
+    {
+        1 => "Just fed",
+        2 => "At peak",
+        3 => "Past peak",
+        _ => null,
+    };
+
+    private static string? ProofingLabel(int? result) => result switch
+    {
+        1 => "Under-proofed",
+        2 => "Properly proofed",
+        3 => "Over-proofed",
+        _ => null,
+    };
 }
