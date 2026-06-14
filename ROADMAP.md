@@ -37,7 +37,7 @@ Before any milestone work begins, the solution is converted from a standalone WA
 | M12 | Ratings & tags | Overall score (1–5 stars), free-form tags, best-loaf flag on BakeOutcome | M15 | ✅ Complete |
 | M13 | Starter journal | Starter + StarterFeedLog entities; /starter page; link bake to feed log entry | M15 | ✅ Complete |
 | M14 | Recipe library | User-created recipes with baker's %-formula; save-from-advisor flow; IsUserDefined flag | — | ✅ Complete |
-| M15 | Analytics & trends | Scatter correlations, personal bests, season trend, bake-to-bake diff view | — | 📋 Planned |
+| M15 | Analytics & trends | Scatter correlations, personal bests, season trend, bake-to-bake diff view | — | ✅ Done |
 | M16 | PWA & offline | Service worker, offline step progression via IndexedDB queue, app manifest | — | 📋 Planned |
 | M17 | Grain encyclopedia | FlavorNotes / NutritionHighlights / UsageNotes / HistoricalOrigin on GrainProfile; 17 grain seeds; profile cards on comparison page | M15 | ✅ Done |
 | M18 | Crumb reading & troubleshooting | CrumbNotes on BakeOutcome; OutcomeSheet textarea; proofing-result enum; history card excerpt | M9, M15 | ✅ Done |
