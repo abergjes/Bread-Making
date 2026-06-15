@@ -1,0 +1,425 @@
+@page "/inclusions"
+@inject NavigationManager Nav
+
+<div class="incl-page">
+
+    <div class="incl-header">
+        <button class="back-btn" @onclick='() => Nav.NavigateTo("/history")'>← History</button>
+        <div class="incl-title-group">
+            <h2 class="incl-title">Inclusions & Add-ins</h2>
+            <p class="incl-subtitle">How to prepare, time, and quantity-adjust seeds, fruits, nuts, and savoury add-ins</p>
+        </div>
+    </div>
+
+    <div class="incl-tabs">
+        @foreach (var t in _tabs)
+        {
+            <button class="incl-tab @(_activeTab == t.Id ? "incl-tab--active" : "")"
+                    @onclick="() => _activeTab = t.Id">@t.Label</button>
+        }
+    </div>
+
+    @if (_activeTab == "principles")
+    {
+        <section class="incl-section">
+            <p class="incl-intro">
+                Inclusions are added after bulk structure is established — too early and they cut gluten strands;
+                too late and they tear a shaped loaf. As a rule: add at the lamination fold, or fold in during
+                the first 30 minutes of bulk before significant gluten has built up.
+            </p>
+
+            <div class="incl-principle-grid">
+                @foreach (var p in _principles)
+                {
+                    <div class="incl-principle-card">
+                        <span class="incl-principle-icon">@p.Icon</span>
+                        <div class="incl-principle-name">@p.Name</div>
+                        <p class="incl-principle-desc">@p.Description</p>
+                    </div>
+                }
+            </div>
+
+            <div class="incl-timing-card">
+                <div class="incl-timing-title">When to add inclusions during the bake process</div>
+                <div class="incl-timeline">
+                    @foreach (var s in _addTimings)
+                    {
+                        <div class="incl-tl-item incl-tl-item--@s.RecommendClass">
+                            <div class="incl-tl-dot"></div>
+                            <div class="incl-tl-body">
+                                <div class="incl-tl-label">@s.Stage</div>
+                                <div class="incl-tl-rec incl-tl-rec--@s.RecommendClass">@s.Recommendation</div>
+                                <div class="incl-tl-text">@s.Detail</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="incl-hydration-card">
+                <div class="incl-hydration-title">Hydration adjustment by inclusion type</div>
+                <p class="incl-hydration-intro">
+                    Dry inclusions (unsoaked seeds, raw nuts, dry fruits) absorb water from the dough during baking,
+                    tightening the crumb and drying the interior. Soak them first, or reduce overall hydration
+                    by the absorption amount.
+                </p>
+                <div class="incl-hydration-grid">
+                    @foreach (var row in _hydrationAdjustments)
+                    {
+                        <div class="incl-hydration-row">
+                            <span class="incl-hydration-type">@row.Type</span>
+                            <span class="incl-hydration-adj incl-hydration-adj--@row.AdjClass">@row.Adjustment</span>
+                            <span class="incl-hydration-note">@row.Note</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </section>
+    }
+    else if (_activeTab == "seeds")
+    {
+        <section class="incl-section">
+            <p class="incl-intro">
+                Seeds add crunch, nutrition, and flavour without significantly disrupting gluten structure.
+                Toast most seeds before adding — it removes moisture and intensifies flavour compounds.
+                Soak dense seeds (flax, hemp) to prevent moisture draw from the crumb.
+            </p>
+
+            <div class="incl-item-grid">
+                @foreach (var item in _seeds)
+                {
+                    <div class="incl-item-card">
+                        <div class="incl-item-header">
+                            <span class="incl-item-icon">@item.Icon</span>
+                            <div>
+                                <div class="incl-item-name">@item.Name</div>
+                                <div class="incl-item-qty">@item.Quantity</div>
+                            </div>
+                            <div class="incl-item-tags">
+                                <span class="incl-tag incl-tag--@item.PrepClass">@item.PrepLabel</span>
+                                <span class="incl-tag incl-tag--timing">@item.When</span>
+                            </div>
+                        </div>
+                        @if (!string.IsNullOrEmpty(item.Prep))
+                        {
+                            <div class="incl-prep-row">
+                                <span class="incl-prep-label">Prep:</span> @item.Prep
+                            </div>
+                        }
+                        <p class="incl-item-desc">@item.Description</p>
+                        <div class="incl-item-pairs">
+                            @foreach (var pair in item.Pairs)
+                            {
+                                <span class="incl-pair-chip">@pair</span>
+                            }
+                        </div>
+                        @if (!string.IsNullOrEmpty(item.Tip))
+                        {
+                            <div class="incl-item-tip">💡 @item.Tip</div>
+                        }
+                    </div>
+                }
+            </div>
+        </section>
+    }
+    else if (_activeTab == "fruits")
+    {
+        <section class="incl-section">
+            <p class="incl-intro">
+                Dried fruits add sugar directly to the crumb — this accelerates fermentation and can cause
+                localised over-proof around each piece. Keep quantities moderate (15–25%) and add late in bulk
+                or at lamination. Fresh fruits add significant water; reduce dough hydration to compensate.
+            </p>
+
+            <div class="incl-item-grid">
+                @foreach (var item in _fruitsAndNuts)
+                {
+                    <div class="incl-item-card">
+                        <div class="incl-item-header">
+                            <span class="incl-item-icon">@item.Icon</span>
+                            <div>
+                                <div class="incl-item-name">@item.Name</div>
+                                <div class="incl-item-qty">@item.Quantity</div>
+                            </div>
+                            <div class="incl-item-tags">
+                                <span class="incl-tag incl-tag--@item.PrepClass">@item.PrepLabel</span>
+                                <span class="incl-tag incl-tag--timing">@item.When</span>
+                            </div>
+                        </div>
+                        @if (!string.IsNullOrEmpty(item.Prep))
+                        {
+                            <div class="incl-prep-row">
+                                <span class="incl-prep-label">Prep:</span> @item.Prep
+                            </div>
+                        }
+                        <p class="incl-item-desc">@item.Description</p>
+                        <div class="incl-item-pairs">
+                            @foreach (var pair in item.Pairs)
+                            {
+                                <span class="incl-pair-chip">@pair</span>
+                            }
+                        </div>
+                        @if (!string.IsNullOrEmpty(item.Tip))
+                        {
+                            <div class="incl-item-tip">💡 @item.Tip</div>
+                        }
+                    </div>
+                }
+            </div>
+        </section>
+    }
+    else if (_activeTab == "savoury")
+    {
+        <section class="incl-section">
+            <p class="incl-intro">
+                Savoury inclusions — olives, cheese, herbs, alliums — transform a plain loaf into a centrepiece.
+                Fats from cheese and olives weaken gluten slightly; compensate with tighter shaping.
+                Wet ingredients (roasted garlic, caramelised onion) add moisture; pat dry before adding.
+            </p>
+
+            <div class="incl-item-grid">
+                @foreach (var item in _savoury)
+                {
+                    <div class="incl-item-card">
+                        <div class="incl-item-header">
+                            <span class="incl-item-icon">@item.Icon</span>
+                            <div>
+                                <div class="incl-item-name">@item.Name</div>
+                                <div class="incl-item-qty">@item.Quantity</div>
+                            </div>
+                            <div class="incl-item-tags">
+                                <span class="incl-tag incl-tag--@item.PrepClass">@item.PrepLabel</span>
+                                <span class="incl-tag incl-tag--timing">@item.When</span>
+                            </div>
+                        </div>
+                        @if (!string.IsNullOrEmpty(item.Prep))
+                        {
+                            <div class="incl-prep-row">
+                                <span class="incl-prep-label">Prep:</span> @item.Prep
+                            </div>
+                        }
+                        <p class="incl-item-desc">@item.Description</p>
+                        <div class="incl-item-pairs">
+                            @foreach (var pair in item.Pairs)
+                            {
+                                <span class="incl-pair-chip">@pair</span>
+                            }
+                        </div>
+                        @if (!string.IsNullOrEmpty(item.Tip))
+                        {
+                            <div class="incl-item-tip">💡 @item.Tip</div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <div class="incl-fat-warning">
+                <span>⚠️</span>
+                <div>
+                    <strong>Fat inclusions and gluten:</strong> Cheese, olives, and oily herbs all introduce fat into
+                    the dough matrix. Fat coats gluten strands and reduces extensibility. Add these inclusions as late
+                    as possible (lamination or final fold), work quickly during shaping, and expect a slightly denser
+                    crumb than an equivalent plain loaf. The flavour trade-off is overwhelmingly worth it.
+                </div>
+            </div>
+        </section>
+    }
+
+</div>
+
+@code {
+    private string _activeTab = "principles";
+
+    private record Tab(string Id, string Label);
+    private readonly Tab[] _tabs =
+    [
+        new("principles", "Principles"),
+        new("seeds",      "Seeds & Grains"),
+        new("fruits",     "Fruits & Nuts"),
+        new("savoury",    "Savoury"),
+    ];
+
+    private record Principle(string Icon, string Name, string Description);
+    private readonly Principle[] _principles =
+    [
+        new("⚖️", "Quantity matters",
+            "Most inclusions work best at 15–25% of flour weight. Above 30%, gluten cannot bridge between pieces and the loaf cannot hold structure. Below 10%, flavour is imperceptible."),
+        new("🔥", "Toast dry seeds and nuts",
+            "Toasting removes surface moisture, intensifies Maillard flavour compounds, and prevents raw beany or grassy notes. Do it before mixing — inclusions added raw rarely toast adequately inside a closed crumb."),
+        new("💧", "Soak high-absorption items",
+            "Flax, hemp, oats, and dried fruits all draw moisture aggressively from the dough. Soak in equal-weight water for 30–60 min, drain, and add the soaked weight to your formula. Or reduce dough water by ~50% of the inclusion weight."),
+        new("✂️", "Cut large pieces smaller",
+            "Large chunks (half-walnut, whole fig) create voids in the crumb and stress gluten. Chop to hazelnut-size or smaller. Smaller pieces distribute more evenly and score through more cleanly."),
+        new("⏰", "Add at the right stage",
+            "Lamination fold (after set 1 of bulk) is ideal — the dough has structure but is still extensible enough to envelop inclusions without tearing. Adding at mix weakens early gluten; adding at shaping tears the surface."),
+        new("🧂", "Adjust salt for seasoned inclusions",
+            "Olives, capers, cured meats, and aged cheeses are already salty. Reduce dough salt by 0.2–0.5% when using these ingredients or the final loaf will be aggressively salty."),
+    ];
+
+    private record AddTiming(string Stage, string Recommendation, string RecommendClass, string Detail);
+    private readonly AddTiming[] _addTimings =
+    [
+        new("Mix / autolyse",         "Avoid",        "avoid",
+            "Inclusions at this stage are beaten into the gluten network before it forms, physically cutting strands. Reserve for very robust items only (e.g., whole rolled oats at <10%)."),
+        new("Set 1 folds (30 min)",   "Acceptable",   "ok",
+            "Gluten is just beginning to form. Small, light inclusions (fine seeds, dried herbs) can be added here with minimal disruption."),
+        new("Lamination fold (60 min)","Best",         "best",
+            "The dough is spread thin on the bench, inclusions are scattered, then the dough is folded back over them. This is the most even distribution method and causes least gluten damage."),
+        new("Set 2–3 folds",          "Acceptable",   "ok",
+            "Coil fold in inclusions gently. Works for items you forgot to add at lamination. Avoid sharp items (hard nuts) that could pierce gluten."),
+        new("Pre-shape",              "Last resort",  "avoid",
+            "Adding at pre-shape tears the surface and leaves inclusions visible on the exterior. Only acceptable for items meant to be surface-applied (seeds for crust)."),
+        new("Crust / banneton",       "Surface only", "surface",
+            "Roll shaped dough in seeds, nuts, or oats for a coated crust. These items will toast in the oven and create a textured exterior. They do not affect crumb structure."),
+    ];
+
+    private record HydrationRow(string Type, string Adjustment, string AdjClass, string Note);
+    private readonly HydrationRow[] _hydrationAdjustments =
+    [
+        new("Toasted seeds (unsoaked)",   "Reduce water 3–5%",  "reduce",   "Absorb ~40–60% of their weight in water from the crumb during baking"),
+        new("Soaked seeds",               "No adjustment",      "none",     "Pre-saturated seeds take no water from the dough"),
+        new("Dried fruit (unsoaked)",     "Reduce water 5–8%",  "reduce",   "High sugar content draws water osmotically from surrounding dough"),
+        new("Soaked dried fruit",         "Reduce water 2–3%",  "small",    "Still slightly hygroscopic even after soaking; drain well"),
+        new("Raw nuts",                   "Reduce water 2–3%",  "small",    "Lower absorption than seeds; mostly affect crumb texture"),
+        new("Olives (drained)",           "Reduce water 3–5%",  "reduce",   "Oil coating adds fat to dough; brine released during baking adds salt and moisture"),
+        new("Fresh herbs / greens",       "No adjustment",      "none",     "Water content is negligible at typical quantities (1–3% flour weight)"),
+        new("Cheese (grated / cubed)",    "Reduce water 2–4%",  "reduce",   "Releases fat and some moisture during baking; dense inclusion weakens gluten locally"),
+        new("Roasted garlic / onion",     "Reduce water 5–10%", "reduce",   "Very high moisture content; pat dry on paper towel before adding"),
+        new("Sun-dried tomatoes",         "No adjustment",      "none",     "Oil-packed type is dry enough; rehydrated type: drain and reduce water 3%"),
+    ];
+
+    private record Inclusion(string Icon, string Name, string Quantity, string PrepLabel, string PrepClass,
+        string When, string Prep, string Description, string[] Pairs, string Tip = "");
+
+    private readonly Inclusion[] _seeds =
+    [
+        new("🟡", "Sesame (white/black)", "10–20% flour", "Toast", "toast", "Lamination or crust",
+            "Toast in a dry pan over medium heat until golden and fragrant (3–4 min). Cool completely.",
+            "The most versatile seed inclusion. White sesame adds a mild nutty flavour; black sesame is more bitter and striking visually. Both work equally well in the crumb or as a crust coating.",
+            ["Country sourdough", "Rye", "Rolls", "Seeded tin loaf"],
+            "A sesame crust: roll the shaped loaf in a shallow tray of sesame seeds immediately after shaping, before the banneton."),
+        new("🔵", "Poppy seeds", "5–10% flour", "Use dry", "dry", "Lamination or crust",
+            "No preparation needed. Use straight from the bag.",
+            "A fine seed that does not disrupt gluten structure at typical quantities. Adds a distinctive mineral, slightly earthy note. Pairs classically with lemon zest.",
+            ["White sandwich loaf", "Rolls", "Enriched breads", "Rye"],
+            "Combine with lemon zest (0.5% flour weight) for a classic flavour pairing."),
+        new("🌻", "Sunflower seeds", "15–20% flour", "Toast + soak", "toast", "Lamination",
+            "Toast until golden (5–6 min at 180 °C). Cool, then soak in equal-weight warm water for 30 min. Drain before use.",
+            "A bold, buttery seed that benefits most from soaking — unsoaked sunflower seeds create dry patches in the crumb. One of the most popular inclusions in German-style whole grain loaves.",
+            ["Whole grain", "Rye", "Seeded sourdough", "Spelt"],
+            "Reserve the sunflower soak water (rich in nutrients and flavour) and use it as part of the dough water."),
+        new("🟩", "Pumpkin seeds (pepitas)", "10–15% flour", "Toast", "toast", "Lamination",
+            "Toast at 170 °C for 8–10 min until puffed and lightly coloured. Cool completely.",
+            "A large, flat seed with a rich, savoury flavour. Pumpkin seeds hold their shape well in the crumb. Pairs beautifully with rye and whole-grain doughs.",
+            ["Rye", "Spelt", "Whole grain", "Multi-seed loaf"],
+            "Chop roughly if they are very large — a whole pumpkin seed creates a significant void in the crumb when it is bitten through."),
+        new("🟤", "Flaxseeds (linseed)", "5–10% flour", "Soak — essential", "soak", "Lamination",
+            "Soak in 2× their weight in cold water for 2–8 h or overnight. They form a gel — use the whole gelatinous mass.",
+            "Flax absorbs an extraordinary amount of water (2× its weight) and must be soaked. The resulting gel distributes evenly through the dough and adds moisture retention. Do not add flax unsoaked.",
+            ["Whole grain", "Seeded rye", "Spelt", "Multi-seed"],
+            "Ground flax (linseed meal) releases omega-3 compounds more readily than whole seeds and disperses more evenly, though it gives less texture."),
+        new("🌿", "Hemp seeds", "5–10% flour", "Soak 30 min", "soak", "Lamination",
+            "Soak in equal-weight water for 30 min. Drain before use.",
+            "A soft, mild seed with a faintly grassy flavour. High in protein and fat. Hemp seeds soften during baking rather than crisping — their primary contribution is nutritional rather than textural.",
+            ["Whole grain", "Spelt", "Nutrition-focused loaves"],
+            "Use hulled hemp seeds (hearts) rather than whole hemp seeds — the hulls are bitter and visually unappealing in a pale crumb."),
+        new("🥣", "Rolled oats", "10–20% flour", "Soak 30 min", "soak", "Early bulk or lamination",
+            "Soak in equal-weight boiling water for 30 min. Cool before adding to dough.",
+            "Adds a soft, porridge-like quality to the crumb and a characteristic mild, creamy flavour. An oat porridge bread (using a soaker) is one of the most comforting everyday loaves.",
+            ["Porridge bread", "Soft tin loaf", "Enriched loaves", "Sandwich bread"],
+            "For an oat crust: roll the shaped loaf in dry rolled oats before placing in the banneton — they toast golden during baking."),
+        new("⚫", "Caraway seeds", "1–3% flour", "Use dry", "dry", "Lamination or mix",
+            "No preparation. Use whole or lightly crushed.",
+            "Caraway seeds are aromatic rather than structural — quantities stay low (1–3%). They define the flavour of classic German and Jewish rye breads. A small amount goes a very long way.",
+            ["Rye", "Caraway rye", "Soda bread"],
+            "Lightly crushing half the caraway seeds releases their volatile oils into the dough while the other half stays whole for texture."),
+    ];
+
+    private readonly Inclusion[] _fruitsAndNuts =
+    [
+        new("🍇", "Raisins / sultanas", "15–25% flour", "Soak", "soak", "Lamination",
+            "Soak in warm water, tea, or rum for 20–30 min. Drain and pat dry before adding.",
+            "The most common dried fruit inclusion. Very high sugar content accelerates fermentation locally — watch bulk timing. Soaking plumps them and prevents the crumb from drying out.",
+            ["Cinnamon raisin loaf", "Fruit sourdough", "Enriched breads", "Rye"],
+            "Soak raisins in strong black tea for a more complex, less sweet flavour that complements whole-grain breads."),
+        new("🍒", "Dried cranberries", "10–15% flour", "Soak 15 min", "soak", "Lamination",
+            "Soak in warm water for 15 min to soften. Drain. Chop in half if large.",
+            "Bright, tart fruit that contrasts beautifully with mild, creamy crumbs. The acidity also complements sourdough's own tang. Often paired with orange zest or walnuts.",
+            ["Walnut-cranberry sourdough", "White country loaf", "Spelt"],
+            "Cranberry and orange zest (1% flour weight) is a classic combination — add the zest at lamination with the cranberries."),
+        new("🟤", "Dried figs", "15–20% flour", "Chop + soak", "soak", "Lamination",
+            "Stem and chop into hazelnut-sized pieces. Soak in warm water or Marsala wine for 20 min. Drain.",
+            "A dense, intensely sweet fruit with an earthy, jammy character. Works particularly well in whole-grain and rye breads where the grain flavour is strong enough to stand up to the fig's sweetness.",
+            ["Rye", "Whole grain", "Walnut-fig sourdough"],
+            "Pair with toasted walnuts and a small amount of fennel seed (0.5%) for a classic Italian-inspired combination."),
+        new("🟡", "Dried apricots", "10–15% flour", "Chop + soak", "soak", "Lamination",
+            "Chop into small pieces. Soak in warm orange juice or water for 20 min. Drain.",
+            "Bright, tangy, and aromatic. Dried apricots have a high pectin content that gels slightly around each piece during baking. Use unsulphured (brown/dark) apricots for deeper flavour.",
+            ["Spelt", "Einkorn", "Enriched breads", "Country sourdough"],
+            "Unsulphured apricots look less attractive but taste significantly better — the bright orange sulphured variety has a chemical aftertaste when baked."),
+        new("🌰", "Walnuts", "15–25% flour", "Toast + chop", "toast", "Lamination",
+            "Toast at 175 °C for 8–10 min until fragrant. Cool completely. Chop into hazelnut-sized pieces.",
+            "The classic sourdough nut inclusion. Walnut tannins interact with flour starch to produce a slightly purple-grey crumb — entirely normal and desirable. Toasting is essential to develop flavour.",
+            ["Walnut sourdough", "Fruit-and-nut loaf", "Rye"],
+            "The purple crumb is caused by walnut tannins reacting with starch — not under-baking. It intensifies with whole-grain flour."),
+        new("🟫", "Pecans", "15–20% flour", "Toast + chop", "toast", "Lamination",
+            "Toast at 175 °C for 8–10 min. Cool. Chop roughly.",
+            "Softer and more buttery than walnuts with less bitterness. Pairs exceptionally well with brown sugar, cinnamon, and enriched doughs. A good alternative when walnut tannin is unwelcome.",
+            ["Enriched breads", "Cinnamon swirl", "Country loaf"],
+            "For a pull-apart enriched bread, pecan halves pressed into the dough surface before the final proof look stunning after baking."),
+        new("⚪", "Hazelnuts", "10–20% flour", "Toast + skin", "toast", "Lamination",
+            "Toast at 180 °C for 12 min until skins crack. Cool then rub in a tea towel to remove loose skins. Chop.",
+            "Rich, sweet, and aromatic. Hazelnuts pair particularly well with chocolate, coffee, or fig. Their relatively low tannin content means they do not discolour the crumb.",
+            ["Enriched loaves", "Chocolate-hazelnut bread", "Fig and nut sourdough"],
+            "Removing the skins eliminates bitterness — worth the extra step for a paler, less astringent crumb."),
+        new("🍊", "Candied orange / lemon peel", "5–10% flour", "Dice", "dry", "Lamination",
+            "Dice into small pieces (5 mm). No soaking needed — commercial candied peel is already moist.",
+            "Adds bright citrus fragrance and a pleasantly chewy texture. Works best in enriched breads and festive loaves (panettone, stollen). Pairs with dried fruits, nuts, and warm spices.",
+            ["Panettone-style enriched", "Stollen", "Fruit loaf"],
+            "Home-made candied peel has far better flavour than commercial. Make it from organic citrus and it will transform any fruit bread."),
+    ];
+
+    private readonly Inclusion[] _savoury =
+    [
+        new("🫒", "Kalamata olives", "15–25% flour", "Drain + pit", "prep", "Lamination",
+            "Pit and roughly chop. Drain in a sieve for 10 min; pat dry on kitchen paper. Reserve oil for brushing the crust after baking.",
+            "Briny, rich, and intensely flavoured. Olive oil released during baking adds fat to the crumb. Reduce dough salt by 0.3–0.5% to compensate for the olive brine.",
+            ["Focaccia", "Country sourdough", "Ciabatta", "Olive rolls"],
+            "Green olives (Castelvetrano) give a milder, buttery flavour; Kalamata gives a sharper, more assertive result. Mix both for complexity."),
+        new("🧀", "Cheddar / Gruyère", "20–30% flour", "Grate or cube", "prep", "Lamination",
+            "Grate coarsely or cut into 1 cm cubes. Chill until adding — cold cheese distributes more cleanly than room-temperature.",
+            "Melts into pockets during baking, leaving rich, golden craters in the crumb. A small amount of cheese seeps to the crust, creating a crispy, savoury exterior. Aged cheeses (at least 12 months) provide the most flavour.",
+            ["Cheese sourdough", "Beer bread", "Focaccia", "Rolls"],
+            "Use some cheese at lamination (crumb) and scatter some on top just before baking (crust). The two textures — melted pockets and crispy surface — are very different and both desirable."),
+        new("🌿", "Fresh rosemary", "1–3% flour", "Strip + chop", "prep", "Lamination or mix",
+            "Strip leaves from stems; roughly chop. No heating needed.",
+            "Assertive and aromatic — a little goes a long way. Rosemary volatiles dissipate quickly at high heat, so adding some at lamination and a small amount at shaping (pressed onto the surface) gives both internal and surface aroma.",
+            ["Focaccia", "Ciabatta", "Rosemary-olive loaf", "Dinner rolls"],
+            "Infuse the rosemary in olive oil for 30 min before using — the oil carries the volatile compounds into the crumb more effectively than dry herb alone."),
+        new("🧄", "Roasted garlic", "10–15% flour", "Roast + cool", "prep", "Lamination",
+            "Roast a whole head at 200 °C for 40 min. Squeeze cloves out; cool completely. Pat dry on kitchen paper.",
+            "Roasting converts harsh raw garlic into a sweet, caramelised, spreadable paste. Distribute as small blobs rather than stirring in completely — irregular pockets of garlic are more flavourful than an even spread.",
+            ["Garlic sourdough", "Focaccia", "Ciabatta", "Pull-apart rolls"],
+            "Raw garlic added to dough weakens gluten through allicin — always roast first. Even 'roasted' garlic from a jar is preferable to raw."),
+        new("🧅", "Caramelised onion", "15–25% flour", "Cook + cool + drain", "prep", "Lamination",
+            "Slow-cook sliced onion in butter or oil over low heat for 40–60 min until deep golden. Cool completely; squeeze out excess fat on kitchen paper.",
+            "Intensely sweet and complex from Maillard browning. Adds significant moisture to the dough — reduce dough water by 8–10% or the dough will be unworkably slack.",
+            ["Caramelised onion sourdough", "Focaccia", "Cheese-onion loaf"],
+            "Adding 0.5% balsamic vinegar to the onions during cooking adds a deep, fruity acidity that pairs brilliantly with cheese inclusions."),
+        new("🍅", "Sun-dried tomatoes (oil-packed)", "10–15% flour", "Drain + chop", "prep", "Lamination",
+            "Drain from oil; chop into 1 cm pieces. Reserve oil for brushing post-bake.",
+            "Intensely savoury, with concentrated umami from the drying process. The tomato oil (highly flavoured) can be used in the dough in place of some water for extra depth.",
+            ["Focaccia", "Ciabatta", "Mediterranean sourdough"],
+            "Combine with basil (at lamination) and black olives for a focaccia that tastes like a pizza without the toppings."),
+        new("🌶️", "Jalapeño / roasted peppers", "10–20% flour", "Roast + dice + drain", "prep", "Lamination",
+            "Roast until charred; peel and deseed; dice and drain on kitchen paper. Canned roasted peppers work well too — drain thoroughly.",
+            "Adds colour, sweetness (from roasting), and variable heat. Pairs very well with cheese. Fresh jalapeño has a grassier, sharper heat than roasted; roasted is more complex and less aggressive.",
+            ["Jalapeño-cheddar sourdough", "Cornbread-style", "Rolls"],
+            "Wear gloves when handling fresh chillies and avoid touching your eyes. The capsaicin is oil-based and not removed by washing with water alone."),
+        new("🥓", "Bacon / pancetta (cooked)", "10–20% flour", "Cook until crisp + cool", "prep", "Lamination",
+            "Cook until crispy; cool on kitchen paper; roughly chop into lardons. Drain fat thoroughly.",
+            "Salty, smoky, and rich. Fat from bacon adds flavour but weakens gluten — keep inclusions cool and work quickly during shaping. Reduce dough salt by 0.5% minimum.",
+            ["Bacon sourdough", "Cheese-and-bacon rolls", "Enriched pull-apart"],
+            "Undercooking bacon leads to watery fat pockets in the crumb. Cook until genuinely crispy — it will soften again during baking but the excess fat will have been removed."),
+    ];
+}
