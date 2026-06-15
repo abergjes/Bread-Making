@@ -1,0 +1,332 @@
+@page "/specialty"
+@inject NavigationManager Nav
+
+<div class="specialty-page">
+
+    <div class="specialty-header">
+        <button class="back-btn" @onclick='() => Nav.NavigateTo("/history")'>← History</button>
+        <div class="specialty-title-group">
+            <h2 class="specialty-title">Specialty Bread Families</h2>
+            <p class="specialty-subtitle">Baker's guide §32 · Rye · Pizza & Flatbreads · Boiled & Alkaline breads</p>
+        </div>
+    </div>
+
+    <div class="specialty-tabs" role="tablist">
+        @foreach (var tab in _tabs)
+        {
+            <button class="specialty-tab @(_activeTab == tab.Id ? "specialty-tab-active" : "")"
+                    role="tab"
+                    @onclick="() => _activeTab = tab.Id">
+                <span>@tab.Icon</span> @tab.Label
+            </button>
+        }
+    </div>
+
+    @if (_activeTab == "rye")
+    {
+        <div class="specialty-section">
+            <p class="specialty-intro">Rye is the bread world's most structurally unusual cereal. It contains almost no functional gluten — instead, rye's crumb structure depends entirely on a group of carbohydrates called <strong>pentosans (arabinoxylans)</strong>. Understanding this one difference explains everything peculiar about rye baking.</p>
+
+            <div class="specialty-callout">
+                <strong>The short version:</strong> Rye = no gluten network, replace with pentosan gel. Everything else follows from that.
+            </div>
+
+            <h3 class="specialty-h3">How Rye Structure Works</h3>
+            <div class="specialty-mechanism-grid">
+                @foreach (var m in _ryeMechanisms)
+                {
+                    <div class="mechanism-card">
+                        <div class="mechanism-number">@m.Number</div>
+                        <div>
+                            <div class="mechanism-title">@m.Title</div>
+                            <p class="mechanism-desc">@m.Description</p>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <h3 class="specialty-h3">Rye Baking Rules</h3>
+            <div class="rye-rules-grid">
+                @foreach (var r in _ryeRules)
+                {
+                    <div class="rye-rule-card">
+                        <span class="rye-rule-icon">@r.Icon</span>
+                        <div>
+                            <div class="rye-rule-title">@r.Title</div>
+                            <p class="rye-rule-desc">@r.Description</p>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="specialty-stat-row">
+                @foreach (var s in _ryeStats)
+                {
+                    <div class="stat-card">
+                        <div class="stat-value">@s.Value</div>
+                        <div class="stat-label">@s.Label</div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    @if (_activeTab == "pizza")
+    {
+        <div class="specialty-section">
+            <p class="specialty-intro">Pizza and flatbreads are built on the same heat-water trade: a thin dough in a very hot oven with little or no steam. That trade explains almost everything — the quick bake, the chewy char, the need for high-protein flour, the reason a home oven struggles to match a wood-fired one.</p>
+
+            <div class="specialty-callout">
+                <strong>The single biggest upgrade for home pizza:</strong> Preheat a baking steel or stone for at least 45 minutes at maximum oven temperature. This brings the base temperature close enough to simulate the floor of a deck oven.
+            </div>
+
+            <h3 class="specialty-h3">The Heat-Water Trade</h3>
+            <div class="heat-water-grid">
+                @foreach (var h in _heatWaterPairs)
+                {
+                    <div class="heat-water-card">
+                        <div class="hw-variable">@h.Variable</div>
+                        <div class="hw-pizza @("hw-" + h.PizzaClass)">
+                            <div class="hw-label">Pizza / flatbread</div>
+                            <div class="hw-value">@h.PizzaValue</div>
+                        </div>
+                        <div class="hw-bread hw-neutral">
+                            <div class="hw-label">Lean loaf</div>
+                            <div class="hw-value">@h.BreadValue</div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <h3 class="specialty-h3">Pizza Dough Types</h3>
+            <div class="pizza-type-grid">
+                @foreach (var p in _pizzaTypes)
+                {
+                    <div class="pizza-type-card">
+                        <div class="pizza-type-header">
+                            <span class="pizza-type-icon">@p.Icon</span>
+                            <div>
+                                <div class="pizza-type-name">@p.Name</div>
+                                <div class="pizza-type-origin">@p.Origin</div>
+                            </div>
+                        </div>
+                        <div class="pizza-type-specs">
+                            <span class="pizza-spec">💧 @p.Hydration</span>
+                            <span class="pizza-spec">🌾 @p.Flour</span>
+                            <span class="pizza-spec">🌡️ @p.OvenTemp</span>
+                        </div>
+                        <p class="pizza-type-notes">@p.Notes</p>
+                    </div>
+                }
+            </div>
+
+            <h3 class="specialty-h3">Flatbread Families</h3>
+            <div class="flatbread-grid">
+                @foreach (var f in _flatbreads)
+                {
+                    <div class="flatbread-card">
+                        <span class="flatbread-icon">@f.Icon</span>
+                        <div>
+                            <div class="flatbread-name">@f.Name</div>
+                            <p class="flatbread-desc">@f.Description</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    @if (_activeTab == "boiled")
+    {
+        <div class="specialty-section">
+            <p class="specialty-intro">Bagels, pretzels, and a handful of other breads pass through hot liquid before they enter the oven — this step is not cosmetic. Boiling or alkaline-dipping sets the crust chemistry and determines the final texture. Leaving it out produces something that merely looks like the bread in question.</p>
+
+            <div class="specialty-callout">
+                <strong>The mechanism in both cases:</strong> Gelatinisation of starch on the dough surface. Boiling or alkaline dipping partially sets the outer layer, locking in gas and creating a distinct crust/crumb boundary that baking then develops into the finished texture.
+            </div>
+
+            <h3 class="specialty-h3">Boiled Breads</h3>
+            <div class="boiled-grid">
+                @foreach (var b in _boiledBreads)
+                {
+                    <div class="boiled-card">
+                        <div class="boiled-header">
+                            <span class="boiled-icon">@b.Icon</span>
+                            <div>
+                                <div class="boiled-name">@b.Name</div>
+                                <div class="boiled-liquid">Liquid: @b.Liquid</div>
+                            </div>
+                        </div>
+                        <div class="boiled-time-row">
+                            <span class="boiled-time-badge">@b.BoilTime per side</span>
+                        </div>
+                        <p class="boiled-effect">@b.Effect</p>
+                        @if (!string.IsNullOrEmpty(b.Note))
+                        {
+                            <div class="boiled-note">@b.Note</div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <h3 class="specialty-h3">Alkaline Dipping — Pretzel Chemistry</h3>
+            <div class="alkaline-explainer">
+                <div class="alkaline-card alkaline-mild">
+                    <div class="alkaline-title">Baked soda wash (mild)</div>
+                    <div class="alkaline-ph">pH ~10</div>
+                    <p class="alkaline-desc">Bake baking soda at 120 °C for 1 hour to convert NaHCO₃ → Na₂CO₃ (sodium carbonate). Dissolve 1% in boiling water. Speeds Maillard browning significantly — achieves deep mahogany without lye. Safe and home-friendly.</p>
+                </div>
+                <div class="alkaline-arrow">→</div>
+                <div class="alkaline-card alkaline-strong">
+                    <div class="alkaline-title">Food-grade lye (NaOH)</div>
+                    <div class="alkaline-ph">pH ~13–14</div>
+                    <p class="alkaline-desc">1–4% NaOH solution. The traditional pretzel dip and the only way to achieve the authentic near-black mahogany and lacquered sheen of a Bavarian pretzel. Must be handled with gloves and eye protection; caustic until baked off. Safe once baked.</p>
+                </div>
+            </div>
+
+            <div class="specialty-callout" style="margin-top:16px">
+                <strong>Why alkaline dipping browns so fast:</strong> The Maillard reaction accelerates sharply at higher pH. At pH 13, browning can happen in 10–12 minutes at 220 °C that would take 25–30 minutes from a neutral surface. This is why the colour on an authentic pretzel is so intense and uniform.
+            </div>
+
+            <h3 class="specialty-h3">Bagel Shaping & Boil Notes</h3>
+            <div class="bagel-tips">
+                @foreach (var t in _bagelTips)
+                {
+                    <div class="bagel-tip">
+                        <span class="bagel-tip-icon">@t.Icon</span>
+                        <p>@t.Text</p>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+</div>
+
+@code {
+    private string _activeTab = "rye";
+
+    private record Tab(string Id, string Icon, string Label);
+    private readonly Tab[] _tabs =
+    [
+        new("rye",    "🌿", "Rye"),
+        new("pizza",  "🍕", "Pizza & Flatbreads"),
+        new("boiled", "🥯", "Boiled & Alkaline"),
+    ];
+
+    // ── Rye ──────────────────────────────────────────────────
+    private record Mechanism(string Number, string Title, string Description);
+    private readonly Mechanism[] _ryeMechanisms =
+    [
+        new("①", "No functional gluten",
+            "Rye's gliadin and glutenin proteins exist but don't form continuous gluten networks because rye pentosans (arabinoxylans) compete for water and prevent the network from linking up. A 100% rye dough cannot be stretched — it behaves like a thick paste."),
+        new("②", "Pentosans absorb water",
+            "Rye arabinoxylans can absorb up to 10× their weight in water. This massive water absorption is why rye doughs are hydrated at 75–90% (and baked in tins, not free-form). The pentosan gel sets during baking and provides the crumb structure."),
+        new("③", "Starch gelatinisation sets the crumb",
+            "Rye starch gelatinises at a lower temperature than wheat starch (62–72 °C vs. 58–64 °C). The pentosan gel and the setting starch together give rye bread its characteristic dense, moist crumb — a texture that continues to improve for 24–48 hours as the starches fully set."),
+        new("④", "Acidity is not optional",
+            "Rye flour contains active amylase enzymes that degrade starch. Without sufficient acidity (pH < 4.2), the amylase runs unchecked during baking, converting starch to dextrins and producing a sticky, gummy crumb. Sourdough's lactic and acetic acids inactivate the amylase early in the bake. This is why rye bread is almost always sourdough, not commercial-yeast."),
+    ];
+
+    private record RyeRule(string Icon, string Title, string Description);
+    private readonly RyeRule[] _ryeRules =
+    [
+        new("🍞", "Always bake in a tin",
+            "Rye dough cannot hold a free-form shape — bake in a Pullman pan, loaf tin, or traditional clay form. Fill the tin to 75% and let it rise level with or just above the rim."),
+        new("🌡️", "Bake hot, then drop",
+            "Start at 240–250 °C for 10 minutes to set the crust and kill amylase early; drop to 190–200 °C for the remaining 40–60 min. Internal target: 96–98 °C."),
+        new("⏱️", "Rest for 24 hours",
+            "Rye bread continues to set after baking — cutting hot produces a gummy crumb. Wait at least 24 hours (ideally 48) before slicing. The flavour also develops markedly during this time."),
+        new("💧", "High hydration — always",
+            "70–90% hydration depending on rye percentage. Pure rye is typically 85–90%. Resist adding flour during mixing; the dough is meant to be sticky paste at high rye percentages."),
+        new("🧫", "Long, cold ferment builds flavour",
+            "Rye's complex pentosan structure gives LAB more substrate to work with. An 8–12 hour cold retard produces the deep, slightly sweet-sour flavour of a traditional Roggenbrot."),
+        new("🔪", "Wet your hands, not more flour",
+            "Handle rye dough with wet hands and a wet scraper. Adding flour stiffens the dough and fights the pentosan gel; water is the rye baker's flour."),
+    ];
+
+    private record RyeStat(string Value, string Label);
+    private readonly RyeStat[] _ryeStats =
+    [
+        new("10×", "Pentosan water absorption"),
+        new("85–90%", "Typical pure rye hydration"),
+        new("< 4.2", "pH needed to inactivate amylase"),
+        new("24–48h", "Rest after baking before slicing"),
+    ];
+
+    // ── Pizza & Flatbreads ────────────────────────────────────
+    private record HeatWaterPair(string Variable, string PizzaValue, string PizzaClass, string BreadValue);
+    private readonly HeatWaterPair[] _heatWaterPairs =
+    [
+        new("Oven temperature", "400–500 °C (deck/wood)", "hw-hot", "220–250 °C (Dutch oven)"),
+        new("Bake time", "60–90 seconds (thin crust)", "hw-fast", "35–50 minutes (lean loaf)"),
+        new("Steam", "None — open oven floor", "hw-none", "15–20 min trapped steam"),
+        new("Dough thickness", "2–8 mm", "hw-thin", "50–100 mm crumb"),
+        new("Typical hydration", "55–65% (Neapolitan–NY)", "hw-neutral", "70–80% (lean loaf)"),
+        new("Flour protein", "13–14%+ (strong bread flour)", "hw-high", "11–13%"),
+    ];
+
+    private record PizzaType(string Icon, string Name, string Origin, string Hydration, string Flour, string OvenTemp, string Notes);
+    private readonly PizzaType[] _pizzaTypes =
+    [
+        new("🇮🇹", "Neapolitan", "Naples, Italy",
+            "55–62%", "00 flour, 12–13% protein", "430–480 °C",
+            "Soft, leopard-spotted crust. 60–90 second bake in a wood-fired dome oven. VPN rules require San Marzano tomato and fior di latte. Large air pockets in the cornicione are the goal."),
+        new("🗽", "New York", "New York, USA",
+            "60–65%", "Bread flour, 13–14%", "260–280 °C",
+            "Large foldable slices. Gas deck oven. Crisp underneath, chewy crumb. Often a touch of sugar and oil in the dough for colour and tenderness. 24-hour cold ferment typical."),
+        new("🍳", "Detroit / pan pizza", "Detroit, USA",
+            "70–75%", "Bread flour", "230–250 °C",
+            "Thick, focaccia-like crumb baked in an oiled square steel pan — the cheese goes to the very edge (and over it) forming a fried cheese crown. Sauce on top after baking."),
+        new("🇸🇪", "Cracker / Roman (al taglio)", "Rome, Italy",
+            "80–85%", "00 or strong flour", "250–280 °C",
+            "Very high hydration baked in rectangular trays. Airy, irregular crumb; very thin, crisp crust. Long cold ferment (48–72h). Sold by weight and cut with scissors."),
+    ];
+
+    private record Flatbread(string Icon, string Name, string Description);
+    private readonly Flatbread[] _flatbreads =
+    [
+        new("🫓", "Focaccia (Ligurian)", "Thick, olive-oil-soaked slab bread. 75–80% hydration, proved in oiled tray, dimpled with fingers. Baked at 220–230 °C. The oil on the base creates a fried bottom crust that's distinctive from above-the-oven crust."),
+        new("🫙", "Pita", "Middle-Eastern pocket bread. Low hydration (55–60%), baked on a very hot surface (250+ °C). Steam trapped inside creates a balloon that forms the pocket. Must be eaten before the pocket sticks back together."),
+        new("🫙", "Lavash & Sangak", "Armenian/Iranian flatbreads. Lavash is thin and cracker-crisp; sangak is thick and baked on a bed of small pebbles. Both use very hot deck or stone ovens and are eaten fresh."),
+        new("🌮", "Tortilla (flour)", "Northern Mexican unleavened flatbread. Lard or shortening in the dough. Cooked on a comal (dry griddle) — no steam, no oven. Puffs as air pockets form from heat; rolled paper-thin (1–2 mm)."),
+        new("🫓", "Naan", "Central/South Asian leavened flatbread. Enriched with yoghurt and sometimes egg. Slapped onto the interior wall of a tandoor (clay oven) — the intense radiant heat from all sides bakes it in 2–3 minutes."),
+    ];
+
+    // ── Boiled & Alkaline ─────────────────────────────────────
+    private record BoiledBread(string Icon, string Name, string Liquid, string BoilTime, string Effect, string Note);
+    private readonly BoiledBread[] _boiledBreads =
+    [
+        new("🥯", "New York bagel",
+            "Water + barley malt syrup (or baking soda)",
+            "45–60 seconds",
+            "Shiny crust, chewy bite, dense crumb. Barley malt adds sweetness and feeds browning. Very low hydration (52–58%) prevents the bagel spreading during boiling.",
+            "Classic divide: malt syrup + honey (NY style) vs. baking soda (Montreal/other). Baking soda raises pH and produces a thicker, more pretzel-like crust."),
+        new("🥜", "Montreal bagel",
+            "Honey-sweetened water",
+            "2 minutes (turned once)",
+            "Sweeter, denser, thinner with a larger hole than NY style. Wood-fired after boiling — the combined effect of honey boil and wood fire gives a deeply caramelised, slightly sticky surface.",
+            "Always wood-fired; the smoke flavour is part of the identity."),
+        new("🥨", "Pretzel (Brezel)",
+            "1–4% NaOH (lye) or strong baked-soda wash",
+            "Not boiled — brief dip (20–30 seconds)",
+            "Near-black mahogany crust with lacquered shine. Alkaline surface dramatically accelerates Maillard browning. Distinctive flavour unlike any boiled bread: slightly mineral, deeply savoury.",
+            "Lye dip (not boil) at room temperature. Handle with gloves; the NaOH solution is caustic before baking. Fully safe once baked."),
+        new("🍞", "Laugenbrot (German lye bread)",
+            "Baked-soda wash (home) or 1% NaOH",
+            "Brush on before baking",
+            "Dark, shiny rolls or loaves with the same Maillard acceleration as pretzels. Soft interior, deeply coloured crust. Common throughout German-speaking Europe.",
+            "Same chemistry as pretzels; more forgiving shape. Can use baked soda wash safely at home."),
+    ];
+
+    private record BagelTip(string Icon, string Text);
+    private readonly BagelTip[] _bagelTips =
+    [
+        new("💪", "Bagel dough should be stiff and non-tacky — 52–58% hydration. If it sticks to your hands, the hydration is too high and the bagel will spread flat in the water."),
+        new("❄️", "Shape, then cold-retard overnight (8–12 hours). Cold dough holds its ring shape in the boil; warm dough spreads. The cold retard also builds flavour."),
+        new("♨️", "Boil water should be at a rolling boil, not a simmer. Use a wide pot so the bagels can float freely without touching."),
+        new("⏱️", "45–60 seconds per side gives a thin, shiny crust. Longer (2 minutes) gives a thicker, chewier crust in the Montreal style."),
+        new("🌡️", "Bake at 220–230 °C on a preheated stone or steel for maximum bottom heat. The bottom crust should be as dark as the top."),
+        new("🌿", "Add toppings (sesame, poppy, everything seasoning) immediately after boiling while the surface is still wet — they need no wash to stick."),
+    ];
+}
