@@ -1,0 +1,413 @@
+@page "/doughfeel"
+@inject NavigationManager Nav
+
+<div class="df-page">
+
+    <div class="df-header">
+        <button class="back-btn" @onclick='() => Nav.NavigateTo("/history")'>← History</button>
+        <div class="df-title-group">
+            <h2 class="df-title">Dough Feel & Diagnostics</h2>
+            <p class="df-subtitle">Read your dough by touch and sight — from mix to proof</p>
+        </div>
+    </div>
+
+    <div class="df-tabs">
+        @foreach (var t in _tabs)
+        {
+            <button class="df-tab @(_activeTab == t.Id ? "df-tab--active" : "")"
+                    @onclick="() => _activeTab = t.Id">@t.Label</button>
+        }
+    </div>
+
+    @if (_activeTab == "texture")
+    {
+        <section class="df-section">
+            <p class="df-intro">
+                Learning to read dough by feel is the skill that separates a recipe-follower from a baker.
+                Temperature, humidity, flour protein, and hydration all shift the dough's behaviour — only
+                touch tells you where you actually are, not where the recipe assumes you should be.
+            </p>
+
+            <div class="df-feel-section-title">Stickiness spectrum</div>
+            <div class="df-spectrum-card">
+                @foreach (var s in _stickinessLevels)
+                {
+                    <div class="df-spectrum-item df-spectrum-item--@s.Class">
+                        <div class="df-spectrum-label">@s.Label</div>
+                        <div class="df-spectrum-desc">@s.Description</div>
+                        <div class="df-spectrum-action">@s.Action</div>
+                    </div>
+                }
+            </div>
+
+            <div class="df-feel-section-title" style="margin-top:24px">Tension spectrum</div>
+            <div class="df-spectrum-card">
+                @foreach (var s in _tensionLevels)
+                {
+                    <div class="df-spectrum-item df-spectrum-item--@s.Class">
+                        <div class="df-spectrum-label">@s.Label</div>
+                        <div class="df-spectrum-desc">@s.Description</div>
+                        <div class="df-spectrum-action">@s.Action</div>
+                    </div>
+                }
+            </div>
+
+            <div class="df-texture-grid">
+                @foreach (var t in _textureDescriptors)
+                {
+                    <div class="df-texture-card">
+                        <div class="df-texture-header">
+                            <span class="df-texture-icon">@t.Icon</span>
+                            <div>
+                                <div class="df-texture-name">@t.Name</div>
+                                <span class="df-texture-badge df-texture-badge--@t.StatusClass">@t.Status</span>
+                            </div>
+                        </div>
+                        <p class="df-texture-desc">@t.Description</p>
+                        <div class="df-texture-cause"><strong>Cause:</strong> @t.Cause</div>
+                        @if (!string.IsNullOrEmpty(t.Fix))
+                        {
+                            <div class="df-texture-fix">→ @t.Fix</div>
+                        }
+                    </div>
+                }
+            </div>
+        </section>
+    }
+    else if (_activeTab == "bulk")
+    {
+        <section class="df-section">
+            <p class="df-intro">
+                Dough transforms dramatically during bulk fermentation. Each stage has a distinct feel —
+                learning these checkpoints means you can assess progress in seconds without looking at a clock.
+            </p>
+
+            <div class="df-bulk-timeline">
+                @foreach (var stage in _bulkStages)
+                {
+                    <div class="df-bulk-stage">
+                        <div class="df-bulk-stage-marker">
+                            <div class="df-bulk-dot df-bulk-dot--@stage.Class"></div>
+                            <div class="df-bulk-connector"></div>
+                        </div>
+                        <div class="df-bulk-stage-body">
+                            <div class="df-bulk-stage-header">
+                                <span class="df-bulk-stage-icon">@stage.Icon</span>
+                                <div>
+                                    <div class="df-bulk-stage-name">@stage.Name</div>
+                                    <div class="df-bulk-stage-time">@stage.Timing</div>
+                                </div>
+                                <span class="df-bulk-stage-tag df-bulk-stage-tag--@stage.Class">@stage.TagLabel</span>
+                            </div>
+                            <div class="df-bulk-feel-grid">
+                                <div class="df-bulk-feel-item">
+                                    <div class="df-bulk-feel-label">Feel</div>
+                                    <div class="df-bulk-feel-text">@stage.Feel</div>
+                                </div>
+                                <div class="df-bulk-feel-item">
+                                    <div class="df-bulk-feel-label">Look</div>
+                                    <div class="df-bulk-feel-text">@stage.Look</div>
+                                </div>
+                                <div class="df-bulk-feel-item">
+                                    <div class="df-bulk-feel-label">Action</div>
+                                    <div class="df-bulk-feel-text">@stage.Action</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="df-over-under-grid">
+                <div class="df-over-under-card df-over-under-card--under">
+                    <div class="df-ou-title">Under-fermented dough</div>
+                    <ul class="df-ou-list">
+                        @foreach (var s in _underSigns) { <li>@s</li> }
+                    </ul>
+                    <div class="df-ou-consequence">Result: dense, tight crumb; pale crust; little oven spring; gummy interior</div>
+                </div>
+                <div class="df-over-under-card df-over-under-card--over">
+                    <div class="df-ou-title">Over-fermented dough</div>
+                    <ul class="df-ou-list">
+                        @foreach (var s in _overSigns) { <li>@s</li> }
+                    </ul>
+                    <div class="df-ou-consequence">Result: flat loaf; weak oven spring; gummy, sticky crumb; very sour flavour</div>
+                </div>
+            </div>
+        </section>
+    }
+    else if (_activeTab == "proof")
+    {
+        <section class="df-section">
+            <p class="df-intro">
+                Proofing readiness is the most time-critical judgement in bread baking. Over-proofed dough
+                cannot be corrected once it goes in the oven. Use the poke test and jiggle test together —
+                neither alone is definitive.
+            </p>
+
+            <div class="df-poke-card">
+                <div class="df-poke-title">The poke test</div>
+                <p class="df-poke-intro">
+                    Flour a fingertip and press 1–2 cm into the shaped dough, then withdraw. Watch how the
+                    indentation responds over the next 10–15 seconds.
+                </p>
+                <div class="df-poke-grid">
+                    @foreach (var p in _pokeResults)
+                    {
+                        <div class="df-poke-result df-poke-result--@p.Class">
+                            <div class="df-poke-result-header">
+                                <span class="df-poke-icon">@p.Icon</span>
+                                <div>
+                                    <div class="df-poke-label">@p.Label</div>
+                                    <div class="df-poke-response">@p.Response</div>
+                                </div>
+                            </div>
+                            <p class="df-poke-desc">@p.Description</p>
+                            <div class="df-poke-action df-poke-action--@p.Class">@p.Action</div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="df-jiggle-card">
+                <div class="df-jiggle-title">The jiggle test</div>
+                <p class="df-jiggle-desc">
+                    Gently shake the banneton or baking vessel from side to side. A properly proofed loaf
+                    wobbles as a single mass — the interior gas structure moves together, like jelly.
+                    An under-proofed loaf feels stiff and barely wobbles. An over-proofed loaf wobbles
+                    but feels loose, deflates at the edges, or slumps when you lift it.
+                </p>
+                <div class="df-jiggle-grid">
+                    <div class="df-jiggle-item df-jiggle-item--under">
+                        <strong>Under-proofed</strong>
+                        <span>Barely wobbles; feels stiff and dense; resists shaking</span>
+                    </div>
+                    <div class="df-jiggle-item df-jiggle-item--ready">
+                        <strong>Ready</strong>
+                        <span>Wobbles as one unit; light, airy movement; surface ripples slightly</span>
+                    </div>
+                    <div class="df-jiggle-item df-jiggle-item--over">
+                        <strong>Over-proofed</strong>
+                        <span>Jiggles loosely; edges slump; surface craters when shaken; feels fragile</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="df-visual-card">
+                <div class="df-visual-title">Visual proofing signs</div>
+                <div class="df-visual-grid">
+                    @foreach (var v in _visualSigns)
+                    {
+                        <div class="df-visual-item">
+                            <span class="df-visual-icon">@v.Icon</span>
+                            <div>
+                                <div class="df-visual-name">@v.Name</div>
+                                <div class="df-visual-text">@v.Description</div>
+                            </div>
+                            <span class="df-visual-tag df-visual-tag--@v.TagClass">@v.Conclusion</span>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="df-hydration-note-card">
+                <div class="df-hydration-note-title">How hydration affects testing</div>
+                <div class="df-hydration-note-grid">
+                    <div class="df-hydration-note-item">
+                        <strong>Low hydration (60–68%)</strong>
+                        <span>Poke test is very reliable — spring-back is crisp and easy to read. Jiggle is subtle.</span>
+                    </div>
+                    <div class="df-hydration-note-item">
+                        <strong>Medium hydration (68–76%)</strong>
+                        <span>Both tests work well. Standard reference point for most sourdough guides.</span>
+                    </div>
+                    <div class="df-hydration-note-item">
+                        <strong>High hydration (76–85%)</strong>
+                        <span>Poke test less reliable — wet dough rebounds slowly at all stages. Rely more on jiggle and volume.</span>
+                    </div>
+                    <div class="df-hydration-note-item">
+                        <strong>Cold-retarded dough</strong>
+                        <span>Skip the poke test on a cold loaf — it reads under-proofed even when ready. Score and bake directly from cold.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    }
+
+</div>
+
+@code {
+    private string _activeTab = "texture";
+
+    private record Tab(string Id, string Label);
+    private readonly Tab[] _tabs =
+    [
+        new("texture", "Feel & Texture"),
+        new("bulk",    "Through Bulk"),
+        new("proof",   "Proofing Readiness"),
+    ];
+
+    private record SpectrumLevel(string Label, string Description, string Action, string Class);
+
+    private readonly SpectrumLevel[] _stickinessLevels =
+    [
+        new("Dry",
+            "Dough pulls cleanly away from the bench with no residue. Possibly a cracking surface.",
+            "Add a few drops of water (bassinage) and fold in. Under-hydrated.",
+            "dry"),
+        new("Tacky",
+            "Leaves a slight impression on your palm but releases cleanly. Like the back of a Post-it note. Ideal.",
+            "This is your target for most bread doughs. No action needed.",
+            "ideal"),
+        new("Sticky",
+            "Clings to your hand and leaves a noticeable residue. Requires scraping to release.",
+            "Normal for high-hydration doughs and early in bulk. Wet hands; do not add flour.",
+            "warn"),
+        new("Wet",
+            "Flows through your fingers. Cannot be lifted without spreading. Pours rather than holds.",
+            "Either too much water, or severely over-fermented. Cannot be corrected with flour at this stage.",
+            "bad"),
+    ];
+
+    private readonly SpectrumLevel[] _tensionLevels =
+    [
+        new("Tight / stiff",
+            "Resists stretching; springs back immediately; hard to fold. Surface feels drum-like.",
+            "Under-developed, over-chilled, or over-shaped. Rest 20–30 min uncovered before proceeding.",
+            "tight"),
+        new("Supple",
+            "Stretches willingly but holds its shape. Smooth surface. Slight resistance at the end of the stretch.",
+            "Ideal for shaping. Proceed with confidence.",
+            "ideal"),
+        new("Slack / extensible",
+            "Stretches easily with little resistance; difficult to build surface tension; spreads sideways.",
+            "High hydration, warm dough, or late bulk. Use coil folds; work quickly; chill if necessary.",
+            "slack"),
+        new("Weak / soupy",
+            "Cannot hold any tension. Spreads flat immediately. No bounce or spring.",
+            "Over-fermented. Gas cell walls have broken down. Cannot be recovered; bake as a flatbread.",
+            "bad"),
+    ];
+
+    private record TextureDescriptor(string Icon, string Name, string Status, string StatusClass,
+        string Description, string Cause, string Fix = "");
+
+    private readonly TextureDescriptor[] _textureDescriptors =
+    [
+        new("✨", "Silky and smooth", "Ideal", "good",
+            "The surface is even, slightly shiny, and feels like firm putty. No lumps, tears, or rough patches. The hallmark of well-developed gluten.",
+            "Good mixing, proper hydration, sufficient folding.",
+            ""),
+        new("🔘", "Lumpy or uneven", "Needs work", "warn",
+            "Small bumps visible under the surface. Dough feels grainy or inconsistent. Some areas stretch, others resist.",
+            "Incomplete mixing, or inclusions (seeds, grains) not fully incorporated.",
+            "Additional folds will smooth most lumps. If inclusions are the cause, this is normal."),
+        new("🕳️", "Pockmarked surface", "Late bulk", "warn",
+            "Small craters or holes appearing on the dough surface. Gas escaping through thin gluten walls.",
+            "Dough is approaching the end of bulk fermentation — gas production is ahead of gluten strength.",
+            "Shape soon. If this appears before 50% rise, the kitchen is too warm or the starter too active."),
+        new("💦", "Shiny or glistening surface", "Normal", "ok",
+            "A light sheen on the dough surface. Often appears during high-hydration folds.",
+            "Moisture from the dough expressing at the surface — normal, especially with wet hands or on a wet bench.",
+            ""),
+        new("🧵", "Stringy or ropy when pulled", "Alert", "bad",
+            "Dough pulls into long, elastic strings and does not release. Feels almost rubbery.",
+            "Either the gluten is extremely well developed (bread flour, long mix) — or there is rope contamination from Bacillus subtilis.",
+            "Test: does it smell and taste normal? If yes, it is well-developed gluten. If off-flavour, suspect rope."),
+        new("🧊", "Dense and cold", "Check temp", "warn",
+            "Dough feels noticeably cooler than your hands and resists stretching. Heavy, brick-like.",
+            "Dough temperature is below 18 °C. Fermentation is very slow.",
+            "Move to a warmer spot. Check dough temperature with a probe thermometer."),
+        new("☁️", "Light and pillowy", "Ready to shape", "good",
+            "Dough lifts easily; interior feels airy. A light press leaves an impression quickly. Gas bubbles visible at the surface.",
+            "Bulk fermentation is complete or nearly complete. Fermentation gases have expanded the gluten network.",
+            ""),
+        new("💧", "Weeping liquid", "Over-fermented", "bad",
+            "A pool of liquid (grey or yellow) forming around or inside the dough.",
+            "Gluten has broken down completely. Acidity has cut the protein strands. Cannot be recovered as a loaf.",
+            "Bake as a flatbread, crackers, or discard. Note the bulk time and reduce next time."),
+    ];
+
+    private record BulkStage(string Icon, string Name, string Timing, string TagLabel, string Class,
+        string Feel, string Look, string Action);
+
+    private readonly BulkStage[] _bulkStages =
+    [
+        new("🔄", "Just mixed", "0–15 min", "Mix-end", "start",
+            "Rough, shaggy, slightly sticky. Tears when stretched. No elasticity.",
+            "Uneven surface, possibly dry patches. No visible bubbles.",
+            "Autolyse rest (20–60 min) or begin first set of folds immediately. Do not worry about lumps yet."),
+        new("🤲", "After set 1 (30 min)", "30 min", "Early bulk", "early",
+            "Noticeably smoother. Less sticky. Slightly more resistant to stretching. Still quite extensible.",
+            "Surface beginning to tighten. May see one or two bubbles at the base if in a glass container.",
+            "Coil fold or stretch-and-fold. Dough should feel more cohesive than at mix."),
+        new("💪", "After sets 2–3 (60–90 min)", "60–90 min", "Building", "mid",
+            "Smoother, more elastic, slightly firmer. Stretches further before resistance. Holds its shape briefly.",
+            "Visible volume increase (10–20%). Small bubbles starting to appear throughout.",
+            "Continue folds. Dough should resist tearing during the fold — a good sign of developing gluten."),
+        new("☁️", "Mid-bulk (50% rise)", "2–5 h", "Mid bulk", "good",
+            "Light, slightly billowy. Easier to stretch without tearing. Holds shape better than earlier.",
+            "Surface smooth and shiny. Bubbles visible at sides of container. Volume up 40–50%.",
+            "Last set of folds or transition to hands-off rest. Begin checking more frequently."),
+        new("🎯", "End of bulk (75% rise)", "4–8 h", "Ready", "ready",
+            "Airy, light, jiggly. Interior feels like a foam. Slight resistance at the end of a stretch.",
+            "Domed surface with small craters. Webbed interior visible through glass. Volume up 50–75%.",
+            "Pre-shape now. This window is 30–60 min wide — do not delay."),
+        new("⚠️", "Past optimal", "8 h+", "Over", "over",
+            "Very slack, almost soupy. No resistance to stretching. Difficult to hold tension.",
+            "Dome has fallen flat. Surface pockmarked and dull. Possible pool of liquid forming.",
+            "Shape immediately using a bench scraper. Expect a denser, more acidic loaf. Adjust next bake."),
+    ];
+
+    private readonly string[] _underSigns =
+    [
+        "Dense, heavy feel — dough does not spring up when pressed",
+        "Tight and resistant to folding — fights every movement",
+        "No visible bubbles through container sides",
+        "Volume risen less than 30–40%",
+        "Smells mostly like flour, not yet sour or yeasty",
+        "Poke test: bounces back immediately and completely",
+    ];
+
+    private readonly string[] _overSigns =
+    [
+        "Slack and soupy — spreads immediately when tipped out",
+        "Sticky even after proper folding — clings and tears",
+        "Surface pockmarked, flat, or has small craters",
+        "Volume risen more than 100% or has begun to fall",
+        "Smells sharply acidic, boozy, or like acetone",
+        "Poke test: leaves a permanent indentation that does not spring back",
+    ];
+
+    private record PokeResult(string Icon, string Label, string Response, string Class,
+        string Description, string Action);
+
+    private readonly PokeResult[] _pokeResults =
+    [
+        new("⚡", "Under-proofed", "Springs back immediately — fully fills the indent within 3–5 seconds", "under",
+            "Strong, taut gluten network. Yeast still very active. There is plenty of fermentation energy left in the dough and it will spring strongly, but may burst at a seam rather than through the score.",
+            "Return to proof for 30–60 min and retest. Do not bake yet."),
+        new("✅", "Ready", "Springs back slowly — 50–70% of the indent fills in over 8–15 seconds", "ready",
+            "Gluten is relaxed but still structured. Gas cell walls are thin enough to be extensible. The dough has the gas content and structure to give maximum oven spring through the score.",
+            "Score and bake immediately. This window is 20–40 min wide."),
+        new("🐌", "Just past peak", "Springs back very slowly — 20–40% of the indent fills in over 15–20 seconds", "pastpeak",
+            "Fermentation is advancing. Still bakeable but oven spring will be moderate rather than dramatic. A cold retard now can extend the window by 8–12 h.",
+            "Bake now or refrigerate immediately. Do not leave at room temperature."),
+        new("❌", "Over-proofed", "Does not spring back — indent remains permanently", "over",
+            "Gas cell walls have thinned to the point of rupture. Gluten structure is largely broken down. The loaf will have little oven spring and a gummy, dense crumb.",
+            "Bake anyway — a flat loaf is better than waste. Reduce proof time next bake by 20–30%."),
+    ];
+
+    private record VisualSign(string Icon, string Name, string Description, string Conclusion, string TagClass);
+    private readonly VisualSign[] _visualSigns =
+    [
+        new("📏", "Volume increase", "Dough has grown 30–50% from its shaped volume", "On track", "ok"),
+        new("🌕", "Domed top", "Surface curves upward at the centre — convex when viewed from the side", "Ready or nearly ready", "good"),
+        new("🫧", "Surface bubbles", "Small bubbles or blisters visible on the upper surface", "Active fermentation; probably ready", "good"),
+        new("🪞", "Smooth, taut surface", "Skin is smooth and slightly shiny, no wrinkles or cracks", "Good proof; well-shaped", "good"),
+        new("💧", "Wrinkled or sagging", "Surface has lost its taut appearance; wrinkles visible", "Over-proofed or weak shaping", "bad"),
+        new("⚪", "Flat, no dome", "Top surface is flat or concave rather than domed", "Under-proofed or over-proofed (check poke)", "warn"),
+        new("🕳️", "Craters or pockmarks", "Small holes or depressions on the surface", "Over-proofed — bake immediately", "bad"),
+        new("🫙", "Fills the banneton evenly", "Dough has expanded to touch the sides and corners of the banneton", "Well-proofed volume", "good"),
+    ];
+}
