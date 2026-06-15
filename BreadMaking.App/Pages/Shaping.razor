@@ -1,0 +1,403 @@
+@page "/shaping"
+@inject NavigationManager Nav
+
+<div class="shaping-page">
+
+    <div class="shaping-header">
+        <button class="back-btn" @onclick='() => Nav.NavigateTo("/history")'>← History</button>
+        <div class="shaping-title-group">
+            <h2 class="shaping-title">Shaping & Folding</h2>
+            <p class="shaping-subtitle">Technique reference for building structure and giving your loaf its final form</p>
+        </div>
+    </div>
+
+    <div class="shaping-tabs">
+        @foreach (var t in _tabs)
+        {
+            <button class="shaping-tab @(_activeTab == t.Id ? "shaping-tab--active" : "")"
+                    @onclick="() => _activeTab = t.Id">@t.Label</button>
+        }
+    </div>
+
+    @if (_activeTab == "folding")
+    {
+        <section class="shaping-section">
+            <p class="shaping-intro">
+                Folds build gluten without intensive kneading. Each fold aligns protein strands, increases dough tension,
+                and traps gas. Perform them during bulk fermentation — typically 4 sets spaced 30 min apart.
+            </p>
+
+            <div class="fold-grid">
+                @foreach (var f in _folds)
+                {
+                    <div class="fold-card">
+                        <div class="fold-card-top">
+                            <span class="fold-icon">@f.Icon</span>
+                            <div>
+                                <div class="fold-name">@f.Name</div>
+                                <div class="fold-meta-row">
+                                    <span class="fold-tag fold-tag--@f.BestForClass">@f.BestFor</span>
+                                    <span class="fold-timing">@f.Timing</span>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="fold-description">@f.Description</p>
+                        <ol class="fold-steps">
+                            @foreach (var step in f.Steps)
+                            {
+                                <li>@step</li>
+                            }
+                        </ol>
+                        @if (!string.IsNullOrEmpty(f.Tip))
+                        {
+                            <div class="fold-tip">💡 @f.Tip</div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <div class="fold-schedule-card">
+                <div class="fold-schedule-title">Typical bulk fermentation fold schedule</div>
+                <div class="fold-schedule-grid">
+                    <div class="fold-sched-item fold-sched-item--key">
+                        <span class="fold-sched-time">0 min</span>
+                        <span class="fold-sched-action">Start bulk · cover</span>
+                    </div>
+                    <div class="fold-sched-item">
+                        <span class="fold-sched-time">30 min</span>
+                        <span class="fold-sched-action">Set 1 — stretch & fold (4 sides)</span>
+                    </div>
+                    <div class="fold-sched-item">
+                        <span class="fold-sched-time">60 min</span>
+                        <span class="fold-sched-action">Set 2 — stretch & fold or coil fold</span>
+                    </div>
+                    <div class="fold-sched-item">
+                        <span class="fold-sched-time">90 min</span>
+                        <span class="fold-sched-action">Set 3 — gentle coil fold</span>
+                    </div>
+                    <div class="fold-sched-item">
+                        <span class="fold-sched-time">120 min</span>
+                        <span class="fold-sched-action">Set 4 — very gentle coil fold or lamination</span>
+                    </div>
+                    <div class="fold-sched-item fold-sched-item--rest">
+                        <span class="fold-sched-time">150 min+</span>
+                        <span class="fold-sched-action">Hands-off rest until ready to shape</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    }
+    else if (_activeTab == "shaping")
+    {
+        <section class="shaping-section">
+            <p class="shaping-intro">
+                Good shaping creates surface tension without degassing the crumb. Work quickly and decisively —
+                hesitation tears gluten. A 20–30 min bench rest before final shape helps the dough relax.
+            </p>
+
+            <div class="shape-grid">
+                @foreach (var s in _shapes)
+                {
+                    <div class="shape-card">
+                        <div class="shape-card-header">
+                            <span class="shape-icon">@s.Icon</span>
+                            <div>
+                                <div class="shape-name">@s.Name</div>
+                                <div class="shape-subtitle-text">@s.Subtitle</div>
+                            </div>
+                            <span class="shape-difficulty shape-difficulty--@s.DifficultyClass">@s.Difficulty</span>
+                        </div>
+                        <p class="shape-description">@s.Description</p>
+                        <ol class="shape-steps">
+                            @foreach (var step in s.Steps)
+                            {
+                                <li>@step</li>
+                            }
+                        </ol>
+                        <div class="shape-tips">
+                            @foreach (var tip in s.Tips)
+                            {
+                                <div class="shape-tip">✓ @tip</div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="shaping-rules-card">
+                <div class="shaping-rules-title">Universal shaping rules</div>
+                <div class="shaping-rules-grid">
+                    @foreach (var rule in _shapingRules)
+                    {
+                        <div class="shaping-rule">
+                            <span class="shaping-rule-icon">@rule.Icon</span>
+                            <div>
+                                <div class="shaping-rule-name">@rule.Name</div>
+                                <div class="shaping-rule-text">@rule.Text</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </section>
+    }
+    else if (_activeTab == "windowpane")
+    {
+        <section class="shaping-section">
+            <p class="shaping-intro">
+                The windowpane test checks whether gluten is sufficiently developed to trap gas and hold its structure
+                through proofing and baking. It is the definitive readiness test for both mix-end and pre-shape.
+            </p>
+
+            <div class="wp-how-to">
+                <div class="wp-how-to-title">How to perform the test</div>
+                <ol class="wp-steps">
+                    <li>Wet or oil your fingers lightly to prevent sticking.</li>
+                    <li>Pinch off a golf-ball-sized piece of dough.</li>
+                    <li>Gently stretch it between your thumbs and forefingers from all four corners.</li>
+                    <li>Hold it up to a light source and observe the membrane.</li>
+                    <li>Rotate and stretch different sections to check consistency.</li>
+                </ol>
+            </div>
+
+            <div class="wp-stage-grid">
+                @foreach (var stage in _wpStages)
+                {
+                    <div class="wp-stage-card wp-stage--@stage.StatusClass">
+                        <div class="wp-stage-header">
+                            <span class="wp-stage-icon">@stage.Icon</span>
+                            <div>
+                                <div class="wp-stage-name">@stage.Name</div>
+                                <div class="wp-stage-label">@stage.Label</div>
+                            </div>
+                        </div>
+                        <p class="wp-stage-desc">@stage.Description</p>
+                        <div class="wp-stage-action">@stage.Action</div>
+                    </div>
+                }
+            </div>
+
+            <div class="wp-caveats-card">
+                <div class="wp-caveats-title">When the test does not apply</div>
+                <div class="wp-caveats-grid">
+                    <div class="wp-caveat">
+                        <span>🌿</span>
+                        <div><strong>High rye or whole grain</strong> — short gluten strands tear before a membrane forms.
+                        Judge by dough feel and volume instead.</div>
+                    </div>
+                    <div class="wp-caveat">
+                        <span>🧁</span>
+                        <div><strong>Enriched doughs</strong> — fat interrupts gluten; a partial pane (tears at 8–10 cm) is acceptable and expected.</div>
+                    </div>
+                    <div class="wp-caveat">
+                        <span>💧</span>
+                        <div><strong>Very high hydration (&gt;80%)</strong> — membrane forms but tears easily; rely on dough tension and jiggle test instead.</div>
+                    </div>
+                    <div class="wp-caveat">
+                        <span>🫓</span>
+                        <div><strong>Steamed breads</strong> — low-protein flour means a thin membrane is not achievable; use doubled volume as your cue.</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    }
+
+</div>
+
+@code {
+    private string _activeTab = "folding";
+
+    private record Tab(string Id, string Label);
+    private readonly Tab[] _tabs =
+    [
+        new("folding",    "Folding techniques"),
+        new("shaping",    "Shaping techniques"),
+        new("windowpane", "Windowpane test"),
+    ];
+
+    private record FoldTechnique(
+        string Icon, string Name, string BestFor, string BestForClass,
+        string Timing, string Description, string[] Steps, string Tip = "");
+
+    private readonly FoldTechnique[] _folds =
+    [
+        new(
+            "🙌", "Stretch & Fold", "All doughs", "all",
+            "Sets 1–2 of bulk",
+            "The foundational fold. Performed in the bowl, four sides, no degassing. Builds strength progressively without stressing gluten early in bulk.",
+            [
+                "Wet one hand to prevent sticking.",
+                "Grab the far edge of the dough, stretch it upward as far as it will go without tearing.",
+                "Fold it over to the near side of the bowl.",
+                "Rotate the bowl 90° and repeat — four folds = one set.",
+                "Cover and rest 30 min before the next set.",
+            ],
+            "Dough should feel noticeably smoother and more resistant after each set."
+        ),
+        new(
+            "🌀", "Coil Fold", "Slack & high-hydration doughs", "slack",
+            "Sets 2–4 of bulk",
+            "Lifts the dough from beneath rather than pulling from the side. Maintains the gluten network's natural alignment and is gentler than stretch & fold.",
+            [
+                "Slide both hands under the centre of the dough.",
+                "Lift the dough — it will drape over your hands.",
+                "Lower it onto one end so that end tucks under.",
+                "Rotate 180°; repeat so the opposite end tucks under.",
+                "Rotate 90° and repeat twice more — four tucks = one set.",
+            ],
+            "Switch from stretch & fold to coil fold when the dough becomes too extensible to grip from the side."
+        ),
+        new(
+            "📄", "Lamination Fold", "Open crumb / high-hydration", "open",
+            "Once, between sets 1 and 2",
+            "Spreads the dough thin on a lightly wet bench and folds it like a letter. Incorporates inclusions and dramatically increases strength in one pass.",
+            [
+                "Wet the bench lightly — no flour.",
+                "Pour the dough onto the bench; spread it by pressing gently with your palms to a roughly 40×50 cm rectangle.",
+                "Add any inclusions (seeds, cheese, herbs) evenly.",
+                "Fold one third over the centre (letter fold).",
+                "Fold the remaining third over the top.",
+                "Turn 90° and fold in thirds again.",
+                "Return to bowl with seam-side down.",
+            ],
+            "Only do lamination once — it is stressful on gluten and works best at 30–60% bulk rise."
+        ),
+        new(
+            "✉️", "Letter Fold", "Medium-hydration enriched", "medium",
+            "Early bulk, before coil folds",
+            "A lighter version of lamination. Good for medium-hydration doughs and enriched formulas where a single strength-building fold is enough.",
+            [
+                "Turn dough out onto a lightly floured surface.",
+                "Gently pat to a rough rectangle (do not use a rolling pin).",
+                "Fold the top third down, then the bottom third up over it.",
+                "Turn 90° and fold the top down, bottom up again.",
+                "Return to bowl seam-side down.",
+            ]
+        ),
+        new(
+            "👋", "Slap & Fold", "Sticky low-structure doughs", "sticky",
+            "Very start of bulk (before sets)",
+            "An aggressive technique that develops gluten quickly in wet, sticky doughs — especially useful for baguettes and ciabatta where no autolyse was used.",
+            [
+                "Lift the dough with both hands.",
+                "Slap the far end onto the bench — the near end will fold over.",
+                "Slide your hands under the dough and repeat.",
+                "Work rhythmically: slap, fold, quarter-turn, slap, fold…",
+                "Stop when dough stops sticking to the bench (typically 5–8 min).",
+            ],
+            "This technique is loud — warn anyone nearby."
+        ),
+    ];
+
+    private record ShapeTechnique(
+        string Icon, string Name, string Subtitle, string Difficulty, string DifficultyClass,
+        string Description, string[] Steps, string[] Tips);
+
+    private readonly ShapeTechnique[] _shapes =
+    [
+        new(
+            "⚽", "Boule", "Round loaf", "Beginner", "easy",
+            "The most forgiving shape. A tight sphere creates even surface tension that supports the dough in a round banneton or on a sheet.",
+            [
+                "Pre-shape: flip dough onto unfloured surface; fold the four edges to the centre; flip seam-side down.",
+                "Drag the ball toward you with cupped hands — the bench friction creates surface tension.",
+                "Bench rest 20–30 min uncovered (let the surface dry slightly).",
+                "Final shape: flip dough; repeat the fold-to-centre pattern more tightly.",
+                "Drag again with more pressure, building a taut skin.",
+                "Place seam-side up in a floured banneton.",
+            ],
+            ["The tighter the drag, the more oven spring you will get.", "Do not flour the bench for the drag — friction is the tool.", "A smooth, crack-free surface = good tension."]
+        ),
+        new(
+            "🏈", "Batard", "Oval loaf", "Intermediate", "medium",
+            "More volume per slice than a boule. Suits bannetons with a tapered end. Good for sandwich-style loaves.",
+            [
+                "Pre-shape into a rough oval; bench rest 20–30 min.",
+                "Flip dough; press gently to degas the top layer only.",
+                "Fold the far edge two-thirds down; press to seal.",
+                "Fold the left and right edges inward (like closing an envelope).",
+                "Roll the near edge away from you, rolling the log tight.",
+                "Seal the seam with the heel of your hand.",
+                "Roll to even the shape; place seam-side up in an oval banneton.",
+            ],
+            ["Keep tension even along the length — loose ends split during baking.", "For a more open crumb, degas less aggressively at step 2."]
+        ),
+        new(
+            "🥖", "Baguette", "Long thin loaf", "Advanced", "hard",
+            "High surface-area-to-volume ratio means fast crust formation and a chewy, open crumb. Requires a delicate touch and a peel or couche to proof.",
+            [
+                "Divide dough into 280–320 g pieces; pre-shape into cylinders; bench rest 30 min.",
+                "Flip; press to a rough rectangle; fold the top third down.",
+                "Fold the bottom third up to overlap slightly; seal with fingertips.",
+                "Fold in half lengthwise; seal the long seam with the heel of your hand.",
+                "Roll from the centre outward, applying gentle downward pressure, to extend to 55–65 cm.",
+                "Transfer seam-side down onto a floured couche or baguette tray.",
+            ],
+            ["Taper the ends by rolling with just the palm of your hand.", "Proof 45–60 min at room temp; baguettes over-proof quickly.", "Score at 30–45° with a razor lame, overlapping cuts by a third."]
+        ),
+        new(
+            "🍞", "Tin Loaf", "Pan bread", "Beginner", "easy",
+            "The simplest shape. A greased tin does most of the work — tension is less critical because the tin supports the dough as it rises.",
+            [
+                "Flatten the dough into a rectangle roughly the width of your tin.",
+                "Fold the far third to the centre; fold the near third over the top.",
+                "Roll the cylinder tight from the near edge.",
+                "Place seam-side down in the greased tin.",
+                "For a 'crown' top: divide dough into 3–4 equal pieces and place side by side.",
+            ],
+            ["Tin loaves can handle slightly more proofing than free-form loaves.", "Brush with egg wash for a shiny crust; leave plain for a matt crust.", "Fill the tin to ~60% of its height; bake when it reaches the rim."]
+        ),
+        new(
+            "🫓", "Rolls", "Dinner / burger rolls", "Beginner", "easy",
+            "Small pieces mean faster proofing and baking. Ideal for practising tension-building technique — the small scale shows feedback quickly.",
+            [
+                "Divide dough into 60–80 g pieces.",
+                "Cup one piece under your palm on an unfloured surface.",
+                "Move your palm in small tight circles — dough adheres to the bench and builds a taut ball.",
+                "Repeat for each piece; place on a lined baking tray.",
+                "Proof until puffy (50–75 min at 22 °C).",
+            ],
+            ["A light bench is key — too much flour and the dough skates rather than grips.", "Space at least 4 cm apart if you want a crust; touching gives soft pull-apart sides."]
+        ),
+    ];
+
+    private record ShapingRule(string Icon, string Name, string Text);
+    private readonly ShapingRule[] _shapingRules =
+    [
+        new("⏱️", "Rest before final shape", "A 20–30 min bench rest after pre-shaping lets gluten relax, making the final shape easier and less likely to tear."),
+        new("🌡️", "Cool dough is easier to handle", "If your kitchen is above 24 °C, refrigerate the dough 30 min before shaping. Cooler dough is firmer and more forgiving."),
+        new("🏃", "Work quickly", "Hesitation allows the surface to dry and the gluten to relax. Commit to each movement and move on."),
+        new("🧤", "Dry hands, wet bench (or vice versa)", "For high-hydration doughs, wet hands and a bare bench. For medium doughs, dry hands and a lightly floured bench. Never flour both."),
+        new("🔁", "Seal seams firmly", "A loose seam opens during baking and deflates spring. Press with the heel of your hand and feel the dough bond."),
+        new("👁️", "Check the surface", "A smooth, slightly translucent skin with no tears means good tension. Cracks or loose folds mean start again."),
+    ];
+
+    private record WpStage(string Icon, string Name, string Label, string StatusClass, string Description, string Action);
+    private readonly WpStage[] _wpStages =
+    [
+        new(
+            "❌", "Tears immediately", "Under-developed",
+            "fail",
+            "The dough snaps before it stretches at all. Gluten strands are short, disorganised, and unable to resist any pulling force.",
+            "Continue mixing or folding. Wait another 20–30 min and retest."
+        ),
+        new(
+            "⚠️", "Stretches but tears with holes", "Needs more development",
+            "warn",
+            "Gluten is forming but strands are still uneven. Some areas stretch, others snap. A patchy membrane or opaque sheet with tears.",
+            "Add 1–2 more fold sets with 20 min rest between. Retest after the next rest."
+        ),
+        new(
+            "✅", "Thin translucent membrane", "Fully developed",
+            "pass",
+            "The dough stretches to a near-transparent sheet. You can see light through it. No tears for at least 6–8 cm of stretch. Gluten network is strong and continuous.",
+            "Proceed to bulk rest, then shaping. Dough is ready."
+        ),
+        new(
+            "🏆", "Glass-thin, no tears at 10 cm+", "Exceptionally developed",
+            "best",
+            "The membrane stretches almost tissue-thin without tearing. Typical after long autolyse or intensive mixing. Common in high-protein flour doughs.",
+            "Begin shaping immediately — further folding risks over-tightening the gluten network."
+        ),
+    ];
+}

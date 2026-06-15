@@ -6592,3 +6592,135 @@ body {
     .formula-card-header { flex-direction: column; }
     .formula-card-actions { align-self: flex-start; }
 }
+
+/* ── M37 Shaping & Folding ───────────────────────────────────── */
+.shaping-page { max-width: 900px; margin: 0 auto; padding: 24px 16px 60px; }
+
+.shaping-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
+.shaping-title-group { flex: 1; }
+.shaping-title { font-size: 1.6rem; font-weight: 700; color: var(--text-primary); margin: 0 0 4px; }
+.shaping-subtitle { color: var(--text-muted); margin: 0; font-size: 0.95rem; }
+
+.shaping-tabs { display: flex; gap: 8px; margin-bottom: 28px; flex-wrap: wrap; }
+.shaping-tab {
+    padding: 8px 18px; border-radius: 20px; font-size: 0.9rem; font-weight: 500; cursor: pointer;
+    border: 1.5px solid var(--border-color); background: var(--card-bg); color: var(--text-secondary);
+    transition: all 0.15s;
+}
+.shaping-tab:hover { border-color: var(--accent); color: var(--accent); }
+.shaping-tab--active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+.shaping-section { }
+.shaping-intro { color: var(--text-secondary); margin: 0 0 24px; line-height: 1.65; }
+
+/* Fold cards */
+.fold-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; margin-bottom: 28px; }
+.fold-card {
+    background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px;
+    padding: 20px; display: flex; flex-direction: column; gap: 12px;
+}
+.fold-card-top { display: flex; align-items: flex-start; gap: 14px; }
+.fold-icon { font-size: 2rem; flex-shrink: 0; }
+.fold-name { font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+.fold-meta-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.fold-tag {
+    font-size: 0.75rem; font-weight: 600; padding: 2px 8px; border-radius: 10px;
+    background: var(--accent-light, #f0f4ff); color: var(--accent);
+}
+.fold-tag--slack  { background: #e8f4fd; color: #1a6fa3; }
+.fold-tag--all    { background: #edf7ed; color: #2d7a2d; }
+.fold-tag--open   { background: #fdf0e8; color: #b35a1a; }
+.fold-tag--medium { background: #f5f0fd; color: #6b3aad; }
+.fold-tag--sticky { background: #fdf8e0; color: #a07a00; }
+.fold-timing { font-size: 0.78rem; color: var(--text-muted); }
+.fold-description { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; margin: 0; }
+.fold-steps { margin: 0; padding-left: 20px; color: var(--text-secondary); font-size: 0.88rem; }
+.fold-steps li { margin-bottom: 5px; line-height: 1.55; }
+.fold-tip {
+    background: var(--accent-light, #f0f4ff); border-left: 3px solid var(--accent);
+    padding: 8px 12px; border-radius: 0 6px 6px 0; font-size: 0.85rem; color: var(--text-secondary);
+}
+
+.fold-schedule-card {
+    background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;
+}
+.fold-schedule-title { font-weight: 700; color: var(--text-primary); margin-bottom: 14px; }
+.fold-schedule-grid { display: flex; flex-direction: column; gap: 6px; }
+.fold-sched-item {
+    display: grid; grid-template-columns: 90px 1fr;
+    align-items: center; gap: 12px; padding: 8px 12px; border-radius: 8px;
+    background: var(--bg-subtle, #f8f8f8);
+}
+.fold-sched-item--key { background: var(--accent-light, #eef2ff); font-weight: 600; }
+.fold-sched-item--rest { background: #f0fdf0; }
+.fold-sched-time { font-size: 0.82rem; font-weight: 600; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+.fold-sched-action { font-size: 0.88rem; color: var(--text-secondary); }
+
+/* Shape cards */
+.shape-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 16px; margin-bottom: 28px; }
+.shape-card {
+    background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px;
+    padding: 20px; display: flex; flex-direction: column; gap: 12px;
+}
+.shape-card-header { display: flex; align-items: flex-start; gap: 14px; }
+.shape-icon { font-size: 2rem; flex-shrink: 0; }
+.shape-name { font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin-bottom: 3px; }
+.shape-subtitle-text { font-size: 0.82rem; color: var(--text-muted); }
+.shape-difficulty {
+    margin-left: auto; font-size: 0.75rem; font-weight: 600; padding: 3px 9px; border-radius: 10px;
+    white-space: nowrap; flex-shrink: 0;
+}
+.shape-difficulty--easy   { background: #edf7ed; color: #2d7a2d; }
+.shape-difficulty--medium { background: #fdf8e0; color: #a07a00; }
+.shape-difficulty--hard   { background: #fdecea; color: #b32a2a; }
+.shape-description { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6; margin: 0; }
+.shape-steps { margin: 0; padding-left: 20px; color: var(--text-secondary); font-size: 0.88rem; }
+.shape-steps li { margin-bottom: 5px; line-height: 1.55; }
+.shape-tips { display: flex; flex-direction: column; gap: 4px; }
+.shape-tip { font-size: 0.83rem; color: var(--text-muted); }
+
+.shaping-rules-card {
+    background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;
+}
+.shaping-rules-title { font-weight: 700; color: var(--text-primary); margin-bottom: 16px; }
+.shaping-rules-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.shaping-rule { display: flex; gap: 12px; align-items: flex-start; }
+.shaping-rule-icon { font-size: 1.3rem; flex-shrink: 0; }
+.shaping-rule-name { font-size: 0.88rem; font-weight: 600; color: var(--text-primary); margin-bottom: 3px; }
+.shaping-rule-text { font-size: 0.83rem; color: var(--text-secondary); line-height: 1.5; }
+
+/* Windowpane */
+.wp-how-to {
+    background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px;
+    padding: 20px; margin-bottom: 20px;
+}
+.wp-how-to-title { font-weight: 700; color: var(--text-primary); margin-bottom: 12px; }
+.wp-steps { margin: 0; padding-left: 20px; color: var(--text-secondary); font-size: 0.9rem; }
+.wp-steps li { margin-bottom: 7px; line-height: 1.6; }
+
+.wp-stage-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin-bottom: 20px; }
+.wp-stage-card {
+    background: var(--card-bg); border: 2px solid var(--border-color); border-radius: 12px; padding: 18px;
+    display: flex; flex-direction: column; gap: 10px;
+}
+.wp-stage--fail { border-color: #e53e3e; }
+.wp-stage--warn { border-color: #d97706; }
+.wp-stage--pass { border-color: #38a169; }
+.wp-stage--best { border-color: var(--accent); }
+.wp-stage-header { display: flex; align-items: flex-start; gap: 12px; }
+.wp-stage-icon { font-size: 1.6rem; }
+.wp-stage-name { font-size: 0.95rem; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; }
+.wp-stage-label { font-size: 0.78rem; color: var(--text-muted); font-weight: 500; }
+.wp-stage-desc { font-size: 0.87rem; color: var(--text-secondary); line-height: 1.6; margin: 0; }
+.wp-stage-action {
+    font-size: 0.83rem; font-weight: 600; color: var(--text-primary);
+    background: var(--bg-subtle, #f8f8f8); padding: 8px 12px; border-radius: 8px;
+}
+
+.wp-caveats-card {
+    background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;
+}
+.wp-caveats-title { font-weight: 700; color: var(--text-primary); margin-bottom: 16px; }
+.wp-caveats-grid { display: flex; flex-direction: column; gap: 14px; }
+.wp-caveat { display: flex; gap: 12px; align-items: flex-start; font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6; }
+.wp-caveat span { font-size: 1.3rem; flex-shrink: 0; }
