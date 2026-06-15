@@ -579,6 +579,150 @@
             </div>
         }
 
+        @* ─── 7. Preferment ─────────────────────────────────────────────────── *@
+        else if (_activeTab == "preferment")
+        {
+            <div class="calc-form">
+                <h3 class="calc-section-title">Preferment calculator</h3>
+                <p class="calc-hint">A preferment is a portion of the dough's flour and water fermented in advance. It adds flavour, extensibility and fermentation control. Choose the style and enter your formula; the calculator splits it into preferment and final-dough amounts.</p>
+
+                <div class="calc-field">
+                    <label class="calc-label">Preferment style</label>
+                    <div class="calc-radio-group">
+                        @foreach (var pt in _prefTypes)
+                        {
+                            <button class="calc-radio-pill @(_prefType == pt.Id ? "calc-radio-pill--active" : "")"
+                                    @onclick="() => { _prefType = pt.Id; _prefResult = null; }">
+                                @pt.Label
+                            </button>
+                        }
+                    </div>
+                    <p class="calc-hint">
+                        @(_prefType switch {
+                            "poolish" => "Equal flour and water (100% hydration). 0.1–0.5% yeast of preferment flour. Ferments 12–16 h at ~20 °C. Gives an open, irregular, slightly nutty crumb — classic for baguettes.",
+                            "biga"    => "Stiff preferment at 55–60% hydration. 0.1–0.3% yeast of preferment flour. Ferments 16–18 h at 18 °C. Gives strength and extensibility — classic for ciabatta.",
+                            "pf"      => "A piece of yesterday's dough carried over. Contains salt and yeast already. Contributes character with less fermentation planning.",
+                            "levain"  => "Sourdough preferment. No commercial yeast. Ferment until doubled (6–12 h at 24–26 °C depending on starter strength and temperature).",
+                            _         => ""
+                        })
+                    </p>
+                </div>
+
+                <div class="calc-field-row">
+                    <div class="calc-field">
+                        <label class="calc-label">Total flour</label>
+                        <div class="calc-input-row">
+                            <input class="calc-input calc-input--short" type="number" min="100"
+                                   @bind="_prefFlour" @bind:event="oninput" />
+                            <span class="calc-unit">g</span>
+                        </div>
+                    </div>
+                    <div class="calc-field">
+                        <label class="calc-label">Target hydration</label>
+                        <div class="calc-input-row">
+                            <input class="calc-input calc-input--short" type="number" min="50" max="100" step="0.5"
+                                   @bind="_prefHydration" @bind:event="oninput" />
+                            <span class="calc-unit">%</span>
+                        </div>
+                    </div>
+                    <div class="calc-field">
+                        <label class="calc-label">Preferment flour share</label>
+                        <div class="calc-input-row">
+                            <input class="calc-input calc-input--short" type="number" min="5" max="60" step="1"
+                                   @bind="_prefShare" @bind:event="oninput" />
+                            <span class="calc-unit">% of total flour</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calc-field-row">
+                    <div class="calc-field">
+                        <label class="calc-label">Overall salt</label>
+                        <div class="calc-input-row">
+                            <input class="calc-input calc-input--short" type="number" min="0" max="5" step="0.1"
+                                   @bind="_prefSaltPct" @bind:event="oninput" />
+                            <span class="calc-unit">% of flour</span>
+                        </div>
+                    </div>
+                    @if (_prefType == "poolish" || _prefType == "biga" || _prefType == "pf")
+                    {
+                        <div class="calc-field">
+                            <label class="calc-label">
+                                @(_prefType == "pf" ? "Yeast in pâte fermentée" : "Yeast in preferment")
+                                <span class="calc-hint-inline">(% of preferment flour)</span>
+                            </label>
+                            <div class="calc-input-row">
+                                <input class="calc-input calc-input--short" type="number" min="0.05" max="2" step="0.05"
+                                       @bind="_prefYeastPct" @bind:event="oninput" />
+                                <span class="calc-unit">%</span>
+                            </div>
+                        </div>
+                    }
+                    @if (_prefType == "biga")
+                    {
+                        <div class="calc-field">
+                            <label class="calc-label">Biga hydration</label>
+                            <div class="calc-input-row">
+                                <input class="calc-input calc-input--short" type="number" min="40" max="80" step="1"
+                                       @bind="_prefBigaHydration" @bind:event="oninput" />
+                                <span class="calc-unit">%</span>
+                            </div>
+                        </div>
+                    }
+                    @if (_prefType == "levain")
+                    {
+                        <div class="calc-field">
+                            <label class="calc-label">Levain hydration</label>
+                            <div class="calc-input-row">
+                                <input class="calc-input calc-input--short" type="number" min="50" max="150" step="5"
+                                       @bind="_prefLevainHydration" @bind:event="oninput" />
+                                <span class="calc-unit">%</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <button class="btn-primary calc-calculate-btn" @onclick="RunPreferment">Calculate</button>
+
+                @if (_prefResult is not null)
+                {
+                    <div class="calc-result-card">
+                        <table class="calc-result-table">
+                            <thead>
+                                <tr><th></th><th>Flour</th><th>Water</th><th>Other</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>@_prefResult.PrefermentLabel</strong></td>
+                                    <td class="calc-num calc-num--bold">@_prefResult.PrefFlour.ToString("F1") g</td>
+                                    <td class="calc-num calc-num--bold">@_prefResult.PrefWater.ToString("F1") g</td>
+                                    <td class="calc-num">@(string.IsNullOrEmpty(_prefResult.PrefOther) ? "—" : _prefResult.PrefOther)</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Final dough additions</strong></td>
+                                    <td class="calc-num calc-num--bold">@_prefResult.DoughFlour.ToString("F1") g</td>
+                                    <td class="calc-num calc-num--bold">@_prefResult.DoughWater.ToString("F1") g</td>
+                                    <td class="calc-num">@(string.IsNullOrEmpty(_prefResult.DoughOther) ? "—" : _prefResult.DoughOther)</td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr class="calc-result-totals">
+                                    <td>Totals (check)</td>
+                                    <td class="calc-num">@(_prefResult.PrefFlour + _prefResult.DoughFlour).ToString("F0") g @(Math.Abs(_prefResult.PrefFlour + _prefResult.DoughFlour - _prefFlour) <= 0.6m ? "✓" : "⚠")</td>
+                                    <td class="calc-num">@(_prefResult.PrefWater + _prefResult.DoughWater).ToString("F0") g · @((_prefResult.PrefWater + _prefResult.DoughWater) / _prefFlour * 100m).ToString("F1")% @(Math.Abs((_prefResult.PrefWater + _prefResult.DoughWater) / _prefFlour * 100m - _prefHydration) <= 0.6m ? "✓" : "⚠")</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                        @if (!string.IsNullOrEmpty(_prefResult.TimingNote))
+                        {
+                            <p class="calc-hint" style="margin-top:12px">⏱ @_prefResult.TimingNote</p>
+                        }
+                    </div>
+                }
+            </div>
+        }
+
     </div>
 </div>
 
@@ -592,7 +736,8 @@
         new("ddt",       "DDT"),
         new("hydration", "Hydration"),
         new("cost",      "Cost"),
-        new("roux",      "Water Roux"),
+        new("roux",       "Water Roux"),
+        new("preferment", "Preferment"),
     ];
     private string _activeTab = "scale";
 
@@ -806,5 +951,116 @@
                 _rouxError = await resp.Content.ReadAsStringAsync();
         }
         finally { _rouxLoading = false; }
+    }
+
+    // ── 7. Preferment state ───────────────────────────────────────────────────
+
+    private record PrefType(string Id, string Label);
+    private readonly PrefType[] _prefTypes =
+    [
+        new("poolish", "Poolish"),
+        new("biga",    "Biga"),
+        new("pf",      "Pâte fermentée"),
+        new("levain",  "Levain"),
+    ];
+
+    private string  _prefType            = "poolish";
+    private decimal _prefFlour           = 500m;
+    private decimal _prefHydration       = 72m;
+    private decimal _prefShare           = 30m;
+    private decimal _prefSaltPct         = 2m;
+    private decimal _prefYeastPct        = 0.2m;
+    private decimal _prefBigaHydration   = 55m;
+    private decimal _prefLevainHydration = 100m;
+
+    private record PrefResult(
+        string PrefermentLabel,
+        decimal PrefFlour,
+        decimal PrefWater,
+        string  PrefOther,
+        decimal DoughFlour,
+        decimal DoughWater,
+        string  DoughOther,
+        string  TimingNote
+    );
+
+    private PrefResult? _prefResult;
+
+    private void RunPreferment()
+    {
+        if (_prefFlour <= 0) return;
+
+        decimal totalFlour = _prefFlour;
+        decimal totalWater = Math.Round(totalFlour * _prefHydration / 100m, 1);
+        decimal totalSalt  = Math.Round(totalFlour * _prefSaltPct / 100m, 1);
+
+        decimal prefFlour = Math.Round(totalFlour * _prefShare / 100m, 1);
+        decimal doughFlour = Math.Round(totalFlour - prefFlour, 1);
+
+        switch (_prefType)
+        {
+            case "poolish":
+            {
+                decimal prefWater = prefFlour;   // 100% hydration
+                decimal doughWater = Math.Round(totalWater - prefWater, 1);
+                decimal yeast = Math.Round(prefFlour * _prefYeastPct / 100m, 2);
+                _prefResult = new PrefResult(
+                    "Poolish",
+                    prefFlour, prefWater,
+                    $"{yeast} g instant yeast",
+                    doughFlour, doughWater,
+                    $"{totalSalt} g salt  (add all to final dough)",
+                    $"Ferment poolish 12–16 h at ~20 °C (until domed, bubbling and just starting to fall). Add to final dough with remaining flour, water and salt."
+                );
+                break;
+            }
+            case "biga":
+            {
+                decimal prefWater = Math.Round(prefFlour * _prefBigaHydration / 100m, 1);
+                decimal doughWater = Math.Round(totalWater - prefWater, 1);
+                decimal yeast = Math.Round(prefFlour * _prefYeastPct / 100m, 2);
+                _prefResult = new PrefResult(
+                    $"Biga ({_prefBigaHydration}% hydration)",
+                    prefFlour, prefWater,
+                    $"{yeast} g instant yeast",
+                    doughFlour, doughWater,
+                    $"{totalSalt} g salt  (add all to final dough)",
+                    $"Ferment biga 16–18 h at 18 °C until it has expanded and shows a slightly domed top with small bubbles. Tear into pieces before mixing."
+                );
+                break;
+            }
+            case "pf":
+            {
+                decimal pfHydration = 60m;
+                decimal prefWater = Math.Round(prefFlour * pfHydration / 100m, 1);
+                decimal pfSalt    = Math.Round(prefFlour * 2m / 100m, 1);
+                decimal pfYeast   = Math.Round(prefFlour * _prefYeastPct / 100m, 2);
+                decimal doughWater = Math.Round(totalWater - prefWater, 1);
+                decimal doughSalt  = Math.Round(totalSalt - pfSalt, 1);
+                _prefResult = new PrefResult(
+                    "Pâte fermentée (60% hydration)",
+                    prefFlour, prefWater,
+                    $"{pfYeast} g yeast + {pfSalt} g salt",
+                    doughFlour, doughWater,
+                    $"{doughSalt} g salt (remainder)",
+                    "Use leftover dough from a previous bake, or build fresh and refrigerate 8–24 h. Add to final dough cold — it will warm during mixing."
+                );
+                break;
+            }
+            case "levain":
+            {
+                decimal levainWater = Math.Round(prefFlour * _prefLevainHydration / 100m, 1);
+                decimal doughWater  = Math.Round(totalWater - levainWater, 1);
+                _prefResult = new PrefResult(
+                    $"Levain ({_prefLevainHydration}% hydration)",
+                    prefFlour, levainWater,
+                    "Wild yeast (from starter seed — not included in weights above)",
+                    doughFlour, doughWater,
+                    $"{totalSalt} g salt  (add all to final dough)",
+                    $"Build levain 6–12 h before mixing at 24–26 °C. Use at peak (doubled, domed, passes float test). Adjust timing by choosing a larger or smaller seed-to-flour ratio."
+                );
+                break;
+            }
+        }
     }
 }
