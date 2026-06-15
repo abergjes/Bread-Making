@@ -6125,3 +6125,179 @@ body {
     border-top: 1px solid var(--border);
     padding-top: 10px;
 }
+
+/* ── M35: Baker's Glossary ───────────────────────────────── */
+
+.glossary-page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+}
+
+.glossary-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.glossary-title-group { flex: 1; }
+.glossary-title    { font-size: 1.5rem; font-weight: 700; margin: 0 0 4px; color: var(--text); }
+.glossary-subtitle  { font-size: .85rem; color: var(--text-muted); margin: 0; }
+
+.glossary-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.glossary-search {
+    width: 100%;
+    padding: 9px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--panel);
+    color: var(--text);
+    font-size: .88rem;
+    box-sizing: border-box;
+}
+
+.glossary-search:focus { outline: 2px solid var(--accent); border-color: var(--accent); }
+
+.glossary-letters {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.glossary-letter-btn {
+    padding: 4px 9px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--panel);
+    color: var(--text-muted);
+    font-size: .78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .12s, color .12s;
+    min-width: 28px;
+    text-align: center;
+}
+
+.glossary-letter-btn:hover { background: var(--hover); color: var(--text); }
+.glossary-letter-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+.glossary-empty {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: .88rem;
+    padding: 40px 0;
+}
+
+/* Groups */
+.glossary-group {
+    margin-bottom: 24px;
+}
+
+.glossary-group-letter {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--accent);
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 4px;
+    margin-bottom: 8px;
+}
+
+.glossary-group-terms {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* Term cards */
+.glossary-term-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+
+.glossary-term-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 10px 14px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+}
+
+.glossary-term-header:hover { background: var(--hover); }
+
+.glossary-term-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    flex-wrap: wrap;
+}
+
+.glossary-term-name {
+    font-weight: 700;
+    font-size: .88rem;
+    color: var(--text);
+}
+
+.glossary-also {
+    font-size: .74rem;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+.glossary-tag {
+    font-size: .66rem;
+    font-weight: 600;
+    padding: 1px 7px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    flex-shrink: 0;
+}
+
+.glossary-tag--technique  { background: color-mix(in srgb, #6366f1 12%, var(--panel)); color: #4338ca; }
+.glossary-tag--science    { background: color-mix(in srgb, #06b6d4 12%, var(--panel)); color: #0e7490; }
+.glossary-tag--ingredient { background: color-mix(in srgb, #22c55e 12%, var(--panel)); color: #166534; }
+.glossary-tag--equipment  { background: color-mix(in srgb, #f59e0b 12%, var(--panel)); color: #b45309; }
+.glossary-tag--formula    { background: color-mix(in srgb, #a78bfa 12%, var(--panel)); color: #7c3aed; }
+.glossary-tag--ferment    { background: color-mix(in srgb, #fb923c 12%, var(--panel)); color: #c2410c; }
+.glossary-tag--bread      { background: color-mix(in srgb, #f472b6 12%, var(--panel)); color: #be185d; }
+.glossary-tag--appearance { background: color-mix(in srgb, #94a3b8 12%, var(--panel)); color: #475569; }
+.glossary-tag--grain      { background: color-mix(in srgb, #84cc16 12%, var(--panel)); color: #4d7c0f; }
+
+.glossary-chevron { font-size: .8rem; color: var(--text-muted); flex-shrink: 0; }
+
+/* Term body */
+.glossary-term-body {
+    border-top: 1px solid var(--border);
+    padding: 10px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.glossary-def {
+    margin: 0;
+    font-size: .83rem;
+    color: var(--text-muted);
+    line-height: 1.65;
+}
+
+.glossary-see-also {
+    font-size: .74rem;
+    color: var(--accent);
+    font-style: italic;
+}

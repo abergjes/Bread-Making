@@ -1,0 +1,386 @@
+@page "/glossary"
+@inject NavigationManager Nav
+
+<div class="glossary-page">
+
+    <div class="glossary-header">
+        <button class="back-btn" @onclick='() => Nav.NavigateTo("/history")'>← History</button>
+        <div class="glossary-title-group">
+            <h2 class="glossary-title">Baker's Glossary</h2>
+            <p class="glossary-subtitle">@_filtered.Length terms · click any term to expand</p>
+        </div>
+    </div>
+
+    <div class="glossary-controls">
+        <input class="glossary-search" type="search" placeholder="Search terms…"
+               @bind="_query" @bind:event="oninput" />
+        <div class="glossary-letters">
+            <button class="glossary-letter-btn @(_activeLetter == "" ? "active" : "")"
+                    @onclick='() => _activeLetter = ""'>All</button>
+            @foreach (var letter in _availableLetters)
+            {
+                <button class="glossary-letter-btn @(_activeLetter == letter ? "active" : "")"
+                        @onclick="() => _activeLetter = letter">@letter</button>
+            }
+        </div>
+    </div>
+
+    @if (_filtered.Length == 0)
+    {
+        <p class="glossary-empty">No terms match "@_query" — try a different keyword.</p>
+    }
+    else
+    {
+        var grouped = _filtered
+            .GroupBy(t => t.Term[0].ToString().ToUpper())
+            .OrderBy(g => g.Key);
+
+        foreach (var group in grouped)
+        {
+            <div class="glossary-group">
+                <div class="glossary-group-letter">@group.Key</div>
+                <div class="glossary-group-terms">
+                    @foreach (var term in group.OrderBy(t => t.Term))
+                    {
+                        <div class="glossary-term-card">
+                            <button class="glossary-term-header"
+                                    @onclick="() => Toggle(term.Term)">
+                                <div class="glossary-term-left">
+                                    <span class="glossary-term-name">@term.Term</span>
+                                    @if (!string.IsNullOrEmpty(term.also))
+                                    {
+                                        <span class="glossary-also">also: @term.also</span>
+                                    }
+                                    <span class="glossary-tag glossary-tag--@term.TagClass">@term.Tag</span>
+                                </div>
+                                <span class="glossary-chevron">@(_open.Contains(term.Term) ? "▲" : "▼")</span>
+                            </button>
+                            @if (_open.Contains(term.Term))
+                            {
+                                <div class="glossary-term-body">
+                                    <p class="glossary-def">@term.Definition</p>
+                                    @if (!string.IsNullOrEmpty(term.seeAlso))
+                                    {
+                                        <div class="glossary-see-also">See also: @term.seeAlso</div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    }
+
+</div>
+
+@code {
+    private string _query       = "";
+    private string _activeLetter = "";
+    private readonly HashSet<string> _open = [];
+
+    private void Toggle(string term) { if (!_open.Add(term)) _open.Remove(term); }
+
+    private GlossaryTerm[] _filtered => _terms
+        .Where(t => string.IsNullOrEmpty(_activeLetter) || t.Term.StartsWith(_activeLetter, StringComparison.OrdinalIgnoreCase))
+        .Where(t => string.IsNullOrEmpty(_query) ||
+                    t.Term.Contains(_query, StringComparison.OrdinalIgnoreCase) ||
+                    (t.also?.Contains(_query, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                    t.Definition.Contains(_query, StringComparison.OrdinalIgnoreCase))
+        .ToArray();
+
+    private string[] _availableLetters => _terms
+        .Select(t => t.Term[0].ToString().ToUpper())
+        .Distinct()
+        .OrderBy(x => x)
+        .ToArray();
+
+    private record GlossaryTerm(string Term, string Tag, string TagClass, string Definition, string also = "", string seeAlso = "");
+
+    private static readonly GlossaryTerm[] _terms =
+    [
+        new("Acidity (pH)", "Science", "science",
+            "A measure of hydrogen ion concentration. Sourdough crumb typically reaches pH 3.8–4.2 after a long ferment. Acidity deactivates amylase enzymes in rye and wheat, and is responsible for both flavour and preservation. Lower pH = more sour.",
+            seeAlso: "Lactic acid · Acetic acid · Falling number"),
+
+        new("Active dry yeast", "Ingredient", "ingredient",
+            "Commercial yeast in granulated form that requires rehydration in warm water (35–40 °C) before use. Less active than instant yeast gram-for-gram; use 25% more by weight if substituting for instant. Perishable once opened."),
+
+        new("Alveograph", "Equipment", "equipment",
+            "A laboratory instrument that inflates a disc of standardised dough like a bubble until it bursts. Produces the three key values W (dough strength), P (tenacity), and L (extensibility) that appear on professional flour spec sheets.",
+            seeAlso: "W · P/L ratio"),
+
+        new("Amylase", "Science", "science",
+            "Enzyme that breaks starch into sugars. Alpha-amylase produces dextrins (gummy); beta-amylase produces maltose (fermentable sugars). Measured indirectly by the falling number test. Active amylase in flour is beneficial in small quantities; excess causes a sticky, gummy crumb.",
+            seeAlso: "Falling number · Diastatic malt"),
+
+        new("Arabinoxylan", "Science", "science",
+            "See 'Pentosan'. A water-absorbing carbohydrate that replaces gluten as the structural polymer in rye bread.",
+            also: "Pentosan",
+            seeAlso: "Pentosan · Rye"),
+
+        new("Autolyse", "Technique", "technique",
+            "A rest period of 20–60 minutes after mixing flour and water (before adding levain and salt). Hydration allows gluten bonds to start forming spontaneously, extensibility increases, and mixing time is reduced. Named by Raymond Calvel. The app uses Autolyse as the default method for wheat and spelt.",
+            seeAlso: "Fermentolyse · Bulk fermentation"),
+
+        new("Baker's percentage", "Formula", "formula",
+            "A system for expressing ingredient quantities as a percentage of total flour weight, where flour is always 100%. Example: 72% water means 720 g water per 1000 g flour. Allows scaling any recipe to any batch size by simple multiplication.",
+            also: "Baker's %",
+            seeAlso: "Hydration"),
+
+        new("Banneton", "Equipment", "equipment",
+            "A proofing basket, usually made of rattan or cane, used to support a shaped loaf during its final proof. The coiled rings leave a spiral pattern on the surface of the loaf. Also called a brotform or proofing basket. Lined with linen for smooth loaves; bare for the spiral pattern.",
+            also: "Brotform · Proofing basket"),
+
+        new("Bâtard", "Bread type", "bread",
+            "An oval or torpedo-shaped loaf, wider than a baguette and shorter than a boule. Typically scored with a single diagonal cut that produces a long ear. One of the three fundamental lean bread shapes alongside the boule and baguette."),
+
+        new("Bench rest", "Technique", "technique",
+            "A 15–30 minute rest on the bench between pre-shape and final shape. Allows the gluten to relax after the pre-shape tightening so the dough can be stretched and shaped without tearing. Covered with a cloth or upturned bowl to prevent a skin forming."),
+
+        new("Biga", "Pre-ferment", "ferment",
+            "An Italian stiff pre-ferment (50–60% hydration) made with commercial yeast (0.1–0.3% yeast). Fermented 12–18 h at 16–18 °C. Produces a wheaty, mildly complex flavour without the tang of sourdough. Used in ciabatta, focaccia and pizza.",
+            seeAlso: "Poolish · Preferment"),
+
+        new("Bloom", "Appearance", "appearance",
+            "The opening of a score during oven spring, producing the characteristic 'ear' or wing of a well-baked loaf. A good bloom indicates correct proof level, adequate steam, and a clean score at the right angle.",
+            seeAlso: "Ear · Grigne · Oven spring"),
+
+        new("Boule", "Bread type", "bread",
+            "A round loaf. From the French for 'ball'. One of the three fundamental lean bread shapes. Scored most commonly with a cross or star pattern. Baked in a round Dutch oven or banneton.",
+            seeAlso: "Bâtard · Banneton"),
+
+        new("Bulk fermentation", "Technique", "technique",
+            "The first fermentation phase, in which the mixed dough rests as a single mass (the 'bulk') while yeast and bacteria build flavour and gas. Typically 4–6 hours at 24–26 °C (longer at cooler temperatures). Ends when the dough has increased 50–75% in volume and bubbles are visible at the sides and top.",
+            also: "Bulk rise · First rise",
+            seeAlso: "Autolyse · Cold retard"),
+
+        new("Caramelisation", "Science", "science",
+            "The thermal browning of sugars (without protein involvement) at temperatures above 160 °C. Produces furans, HMF and caramel-like flavour compounds. Distinct from the Maillard reaction, which requires both sugars and amino acids.",
+            seeAlso: "Maillard reaction"),
+
+        new("Coil fold", "Technique", "technique",
+            "A gentle fold performed during bulk fermentation. The baker lifts the centre of the dough, allowing both ends to hang down and fold under, then rotates 90° and repeats. Less degassing than stretch-and-fold; preferred for high-hydration or well-developed doughs.",
+            seeAlso: "Stretch and fold · Lamination"),
+
+        new("Cold retard", "Technique", "technique",
+            "Placing the shaped loaf in the refrigerator (4–5 °C) for 8–24 hours before baking. Slows fermentation, builds acetic acid (sourness), firms the dough for cleaner scoring, and allows baking directly from cold (no temper needed). One of the highest-value techniques in the home baker's toolkit.",
+            also: "Retard · Cold proof",
+            seeAlso: "Acetic acid · Bulk fermentation"),
+
+        new("Crumb", "Appearance", "appearance",
+            "The interior of a baked loaf — the soft, porous part enclosed by the crust. Describes both the texture (open, tight, even) and the network of alveoli (air holes) that give bread its distinctive structure. Open crumb has large irregular holes; closed crumb is fine and even.",
+            seeAlso: "Alveolus · Gluten"),
+
+        new("Crust", "Appearance", "appearance",
+            "The outer surface of a loaf, formed by the Maillard reaction and caramelisation of surface sugars and proteins. Crust colour, thickness and texture are primarily controlled by oven temperature, steam (or lack of it), and bake time.",
+            seeAlso: "Maillard reaction · Steam"),
+
+        new("DDT", "Formula", "formula",
+            "Desired Dough Temperature. The target temperature for mixed dough, typically 24–26 °C for lean sourdough. Controlled by adjusting water temperature. Formula: DDT × 3 − (flour temp + room temp + friction factor) = water temp. The DDT calculator in this app automates this.",
+            also: "Desired dough temperature"),
+
+        new("Diastatic malt", "Ingredient", "ingredient",
+            "Malted barley (or wheat) flour that retains active amylase enzymes. Added at 0.1–0.5% of flour weight to provide enzyme-available sugars for fermentation and to improve crust browning. Distinct from non-diastatic malt, which has been heat-treated and contains no active enzymes.",
+            seeAlso: "Amylase · Falling number"),
+
+        new("Dutch oven", "Equipment", "equipment",
+            "A heavy cast-iron pot with a lid used to bake bread at home. Preheated with the oven at 250 °C for 45–60 min, the Dutch oven traps the steam released by the loaf during the first 20 minutes of baking, replicating the steam injection of a professional deck oven. The lid is removed for the second phase to allow crust browning.",
+            also: "Combo cooker",
+            seeAlso: "Steam · Oven spring"),
+
+        new("Ear", "Appearance", "appearance",
+            "The raised flap of crust produced when a shallow-angle score opens during oven spring. Formed when the blade cuts at 30–45° to the surface, creating a flap that is lifted by the expanding gas. A prominent ear is often considered a sign of a well-made lean sourdough.",
+            also: "Grigne",
+            seeAlso: "Score · Bloom · Oven spring"),
+
+        new("Enriched dough", "Bread type", "bread",
+            "A dough that contains fats (butter, oil, lard), eggs, milk or sugar in addition to flour, water, yeast and salt. These additions tenderise the crumb, increase shelf life, and affect browning. Examples: brioche, challah, milk bread (shokupan), burger buns.",
+            seeAlso: "Tangzhong · Hydration"),
+
+        new("Extensibility", "Science", "science",
+            "The ability of dough to stretch without tearing. Measured as the distance (mm) a dough stretches on the extensograph before it breaks. A dough must have both resistance (strength) and extensibility (yield) to trap gas and bake well. Too little = tears; too much = spreads.",
+            seeAlso: "Gluten · Alveograph · R/E ratio"),
+
+        new("Falling number", "Science", "science",
+            "A test measuring alpha-amylase enzyme activity in flour. A stirrer falls through a hot starch-flour paste; the time in seconds is the falling number. Ideal range for bread: 220–350 s. Below 200 s indicates excessive enzyme activity (risk of gummy crumb); above 400 s indicates very low enzyme activity.",
+            seeAlso: "Amylase · Diastatic malt"),
+
+        new("Fermentolyse", "Technique", "technique",
+            "A variation of autolyse in which the levain is added to the flour and water during the initial rest, before salt. The microbes begin fermenting immediately, producing a more flavourful and extensible dough than a standard autolyse. Particularly effective with ancient grains. Recommended by the app for Einkorn, Emmer and Kamut.",
+            seeAlso: "Autolyse · Bulk fermentation"),
+
+        new("Float test", "Test", "technique",
+            "A quick check of starter or levain readiness: drop a small spoonful into water. If it floats, the culture contains enough gas to indicate peak activity. If it sinks, it is either under-fed or past peak. Not infallible — a stiff starter may sink even at peak — but reliable for liquid levains."),
+
+        new("Gluten", "Science", "science",
+            "A protein network formed when gliadin and glutenin proteins in wheat flour hydrate and are mechanically worked. Gluten is elastic (returns to shape) and extensible (stretches without breaking). It traps carbon dioxide from fermentation, giving leavened bread its structure. Rye flour contains minimal functional gluten; its structure is based on pentosans instead.",
+            seeAlso: "Extensibility · Pentosan · Gluten index"),
+
+        new("Gluten index", "Science", "science",
+            "A measure of gluten quality (0–100). A high index (> 80) indicates strong, elastic gluten that resists mechanical damage. A low index (< 60) indicates weak or extensible gluten. Appears on professional flour specification sheets alongside protein percentage.",
+            seeAlso: "Alveograph · Gluten"),
+
+        new("Hooch", "Fermentation", "ferment",
+            "The grey or brown liquid that separates on top of a neglected, over-acidic starter. Composed of ethanol, organic acids and water. Not harmful — a sign of a hungry starter that has consumed all available sugars. Pour off and feed normally to recover.",
+            seeAlso: "Starter · Acidity"),
+
+        new("Hydration", "Formula", "formula",
+            "The percentage of water relative to total flour weight (baker's %). A dough at 72% hydration contains 720 g water per 1000 g flour. Higher hydration = more open crumb, stickier dough, more extensible gluten. Lower hydration = tighter crumb, easier to handle, more acetic acid production in cold retard.",
+            seeAlso: "Baker's percentage · Open crumb"),
+
+        new("Instant yeast", "Ingredient", "ingredient",
+            "Finely granulated commercial yeast that can be added directly to flour without rehydration. More active than active dry yeast; use 25% less than active dry by weight. Also called fast-action or quick-rise yeast. Produces a reliable, fast fermentation without sourdough complexity.",
+            also: "Fast-action yeast · Quick-rise yeast",
+            seeAlso: "Active dry yeast · Commercial yeast"),
+
+        new("Lame", "Equipment", "equipment",
+            "A scoring tool consisting of a razor blade mounted on a stick or curved handle. The curve of the blade allows the baker to score at a shallow angle more easily than with a straight blade, producing a better ear. A thin, sharp serrated knife can substitute but produces less clean results.",
+            seeAlso: "Score · Ear"),
+
+        new("Lamination", "Technique", "technique",
+            "Stretching the dough very thin (almost translucent) on a wet bench surface and then folding it back on itself in multiple layers. Used to incorporate add-ins (seeds, olives, cheese) evenly and to build gluten strength in high-hydration doughs. Usually performed once during early bulk.",
+            seeAlso: "Coil fold · Stretch and fold"),
+
+        new("Lactic acid", "Science", "science",
+            "An organic acid produced by homofermentative lactic acid bacteria (LAB) during sourdough fermentation. Gives a mild, yogurt-like tang. Dominant at higher temperatures (25–30 °C) and higher hydration. The primary acid in mild, lactic-forward sourdough.",
+            seeAlso: "Acetic acid · Lactic acid bacteria"),
+
+        new("Lactic acid bacteria", "Science", "science",
+            "Bacteria (LAB) that produce lactic and/or acetic acid as fermentation products. The key organisms in sourdough, working alongside wild yeast. Homofermentative LAB produce mainly lactic acid; heterofermentative LAB produce both lactic and acetic acid plus CO₂.",
+            also: "LAB",
+            seeAlso: "Lactic acid · Acetic acid · Starter"),
+
+        new("Levain", "Ingredient", "ingredient",
+            "A portion of active starter (or a freshly built culture) used to leaven a specific dough. Typically built from starter at a ratio of 1:3:3 to 1:5:5 a few hours before mixing. The levain is ready when it has peaked (doubled, domed, passes float test). Distinct from the ongoing sourdough starter, which is the mother culture.",
+            also: "Leaven",
+            seeAlso: "Starter · Float test"),
+
+        new("Maillard reaction", "Science", "science",
+            "A complex chemical reaction between amino acids and reducing sugars at temperatures above 140 °C, producing hundreds of aromatic compounds and brown pigments (melanoidins). Responsible for the colour and flavour of bread crust. Different from caramelisation (sugars only). Accelerates at higher pH — the basis of alkaline pretzel dipping.",
+            seeAlso: "Caramelisation · Melanoidins"),
+
+        new("Melanoidins", "Science", "science",
+            "Large brown polymeric compounds formed at the end of the Maillard reaction cascade. Give crust its characteristic deep brown colour and carry antioxidant activity. Contribute mild bitterness in very dark crust.",
+            seeAlso: "Maillard reaction"),
+
+        new("Miche", "Bread type", "bread",
+            "A large round country loaf, typically 1.5–3 kg. Traditional French pain de campagne style. Scored with a cross or square pattern. Requires a long bulk and cold retard to develop flavour and structure at that scale. Baked on a stone or in a large Dutch oven.",
+            seeAlso: "Boule"),
+
+        new("Open crumb", "Appearance", "appearance",
+            "A crumb with large, irregular holes — the aim of many artisan-style breads. Requires correct hydration (70%+), careful handling to preserve gas, adequate protein in the flour, proper fermentation, and baking on a preheated surface with steam.",
+            seeAlso: "Crumb · Hydration"),
+
+        new("Oven spring", "Technique", "technique",
+            "The rapid expansion of the loaf during the first 10–15 minutes in the oven. Caused by the sudden heat expanding existing gas pockets and activating the yeast and bacteria for a final burst of CO₂ production before the temperature kills them. Steam keeps the crust pliable so the loaf can spring; a tight, sealed crust prevents oven spring.",
+            seeAlso: "Steam · Score · Dutch oven"),
+
+        new("P/L ratio", "Science", "science",
+            "The ratio of tenacity (P) to extensibility (L) from the alveograph. A balanced flour for most bread sits between P/L 0.4 and 1.0. Pizza flours aim for P/L < 0.6 (extensible); long-ferment sourdough flours typically 0.5–0.9.",
+            seeAlso: "Alveograph · W"),
+
+        new("Pâte fermentée", "Pre-ferment", "ferment",
+            "A French pre-ferment made from a piece of already-fermented bread dough (old dough). Contains flour, water, yeast and salt. Added at 20–30% of flour weight. Imparts a subtle, wheaty complexity. Also called old dough. Easy to make — reserve a portion of any batch.",
+            also: "Old dough",
+            seeAlso: "Poolish · Biga · Preferment"),
+
+        new("Pentosan", "Science", "science",
+            "A water-absorbing carbohydrate (arabinoxylan) present in high quantities in rye flour. Absorbs up to 10× its weight in water, forming a gel that substitutes for gluten as the structural polymer in rye bread. Acidity (pH < 4.2) is required to prevent rye amylase from degrading the starch during baking.",
+            also: "Arabinoxylan",
+            seeAlso: "Rye · Amylase"),
+
+        new("Phytic acid", "Science", "science",
+            "An antinutrient in whole grains that binds zinc, iron, magnesium and calcium, reducing their bioavailability. Broken down by phytase enzymes during sourdough fermentation (especially in acidic, long-ferment conditions), freeing the minerals for absorption.",
+            also: "Phytate",
+            seeAlso: "Acidity · Nutrition"),
+
+        new("Poolish", "Pre-ferment", "ferment",
+            "A liquid pre-ferment (100% hydration, equal weights flour and water) made with a small amount of commercial yeast (0.1–0.5%). Fermented 8–16 h at room temperature. Produces a mild, slightly creamy, complex flavour. Developed in Poland and adopted by French bakers in the 19th century.",
+            seeAlso: "Biga · Pâte fermentée · Preferment"),
+
+        new("Pre-ferment", "Technique", "technique",
+            "A portion of dough or batter fermented before the main mix. Adds flavour, improves extensibility, and contributes to keeping quality. Types: poolish (liquid, commercial yeast), biga (stiff, commercial yeast), pâte fermentée (old dough), levain (sourdough starter-based).",
+            seeAlso: "Poolish · Biga · Levain"),
+
+        new("Pre-shape", "Technique", "technique",
+            "A gentle, quick shaping step before the bench rest. The dough is gathered into a rough round or cylinder to begin developing surface tension without fully degassing. The bench rest then allows the gluten to relax for the final shape.",
+            seeAlso: "Bench rest · Shape"),
+
+        new("Proof", "Technique", "technique",
+            "The final fermentation period after shaping and before baking. Sometimes called the second rise. Room-temperature proof: 1–3 h at 24–26 °C. Cold proof (retard): 8–24 h at 4–5 °C. The poke test checks proof level: slow spring-back = correctly proofed; snap-back = under-proofed; no spring-back = over-proofed.",
+            also: "Final proof · Second rise",
+            seeAlso: "Cold retard · Poke test"),
+
+        new("Poke test", "Test", "technique",
+            "A finger-dent test to assess proof level before baking. Flour a finger and press 1–2 cm into the dough. Correct proof: the dent springs back slowly and incompletely. Under-proof: the dent springs back immediately and fully. Over-proof: the dent does not spring back at all, or collapses.",
+            seeAlso: "Proof · Oven spring"),
+
+        new("Retrogradation", "Science", "science",
+            "The recrystallisation of gelatinised starch as bread cools and ages. The main cause of bread going stale — the crumb becomes firm and dry as starch molecules realign. Sourdough's organic acids slow retrogradation, extending shelf life. Briefly reheating (in the oven or toaster) reverses retrogradation temporarily.",
+            also: "Staling",
+            seeAlso: "Staling"),
+
+        new("Rye", "Grain", "grain",
+            "A cereal grain with almost no functional gluten. Rye structure depends on pentosans (arabinoxylans) rather than a gluten network. Requires acidity (pH < 4.2) to inactivate amylase enzymes. High-rye doughs are very sticky, must be baked in tins, and should rest 24–48 h after baking before slicing.",
+            seeAlso: "Pentosan · Autolyse"),
+
+        new("Score", "Technique", "technique",
+            "A cut made on the surface of a shaped loaf just before baking, using a lame or sharp blade. Controls where the loaf opens during oven spring. Depth: 5–15 mm. Angle: 30–45° for an ear; 90° for an even split. One swift, confident stroke on cold, firm dough produces the cleanest result.",
+            also: "Slash · Grigne",
+            seeAlso: "Ear · Oven spring · Lame"),
+
+        new("Shokupan", "Bread type", "bread",
+            "Japanese milk bread. An exceptionally soft, pillowy white sandwich loaf made with tangzhong (water-roux) and enriched with milk, butter and eggs. Baked in a lidded Pullman tin for a perfectly square cross-section. Shelf life extended by the tangzhong's pre-gelatinised starch.",
+            seeAlso: "Tangzhong · Enriched dough"),
+
+        new("Soaker", "Technique", "technique",
+            "Whole or cracked grains soaked in water (or other liquid) for several hours before being added to dough. Softens grains, reduces baking time, improves texture and adds flavour. Prevents hard grain pieces tearing the gluten network. The app uses Soaker as the method for Teff and Sorghum.",
+            seeAlso: "Teff · Sorghum"),
+
+        new("Sourdough starter", "Ingredient", "ingredient",
+            "A live culture of wild yeast and lactic acid bacteria maintained in a flour-water mixture. Fed regularly (typically once or twice daily) to keep it active. The mother culture from which levain builds are made. A healthy starter at 24 °C with a 1:3:3 feed should peak within 4–6 hours.",
+            also: "Starter · Mother culture · Chef",
+            seeAlso: "Levain · Float test · Hooch"),
+
+        new("Staling", "Science", "science",
+            "The gradual firming and loss of moisture in baked bread. Primarily caused by starch retrogradation (recrystallisation) and moisture migration from crumb to crust. Sourdough ages more slowly than commercial-yeast bread due to its organic acid content. Toasting or reheating temporarily reverses staling by re-melting starch crystals.",
+            also: "Retrogradation",
+            seeAlso: "Retrogradation"),
+
+        new("Starter", "Ingredient", "ingredient",
+            "See 'Sourdough starter'.",
+            also: "Sourdough starter",
+            seeAlso: "Sourdough starter · Levain"),
+
+        new("Steam", "Technique", "technique",
+            "Water vapour in the oven during the first 15–20 minutes of baking. Steam keeps the crust surface moist and pliable, allowing scores to bloom and the loaf to spring fully before the crust sets. In a home oven, steam is typically provided by a Dutch oven (lid traps evaporating surface moisture from the loaf), lava rocks, or spray bottle.",
+            seeAlso: "Dutch oven · Oven spring · Score"),
+
+        new("Stretch and fold", "Technique", "technique",
+            "A series of gentle stretch-and-fold movements applied during bulk fermentation to develop gluten strength without degassing the dough. One set: grab one side of the dough, stretch it up, fold it over the centre, rotate 90° and repeat 3 more times. Usually performed every 30 min for the first 2 hours of bulk.",
+            seeAlso: "Coil fold · Lamination · Bulk fermentation"),
+
+        new("Tangzhong", "Technique", "technique",
+            "A water-roux technique from Japanese milk bread. A small portion of flour (5%) is cooked with water (1:5 ratio by weight) at 65 °C until it thickens into a gel. This pre-gelatinised starch is added to the dough and allows it to absorb significantly more liquid, producing an exceptionally soft, moist crumb with extended shelf life.",
+            also: "Water roux · Yudane (related)",
+            seeAlso: "Enriched dough · Shokupan"),
+
+        new("W (alveograph)", "Science", "science",
+            "The total dough strength value from the alveograph, expressed in units of ×10⁻⁴ J. Represents the area under the pressure-volume curve — the total energy required to inflate the dough bubble to bursting. W 220–280: medium (baguette, ciabatta). W 280–360: strong (sourdough, long ferment). W 360+: very strong (enriched, laminated doughs).",
+            also: "Dough strength",
+            seeAlso: "Alveograph · P/L ratio"),
+
+        new("Wild yeast", "Science", "science",
+            "Naturally occurring yeasts present in flour, water, and the environment that colonise and leaven sourdough starters. Predominantly Saccharomyces cerevisiae and Kazachstania humilis (formerly Candida humilis), but many other species appear in healthy starters. More tolerant of acidic environments than commercial yeast.",
+            seeAlso: "Sourdough starter · Lactic acid bacteria"),
+
+        new("Window pane test", "Test", "technique",
+            "A test for gluten development. Stretch a small piece of dough into a thin sheet: if it stretches into a translucent membrane without tearing, the gluten is sufficiently developed. Used primarily with enriched or commercial-yeast doughs. Less meaningful for high-hydration sourdough where the dough is naturally sticky.",
+            seeAlso: "Gluten · Stretch and fold"),
+
+        new("Yudane", "Technique", "technique",
+            "A Japanese technique similar to tangzhong but simpler: boiling water is poured directly over flour (1:1 ratio), mixed quickly, and rested overnight before adding to dough. The result is slightly chewier than tangzhong. Both techniques gelatinise starch to increase water absorption and extend shelf life.",
+            seeAlso: "Tangzhong · Enriched dough"),
+    ];
+}
