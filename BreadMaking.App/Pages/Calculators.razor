@@ -723,6 +723,104 @@
             </div>
         }
 
+        @* ─── 8. Starter Schedule ─────────────────────────────────────────── *@
+        else if (_activeTab == "schedule")
+        {
+            <div class="calc-form">
+                <h3 class="calc-section-title">Starter schedule planner</h3>
+                <p class="calc-hint">Enter your target bake time and environment. The planner works backwards to tell you when to feed your starter and build your levain so everything is ready at the right moment.</p>
+
+                <div class="calc-field-row">
+                    <div class="calc-field">
+                        <label class="calc-label">Target bake time</label>
+                        <input class="calc-input" type="time" @bind="_schedBakeTime" @bind:event="oninput" />
+                    </div>
+                    <div class="calc-field">
+                        <label class="calc-label">Kitchen temperature</label>
+                        <div class="calc-input-row">
+                            <input class="calc-input calc-input--short" type="number" min="15" max="35"
+                                   @bind="_schedTempC" @bind:event="oninput" />
+                            <span class="calc-unit">°C</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calc-field-row">
+                    <div class="calc-field">
+                        <label class="calc-label">Levain peak time at your temp</label>
+                        <div class="calc-input-row">
+                            <input class="calc-input calc-input--short" type="number" min="2" max="24" step="0.5"
+                                   @bind="_schedLevainPeakH" @bind:event="oninput" />
+                            <span class="calc-unit">h</span>
+                        </div>
+                    </div>
+                    <div class="calc-field">
+                        <label class="calc-label">Bulk fermentation</label>
+                        <div class="calc-input-row">
+                            <input class="calc-input calc-input--short" type="number" min="1" max="24" step="0.5"
+                                   @bind="_schedBulkH" @bind:event="oninput" />
+                            <span class="calc-unit">h</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calc-field-row">
+                    <div class="calc-field">
+                        <label class="calc-label">Cold proof (retard)</label>
+                        <div class="calc-input-row">
+                            <input class="calc-input calc-input--short" type="number" min="0" max="72" step="0.5"
+                                   @bind="_schedRetardH" @bind:event="oninput" />
+                            <span class="calc-unit">h</span>
+                        </div>
+                    </div>
+                    <div class="calc-field">
+                        <label class="calc-label">Preheat + setup time</label>
+                        <div class="calc-input-row">
+                            <input class="calc-input calc-input--short" type="number" min="0" max="4" step="0.25"
+                                   @bind="_schedPreheatH" @bind:event="oninput" />
+                            <span class="calc-unit">h</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="calc-field-row">
+                    <div class="calc-field">
+                        <label class="calc-label">Starter feed-to-peak time</label>
+                        <div class="calc-input-row">
+                            <input class="calc-input calc-input--short" type="number" min="4" max="24" step="0.5"
+                                   @bind="_schedFeedPeakH" @bind:event="oninput" />
+                            <span class="calc-unit">h</span>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-primary calc-calculate-btn" @onclick="RunSchedule">Calculate schedule</button>
+
+                @if (_schedResult is not null)
+                {
+                    <div class="calc-result-card sched-result">
+                        <div class="sched-timeline">
+                            @foreach (var step in _schedResult)
+                            {
+                                <div class="sched-step">
+                                    <div class="sched-dot @(step.IsKey ? "sched-dot--key" : "")"></div>
+                                    <div class="sched-line"></div>
+                                    <div class="sched-step-body">
+                                        <div class="sched-time">@step.Time</div>
+                                        <div class="sched-action @(step.IsKey ? "sched-action--key" : "")">@step.Action</div>
+                                        @if (!string.IsNullOrEmpty(step.Note))
+                                        {
+                                            <div class="sched-note">@step.Note</div>
+                                        }
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
     </div>
 </div>
 
@@ -738,6 +836,7 @@
         new("cost",      "Cost"),
         new("roux",       "Water Roux"),
         new("preferment", "Preferment"),
+        new("schedule",   "Starter Schedule"),
     ];
     private string _activeTab = "scale";
 
@@ -1062,5 +1161,70 @@
                 break;
             }
         }
+    }
+
+    // ── 8. Starter Schedule state ─────────────────────────────────────────────
+    private TimeOnly  _schedBakeTime    = new(8, 0);
+    private decimal   _schedTempC       = 22m;
+    private decimal   _schedLevainPeakH = 6m;
+    private decimal   _schedBulkH       = 5m;
+    private decimal   _schedRetardH     = 12m;
+    private decimal   _schedPreheatH    = 1m;
+    private decimal   _schedFeedPeakH   = 10m;
+
+    private record SchedStep(string Time, string Action, string Note, bool IsKey);
+    private List<SchedStep>? _schedResult;
+
+    private void RunSchedule()
+    {
+        // Work backwards from bake time
+        // bake ← preheat ← (take from fridge if retarding) ← retard ← shape ← bulk ← mix (levain at peak) ← levain build ← starter feed
+
+        var bakeAt      = DateTime.Today.Add(_schedBakeTime.ToTimeSpan());
+        var preheatAt   = bakeAt.AddHours(-(double)_schedPreheatH);
+        var fromFridgeAt = _schedRetardH > 0 ? preheatAt : preheatAt;
+        var shapeAt     = _schedRetardH > 0 ? fromFridgeAt.AddHours(-(double)_schedRetardH) : preheatAt.AddMinutes(-20);
+        var mixAt       = shapeAt.AddHours(-(double)_schedBulkH);
+        // Levain should be at peak when mixing starts
+        var levainBuildAt = mixAt.AddHours(-(double)_schedLevainPeakH);
+        var starterFeedAt = levainBuildAt.AddHours(-(double)_schedFeedPeakH);
+
+        static string Fmt(DateTime dt) => dt.ToString("ddd HH:mm");
+        static string Hint(decimal temp) => temp < 20 ? "(may be slow at cool temp)" : temp > 26 ? "(may be fast at warm temp)" : "";
+
+        var steps = new List<SchedStep>
+        {
+            new(Fmt(starterFeedAt), "Feed your starter",
+                $"Refresh at 1:5:5 or your usual ratio. Peak in ~{_schedFeedPeakH:G} h at {_schedTempC}°C {Hint(_schedTempC)}.",
+                true),
+            new(Fmt(levainBuildAt), "Build levain",
+                $"Mix starter at peak into levain at your preferred ratio (e.g. 20% of flour). It will peak in ~{_schedLevainPeakH:G} h.",
+                true),
+            new(Fmt(mixAt), "Mix dough — levain at peak",
+                $"Levain should be doubled, domed, and just beginning to recede. Autolyse flour + water 30–60 min before this if you prefer. Bulk: {_schedBulkH:G} h.",
+                true),
+            new(Fmt(mixAt.AddHours(1)), "Stretch & fold sets",
+                $"Perform 3–4 sets of coil folds or stretch-and-folds in the first 2 h of bulk, every 30 min.",
+                false),
+            new(Fmt(shapeAt), "Pre-shape → bench rest → final shape",
+                "20–30 min bench rest between pre-shape and final shape. Load into banneton seam-up.",
+                true),
+        };
+
+        if (_schedRetardH > 0)
+        {
+            steps.Add(new(Fmt(shapeAt.AddMinutes(30)), "Into the fridge for cold retard",
+                $"{_schedRetardH:G} h at 4–5 °C. Bake straight from cold — no need to temper.",
+                true));
+        }
+
+        steps.Add(new(Fmt(preheatAt), "Preheat oven + Dutch oven",
+            $"250 °C, at least {_schedPreheatH * 60:F0} min. Dutch oven inside from the start.",
+            true));
+        steps.Add(new(Fmt(bakeAt), "Load and bake",
+            "Score, load cold from fridge, lid on 20 min at 250 °C, lid off 20 min at 220 °C.",
+            true));
+
+        _schedResult = steps.OrderBy(s => s.Time).ToList();
     }
 }

@@ -5881,3 +5881,79 @@ body {
     .specsheet-row   { grid-template-columns: 1fr 1fr; font-size: .75rem; }
     .spec-meaning    { grid-column: span 2; color: var(--text-muted); }
 }
+
+/* ── M33: Starter Schedule (in Calculators page) ────────── */
+
+.sched-result { padding: 8px 0; }
+
+.sched-timeline {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    padding-left: 20px;
+}
+
+.sched-step {
+    display: grid;
+    grid-template-columns: 14px 2px 1fr;
+    grid-template-rows: auto 1fr;
+    gap: 0 10px;
+    min-height: 48px;
+}
+
+.sched-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--border);
+    border: 2px solid var(--text-muted);
+    grid-row: 1;
+    grid-column: 1;
+    margin-top: 3px;
+    flex-shrink: 0;
+}
+
+.sched-dot--key {
+    background: var(--accent);
+    border-color: var(--accent);
+}
+
+.sched-line {
+    width: 2px;
+    background: var(--border);
+    grid-row: 1 / span 2;
+    grid-column: 2;
+    margin: 16px auto 0;
+}
+
+.sched-step:last-child .sched-line { display: none; }
+
+.sched-step-body {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+    padding-bottom: 18px;
+}
+
+.sched-time {
+    font-size: .74rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    margin-bottom: 2px;
+}
+
+.sched-action {
+    font-size: .88rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.sched-action--key { color: var(--accent); }
+
+.sched-note {
+    font-size: .78rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-top: 2px;
+}
