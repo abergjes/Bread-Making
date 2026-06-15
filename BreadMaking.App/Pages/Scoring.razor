@@ -1,0 +1,364 @@
+@page "/scoring"
+@inject NavigationManager Nav
+
+<div class="score-page">
+
+    <div class="score-header">
+        <button class="back-btn" @onclick='() => Nav.NavigateTo("/history")'>← History</button>
+        <div class="score-title-group">
+            <h2 class="score-title">Scoring & Ear Guide</h2>
+            <p class="score-subtitle">Blade angles, depth, patterns, and why your ear collapsed</p>
+        </div>
+    </div>
+
+    <div class="score-tabs">
+        @foreach (var t in _tabs)
+        {
+            <button class="score-tab @(_activeTab == t.Id ? "score-tab--active" : "")"
+                    @onclick="() => _activeTab = t.Id">@t.Label</button>
+        }
+    </div>
+
+    @if (_activeTab == "fundamentals")
+    {
+        <section class="score-section">
+            <p class="score-intro">
+                Scoring controls where the loaf expands during oven spring. A well-placed cut lets the baker
+                direct the burst rather than letting the oven decide — usually at a seam, where the ear
+                is weakest and least attractive. Score cold dough, score decisively, and score last.
+            </p>
+
+            <div class="score-blade-grid">
+                @foreach (var b in _blades)
+                {
+                    <div class="score-blade-card">
+                        <div class="score-blade-header">
+                            <span class="score-blade-icon">@b.Icon</span>
+                            <div>
+                                <div class="score-blade-name">@b.Name</div>
+                                <div class="score-blade-sub">@b.Subtitle</div>
+                            </div>
+                            <span class="score-blade-tag score-blade-tag--@b.LevelClass">@b.Level</span>
+                        </div>
+                        <p class="score-blade-desc">@b.Description</p>
+                        <div class="score-blade-pros-cons">
+                            <div>
+                                <div class="score-mini-title">Pros</div>
+                                @foreach (var p in b.Pros) { <div class="score-pro">✓ @p</div> }
+                            </div>
+                            <div>
+                                <div class="score-mini-title">Cons</div>
+                                @foreach (var c in b.Cons) { <div class="score-con">✗ @c</div> }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="score-angle-card">
+                <div class="score-angle-title">Blade angle & depth reference</div>
+                <div class="score-angle-grid">
+                    @foreach (var a in _angles)
+                    {
+                        <div class="score-angle-row score-angle-row--@a.ResultClass">
+                            <div class="score-angle-deg">@a.Angle</div>
+                            <div class="score-angle-depth">@a.Depth</div>
+                            <div class="score-angle-result">@a.Result</div>
+                            <div class="score-angle-use">@a.BestFor</div>
+                        </div>
+                    }
+                </div>
+                <div class="score-angle-legend">
+                    <span class="score-ang-dot score-ang-dot--ear"></span> Ear
+                    <span class="score-ang-dot score-ang-dot--split"></span> Split / bloom
+                    <span class="score-ang-dot score-ang-dot--dock"></span> Dock (no rise)
+                </div>
+            </div>
+
+            <div class="score-timing-card">
+                <div class="score-timing-title">When to score</div>
+                <div class="score-timing-grid">
+                    @foreach (var s in _scoringSequence)
+                    {
+                        <div class="score-seq-item score-seq-item--@s.TypeClass">
+                            <span class="score-seq-icon">@s.Icon</span>
+                            <div>
+                                <div class="score-seq-label">@s.Label</div>
+                                <div class="score-seq-text">@s.Text</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="score-tips-strip">
+                @foreach (var tip in _fundamentalTips)
+                {
+                    <div class="score-tip-item">
+                        <span>@tip.Icon</span>
+                        <div>
+                            <strong>@tip.Label</strong> — @tip.Text
+                        </div>
+                    </div>
+                }
+            </div>
+        </section>
+    }
+    else if (_activeTab == "patterns")
+    {
+        <section class="score-section">
+            <p class="score-intro">
+                Pattern choice should follow loaf shape and crumb intent. Functional scores control expansion;
+                decorative scores add visual appeal but must still be deep enough to guide spring. Always
+                include at least one functional score — decoration alone rarely prevents blowouts.
+            </p>
+
+            <div class="score-pattern-grid">
+                @foreach (var p in _patterns)
+                {
+                    <div class="score-pattern-card">
+                        <div class="score-pattern-diagram">@p.Diagram</div>
+                        <div class="score-pattern-body">
+                            <div class="score-pattern-name">@p.Name</div>
+                            <div class="score-pattern-meta">
+                                <span class="score-diff score-diff--@p.DiffClass">@p.Difficulty</span>
+                                <span class="score-pattern-shape">@p.BestShape</span>
+                            </div>
+                            <p class="score-pattern-desc">@p.Description</p>
+                            <div class="score-pattern-how">
+                                <div class="score-mini-title">How to cut</div>
+                                @foreach (var step in p.Steps)
+                                {
+                                    <div class="score-pattern-step">@step</div>
+                                }
+                            </div>
+                            @if (!string.IsNullOrEmpty(p.Tip))
+                            {
+                                <div class="score-pattern-tip">💡 @p.Tip</div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="score-surface-card">
+                <div class="score-surface-title">Surface preparation by hydration</div>
+                <div class="score-surface-grid">
+                    @foreach (var h in _hydrationSurfaces)
+                    {
+                        <div class="score-surface-row">
+                            <span class="score-surface-range">@h.Range</span>
+                            <span class="score-surface-tag score-surface-tag--@h.TagClass">@h.Label</span>
+                            <span class="score-surface-text">@h.Text</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </section>
+    }
+    else if (_activeTab == "troubleshoot")
+    {
+        <section class="score-section">
+            <p class="score-intro">
+                Most scoring failures trace back to three root causes: under-cold dough, a dull blade, or
+                incorrect angle. Identify the symptom and work backwards to the cause before changing
+                anything else.
+            </p>
+
+            <div class="score-trouble-grid">
+                @foreach (var t in _troubles)
+                {
+                    <div class="score-trouble-card">
+                        <div class="score-trouble-header">
+                            <span class="score-trouble-icon">@t.Icon</span>
+                            <div>
+                                <div class="score-trouble-symptom">@t.Symptom</div>
+                                <span class="score-trouble-sev score-trouble-sev--@t.SevClass">@t.Severity</span>
+                            </div>
+                        </div>
+                        <div class="score-trouble-body">
+                            <div>
+                                <div class="score-mini-title">Likely causes</div>
+                                <ul class="score-cause-list">
+                                    @foreach (var c in t.Causes) { <li>@c</li> }
+                                </ul>
+                            </div>
+                            <div>
+                                <div class="score-mini-title">Fixes</div>
+                                <ul class="score-fix-list">
+                                    @foreach (var f in t.Fixes) { <li>@f</li> }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </section>
+    }
+
+</div>
+
+@code {
+    private string _activeTab = "fundamentals";
+
+    private record Tab(string Id, string Label);
+    private readonly Tab[] _tabs =
+    [
+        new("fundamentals", "Fundamentals"),
+        new("patterns",     "Patterns"),
+        new("troubleshoot", "Troubleshooting"),
+    ];
+
+    private record Blade(string Icon, string Name, string Subtitle, string Level, string LevelClass,
+        string Description, string[] Pros, string[] Cons);
+
+    private readonly Blade[] _blades =
+    [
+        new("🗡️", "Straight razor / lame",   "Traditional baker's lame", "Standard",  "std",
+            "A double-edged razor blade mounted on a stick or held between fingers. " +
+            "The industry standard for sourdough. Available curved or straight; the curve encourages the blade to ride along the surface.",
+            ["Ultra-sharp from the box", "Cheap blades replaceable (~10p each)", "Curved version guides ear formation naturally"],
+            ["Blade dulls after 3–5 uses", "Requires a confident hand — hesitation tears", "Dangerous to handle carelessly"]),
+        new("🔪", "Bread knife (serrated)",   "Emergency substitute",     "Beginner",  "easy",
+            "A sharp serrated knife can score in a pinch. The teeth catch rather than slice, " +
+            "so it is harder to achieve a clean shallow angle. Reserve for low-hydration or tin loaves where angle matters less.",
+            ["Always to hand", "No special purchase needed"],
+            ["Cannot achieve a shallow 30° angle", "Drags on wet dough", "Produces rough, frayed score edges"]),
+        new("✂️", "Scissors / kitchen shears","Decorative cuts only",     "Decorative", "deco",
+            "Scissors cut downward rather than slicing, so they are mainly used for decorative snips " +
+            "on rolls, fougasse leaves, or epi wheat-stalk shapes. Not suitable as the primary functional score on a large loaf.",
+            ["Excellent for roll points and epi shapes", "No angle judgment required"],
+            ["Cannot replace a functional slash", "Compresses dough rather than slicing it"]),
+        new("🪒", "Box cutter / craft blade", "Budget sharp alternative",  "Budget",    "budget",
+            "A new, sharp retractable blade can work almost as well as a razor lame, especially for straight " +
+            "cuts. Change blades every session — even one bake dulls a blade enough to drag on wet dough.",
+            ["Very sharp when new", "Available everywhere", "Retractable = safer to store"],
+            ["Must be brand-new for clean results", "No curved-blade option", "Lacks the ergonomics of a purpose-made lame"]),
+    ];
+
+    private record AngleRow(string Angle, string Depth, string Result, string BestFor, string ResultClass);
+    private readonly AngleRow[] _angles =
+    [
+        new("90° (vertical)", "1–1.5 cm", "Symmetrical bloom — dough opens evenly on both sides",    "Round boules, decorative patterns", "split"),
+        new("45°",            "0.5–1 cm", "Moderate ear — flap lifts slightly; controlled expansion", "Batards, utility cuts",             "ear"),
+        new("30°",            "0.3–0.7 cm","Pronounced ear — blade almost parallel to surface; flap peels away dramatically", "Single-slash batards, show loaves", "ear"),
+        new("15–20°",         "0.2–0.5 cm","Maximum ear — very shallow; works only on cold, taut dough","Competition loaves, high-tension dough", "ear"),
+        new("Dock (no angle)","2–3 cm",   "Controlled release — prevents unpredictable blowout on tight doughs", "Very high-hydration, rye-heavy loaves", "dock"),
+    ];
+
+    private record SeqItem(string Icon, string Label, string Text, string TypeClass);
+    private readonly SeqItem[] _scoringSequence =
+    [
+        new("❄️", "Score from cold",          "Take the loaf straight from the fridge. Cold dough is firm, scores cleanly, and holds its shape while you position and cut.", "key"),
+        new("🌡️", "Oven fully preheated",      "Score only once the oven and vessel are at full temperature. A loaf sitting scored at room temp will proof further and lose tension.", "key"),
+        new("⚡", "Score last, bake first",    "Have the oven open, vessel on the rack, and parchment ready before you score. Elapsed time between score and oven should be under 60 seconds.", "key"),
+        new("✂️", "One pass, no sawing",       "Draw the blade in a single confident stroke. Sawing back-and-forth compresses the cut and prevents a clean opening.", "normal"),
+        new("💨", "Steam immediately",         "Load the scored loaf and cover (or steam) within 30 seconds. Steam keeps the surface extensible during oven spring so the score opens fully.", "normal"),
+    ];
+
+    private record FundamentalTip(string Icon, string Label, string Text);
+    private readonly FundamentalTip[] _fundamentalTips =
+    [
+        new("💧", "Wet blade",       "Dip the blade in water before scoring. Wet stainless steel glides through wet dough rather than dragging."),
+        new("🕯️", "Rice flour dusting", "A thin dusting of rice flour (not wheat) on the surface creates a dry, visible contrast that makes the score easier to see and the blade easier to guide."),
+        new("🔦", "Score under good light", "Score in good light so you can see exactly where the blade is going. A headlamp or bench lamp aimed at the loaf helps on dark doughs."),
+        new("🔄", "Rotate the loaf", "For a single central slash on a batard, rotate the loaf 45° toward you — a diagonal cut relative to your body is more natural and produces a straighter line."),
+    ];
+
+    private record Pattern(string Diagram, string Name, string Difficulty, string DiffClass,
+        string BestShape, string Description, string[] Steps, string Tip = "");
+
+    private readonly Pattern[] _patterns =
+    [
+        new(
+            "╱", "Single slash", "Beginner", "easy", "Batard / oval",
+            "The single most effective score. One decisive cut from end to end at 30° creates a dramatic ear " +
+            "and fully controls oven spring direction. Ideal for batards and oval loaves. Master this before attempting anything else.",
+            ["Orient loaf so the long axis runs away from you.", "Position blade at the far end, 30° to the surface.", "Draw in one continuous stroke toward you, ending 2 cm from the near edge.", "Cut depth: 0.5 cm — shallower than you think."],
+            "Start the stroke before touching the dough and end it after — like a brushstroke. This prevents notching at the ends."
+        ),
+        new(
+            "╱╲", "Double slash", "Beginner", "easy", "Batard / oval",
+            "Two parallel cuts, each offset by one-third the loaf width. Allows expansion at two points, " +
+            "which prevents a single large blowout and suits longer loaves or those with a tighter crumb intent.",
+            ["Make the first slash starting 3 cm from one end, running 60% of the loaf length.", "Make the second slash starting where the first begins its final third, overlapping slightly in the middle.", "Both at 30°, same depth."]
+        ),
+        new(
+            "✛", "Cross / Catholic cross", "Beginner", "easy", "Boule / round",
+            "Two perpendicular cuts at 90° form a cross. The symmetric angle produces a bloom rather than an " +
+            "ear — ideal for round boules where a single-sided ear would look unbalanced.",
+            ["Score one slash straight across the centre at 90°.", "Score a second slash perpendicular to the first, also at 90°.", "Both cuts the same depth (1–1.5 cm)."],
+            "Extend cuts all the way to the edge — stopping short causes the centre to puff unevenly."
+        ),
+        new(
+            "❋", "Radial / star", "Intermediate", "medium", "Boule / round",
+            "Four or more cuts radiating from the centre like wheel spokes. Produces a symmetrical bloom that " +
+            "opens uniformly. The cuts must all be the same length and depth or one will dominate.",
+            ["Mark the centre lightly with a gentle press.", "Cut 4–6 equally spaced lines from near the centre outward (not from the edge in).", "All cuts at 90°, 1 cm deep, same length."],
+            "Work from the centre outward — starting at the edge often results in cuts of unequal length."
+        ),
+        new(
+            "🌾", "Wheat stalk / épi", "Intermediate", "medium", "Baguette / long oval",
+            "Angled snips with scissors create a wheat-ear effect. Entirely decorative — each section " +
+            "opens into a pointed petal during baking. Best for smaller baguette-weight pieces (250–350 g).",
+            ["Hold scissors at 45° to the baguette.", "Make cuts every 4–5 cm along the loaf, alternating slightly left and right.", "After each cut, push the snipped section to the opposite side to fan it out.", "Do not cut all the way through — leave the base intact."]
+        ),
+        new(
+            "🍁", "Leaf / fern", "Advanced", "hard", "Oval / oblong",
+            "A central spine cut at 30° with angled branches produces a leaf silhouette. Very striking on " +
+            "large oval loaves but requires confident depth control — branches that are too shallow won't open.",
+            ["Make the spine cut first: single slash down the centre at 30°, full length.", "Add branch cuts angling away from the spine at 45°, 3–4 cm long, spaced 4 cm apart.", "Work from the top down so you can see your reference marks.", "All branch cuts slightly shallower than the spine."],
+            "The spine does the work; branches are decorative. If short on time, the spine alone produces a beautiful result."
+        ),
+        new(
+            "▱▱", "Batard diamond", "Advanced", "hard", "Batard / oval",
+            "Overlapping diagonal cuts create a diamond grid. Very popular on competition and artisan loaves. " +
+            "Requires precise spacing and consistent depth — one deep cut will burst while others stay closed.",
+            ["Make 4–5 diagonal cuts from top-left to bottom-right at 90°, evenly spaced.", "Make 4–5 crossing cuts from top-right to bottom-left.", "All cuts at 90° vertical angle, 1 cm deep.", "Dust heavily with rice flour or semolina for contrast."],
+            "Chill the loaf for 30 extra minutes before this pattern — the grid only works with maximum dough firmness."
+        ),
+        new(
+            "◯", "Box / square spiral", "Intermediate", "medium", "Boule / square tin",
+            "A single continuous cut that spirals or boxes around the loaf surface. Creates an all-over " +
+            "expansion rather than a directional ear — suits rustic presentation and very high hydration doughs.",
+            ["Start at one corner (for square) or 10 o'clock position (for boule).", "Cut in a spiral or square path, keeping each cut 2–3 cm from the last.", "All cuts at 90°, 1–1.5 cm deep.", "End the spiral at the centre of the loaf."]
+        ),
+    ];
+
+    private record HydrationSurface(string Range, string Label, string TagClass, string Text);
+    private readonly HydrationSurface[] _hydrationSurfaces =
+    [
+        new("60–68%", "Medium",     "medium", "Dough is firm; blade glides easily. Any pattern works. Light rice flour dusting sufficient."),
+        new("68–75%", "High",       "high",   "Dough is tacky; cold proofing essential. Rice flour + brief freezer blast (15 min) firms surface. Stick to simple patterns."),
+        new("75–82%", "Very high",  "vhigh",  "Wet and extensible; cuts may drag. Freeze scored loaf for 5–10 min before loading. Limit to single slash or dock."),
+        new("82%+",   "Extreme",    "extreme","Docking (multiple deep stabs, no ear expected) is more reliable than scoring. Alternatively, bake in a tin."),
+    ];
+
+    private record ScoringTrouble(string Icon, string Symptom, string Severity, string SevClass,
+        string[] Causes, string[] Fixes);
+
+    private readonly ScoringTrouble[] _troubles =
+    [
+        new("😐", "Score closed / no ear", "Cosmetic", "low",
+            ["Blade at too steep an angle (90° instead of 30°)", "Dough too warm — not proofed cold", "Cut too deep — flap is too heavy to lift", "Score made too early — dough proofed further"],
+            ["Angle blade to 30° — almost parallel to the surface", "Score directly from cold fridge", "Cut shallower (0.4–0.6 cm), not deeper", "Score as the last action before loading"]),
+        new("💥", "Blowout at the seam", "Moderate", "medium",
+            ["Scoring omitted or too shallow — gas found the weakest point (the seam)", "Shaping seam not placed face-down in banneton", "Score ended short — gas burst from the unscored tip"],
+            ["Always score the loaf — never rely on seam alone", "Ensure seam is centred face-down when the loaf goes into the banneton", "Extend the score all the way to within 1–2 cm of the ends"]),
+        new("🪨", "Score dragged and tore", "Cosmetic", "low",
+            ["Dull blade — most common cause by far", "Dough surface too dry or floury", "Blade pressed down rather than drawn"],
+            ["Replace the blade — use a fresh razor for every 2–3 loaves", "Dip blade in water before scoring", "Pull the blade toward you rather than pressing down"]),
+        new("📊", "Score opened unevenly", "Cosmetic", "low",
+            ["Inconsistent depth along the cut — deeper at one end", "One side of dough tighter than the other from shaping", "Oven hot spot causing one side to spring before the other"],
+            ["Practice single-speed strokes — accelerate through the cut, don't slow at the end", "Re-shape if tension is noticeably lopsided", "Rotate the loaf 180° halfway through baking if your oven has a hot spot"]),
+        new("🕳️", "Score reopened too wide / tunnel crumb", "Structural", "high",
+            ["Over-proofed dough — gas cell walls thin and burst rather than stretch", "Score too deep on an already-slack dough", "Steam too little — surface set before spring completed"],
+            ["Check bulk and proof timing — over-proofing is the core issue", "Shallower scores on slack dough give more controlled opening", "Ensure lid stays on Dutch oven for full 20 min; add steam if baking open"]),
+        new("😶", "No oven spring / flat loaf", "Structural", "high",
+            ["Score is irrelevant if there is no oven spring — the problem is fermentation, not scoring", "Under-proofed dough springs but tears unpredictably", "Over-proofed dough collapses rather than springs"],
+            ["Check that the starter / levain was active at use", "Verify oven temperature with a thermometer — many domestic ovens run cool", "Review proof timing against the fermentation guide"]),
+        new("🧱", "Score doesn't open on enriched / rye loaves", "Expected", "info",
+            ["Enriched doughs (butter, eggs) have interrupted gluten — less spring energy available for dramatic opening", "High rye (>40%) has short gluten strands that cannot sustain a lifted ear"],
+            ["Expect a bloom rather than an ear on enriched loaves — this is normal", "Use 90° vertical cuts for enriched and rye; do not angle for ear that won't form", "Dock high-rye loaves instead of scoring"]),
+    ];
+}
