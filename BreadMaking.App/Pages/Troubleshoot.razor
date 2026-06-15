@@ -1,0 +1,354 @@
+@page "/troubleshoot"
+@inject NavigationManager Nav
+
+<div class="troubleshoot-page">
+
+    <div class="troubleshoot-header">
+        <button class="back-btn" @onclick='() => Nav.NavigateTo("/history")'>← History</button>
+        <div class="troubleshoot-title-group">
+            <h2 class="troubleshoot-title">Sourdough Troubleshooting</h2>
+            <p class="troubleshoot-subtitle">Diagnose common problems by symptom — crumb, crust, shape, fermentation</p>
+        </div>
+    </div>
+
+    <!-- Symptom search -->
+    <div class="troubleshoot-search-row">
+        <input class="troubleshoot-search" type="search" placeholder="Filter by symptom or cause…"
+               @bind="_filter" @bind:event="oninput" />
+    </div>
+
+    <div class="troubleshoot-categories">
+        <button class="troubleshoot-cat @(_activeCat == "" ? "active" : "")" @onclick='() => _activeCat = ""'>All</button>
+        @foreach (var cat in _categories)
+        {
+            <button class="troubleshoot-cat @(_activeCat == cat ? "active" : "")"
+                    @onclick="() => _activeCat = cat">
+                @cat
+            </button>
+        }
+    </div>
+
+    <div class="troubleshoot-list">
+        @foreach (var p in FilteredProblems)
+        {
+            <div class="trouble-card" id="@p.Id">
+                <button class="trouble-card-header"
+                        @onclick="() => ToggleExpanded(p.Id)">
+                    <div class="trouble-left">
+                        <span class="trouble-severity trouble-severity--@p.SeverityClass">@p.Severity</span>
+                        <span class="trouble-icon">@p.Icon</span>
+                        <div class="trouble-titles">
+                            <div class="trouble-symptom">@p.Symptom</div>
+                            <div class="trouble-cat-badge">@p.Category</div>
+                        </div>
+                    </div>
+                    <span class="trouble-chevron">@(_expanded.Contains(p.Id) ? "▲" : "▼")</span>
+                </button>
+                @if (_expanded.Contains(p.Id))
+                {
+                    <div class="trouble-body">
+                        <div class="trouble-causes-section">
+                            <div class="trouble-causes-label">Most likely causes</div>
+                            @foreach (var cause in p.Causes)
+                            {
+                                <div class="trouble-cause">
+                                    <span class="trouble-cause-icon">⚠</span>
+                                    <span>@cause</span>
+                                </div>
+                            }
+                        </div>
+                        <div class="trouble-fixes-section">
+                            <div class="trouble-fixes-label">How to fix / prevent</div>
+                            @foreach (var fix in p.Fixes)
+                            {
+                                <div class="trouble-fix">
+                                    <span class="trouble-fix-icon">✓</span>
+                                    <span>@fix</span>
+                                </div>
+                            }
+                        </div>
+                        @if (!string.IsNullOrEmpty(p.Explanation))
+                        {
+                            <p class="trouble-explanation">@p.Explanation</p>
+                        }
+                    </div>
+                }
+            </div>
+        }
+        @if (!FilteredProblems.Any())
+        {
+            <p class="troubleshoot-empty">No problems match "@_filter" — try a different symptom or clear the filter.</p>
+        }
+    </div>
+
+</div>
+
+@code {
+    private string _filter    = "";
+    private string _activeCat = "";
+    private readonly HashSet<string> _expanded = [];
+
+    private void ToggleExpanded(string id)
+    {
+        if (!_expanded.Add(id)) _expanded.Remove(id);
+    }
+
+    private record Problem(string Id, string Icon, string Symptom, string Category, string Severity, string SeverityClass,
+        string[] Causes, string[] Fixes, string Explanation);
+
+    private string[] _categories => _problems.Select(p => p.Category).Distinct().ToArray();
+
+    private IEnumerable<Problem> FilteredProblems => _problems
+        .Where(p => string.IsNullOrEmpty(_activeCat) || p.Category == _activeCat)
+        .Where(p => string.IsNullOrEmpty(_filter) ||
+                    p.Symptom.Contains(_filter, StringComparison.OrdinalIgnoreCase) ||
+                    p.Category.Contains(_filter, StringComparison.OrdinalIgnoreCase) ||
+                    p.Causes.Any(c => c.Contains(_filter, StringComparison.OrdinalIgnoreCase)) ||
+                    p.Fixes.Any(f => f.Contains(_filter, StringComparison.OrdinalIgnoreCase)));
+
+    private readonly Problem[] _problems =
+    [
+        // ── Crumb ────────────────────────────────────────────────────────────
+        new("dense-crumb", "🧱", "Dense, tight crumb — few or no bubbles", "Crumb", "Very common", "common",
+            [
+                "Under-fermented bulk — the dough never built enough gas",
+                "Weak or under-fed starter (low activity at mix time)",
+                "Flour too low in protein — insufficient gluten network to trap gas",
+                "Over-developed gluten during mixing so tight the dough can't expand",
+                "Levain added too early (before it had peaked) or too late (collapsing)",
+            ],
+            [
+                "Check starter activity: it should double within 4–6 h at 24 °C after a 1:5:5 feed",
+                "Extend bulk fermentation — look for 50–75% volume increase, a domed top and bubbles on the sides of the container",
+                "Use the poke test: poke a floured finger into shaped dough — it should spring back slowly, not snap back or stay indented",
+                "Use flour with 11–14% protein for lean sourdough",
+                "Add levain at peak (domed, doubled, passes float test)",
+            ],
+            "The single most common cause of dense crumb is under-fermentation. Most recipes state timings that assume a specific kitchen temperature; at 20 °C the same dough may need 8–10 h bulk that a 25 °C kitchen completes in 5 h."),
+
+        new("gummy-crumb", "🍬", "Gummy, wet, sticky crumb — cuts like chewing gum", "Crumb", "Common", "common",
+            [
+                "Under-baked — internal temperature below 96 °C",
+                "Cut while still hot — starch not fully set",
+                "Excess amylase from badly damaged starch or over-malted flour (falling number < 200)",
+                "Excessive whole-rye without sufficient acidity — amylase attack during bake",
+                "Very high hydration without sufficient structure to support the crumb",
+            ],
+            [
+                "Bake to 96–98 °C internal temperature (probe thermometer); don't rely on sound alone",
+                "Cool on a wire rack for at least 1 h (2 h for whole grain) before slicing",
+                "Start high (250 °C, lid on) to set the crumb quickly and deactivate amylase early in the bake",
+                "For rye-heavy doughs, ensure pH < 4.2 (long, sour ferment) to inactivate amylase",
+                "Check flour's falling number: 220–350 s is the ideal range",
+            ],
+            "Cutting hot bread is the single most common cause of gummy crumb — starch takes at least 1 hour after baking to finish setting. The instruction to wait is not decorative."),
+
+        new("uneven-crumb", "🕳️", "Very uneven crumb — huge holes next to dense patches", "Crumb", "Common", "common",
+            [
+                "Levain or salt not fully incorporated — visible streaks",
+                "Folding technique left gas pockets trapped unevenly",
+                "Very high hydration without enough strength built during bulk",
+                "Tunnel formation from steam channels during bake",
+            ],
+            [
+                "Dissolve levain in water before adding flour; dissolve salt separately in a little water",
+                "Use the Rubaud method or slap-and-fold to ensure thorough incorporation",
+                "Perform 4 sets of coil folds in the first 2 h of bulk to build even strength",
+                "Do not poke, prod or compress the shaped dough after final shaping",
+            ],
+            ""),
+
+        new("raw-ring", "🔴", "Ring of raw-looking crumb around the edge", "Crumb", "Less common", "info",
+            [
+                "Dough too cold going into the oven — the edge sets before the inside ferments fully",
+                "Shaped and loaded directly from fridge without preheat",
+                "Dutch oven bottom not preheated — loaf baked from cold base",
+            ],
+            [
+                "Always preheat the Dutch oven (both pot and lid) for at least 45 min at 250 °C",
+                "Score and load directly from the cold fridge — but make sure the oven is fully up to temperature",
+                "The outside ring look is usually under-proofing combined with cold baking surface",
+            ],
+            ""),
+
+        // ── Crust ────────────────────────────────────────────────────────────
+        new("pale-crust", "🍞", "Pale, floury crust — no browning", "Crust", "Common", "common",
+            [
+                "Oven temperature too low, or too short a bake time",
+                "Too much steam throughout the whole bake (lid never removed)",
+                "Dough too cold — oven spring happened but Maillard never ran",
+                "Flour with very high protein and low free sugars — not enough Maillard substrate",
+            ],
+            [
+                "Remove the Dutch oven lid after 20 min and continue at 220 °C for 20–25 min more",
+                "Ensure oven is fully preheated — use an oven thermometer to verify actual temperature",
+                "Add a small amount of diastatic malt flour (0.2% of flour weight) for more available sugars",
+                "Score more deeply — a sealed surface can prevent Maillard chemistry reaching the interior",
+            ],
+            ""),
+
+        new("thick-hard-crust", "🪨", "Excessively thick, brick-hard crust", "Crust", "Common", "common",
+            [
+                "Baked uncovered for too long at too high a temperature",
+                "Insufficient steam in the first phase — crust set too early and dried out",
+                "Low hydration dough baked at high temperature",
+                "Loaf left in the oven after bake time with oven off (residual heat dries it further)",
+            ],
+            [
+                "Use steam for the first 20 min (Dutch oven lid on) to keep the crust pliable",
+                "Lower oven temperature after removing lid: 220 °C is better than 240 °C for the open phase",
+                "Take the loaf out as soon as the internal temperature reaches 96–98 °C",
+                "If the crust is already too thick, wrap in a slightly damp cloth while still hot — this softens it slightly",
+            ],
+            ""),
+
+        new("soft-crust", "🥞", "Crust goes soft and chewy after baking", "Crust", "Very common", "common",
+            [
+                "Wrapped or bagged while still warm — trapped steam softens the crust",
+                "High humidity environment",
+                "Insufficient bake time — too much moisture left in the crust",
+            ],
+            [
+                "Cool on a wire rack (not a tea towel, not a board) for at least 2 h before storing",
+                "Store in a paper bag or linen bread bag, not plastic — plastic traps moisture",
+                "Refresh the next day: 5 min at 200 °C re-crisps the crust",
+            ],
+            "A sourdough crust is best in the first 4–6 hours after baking. After that it naturally softens — this is partly the starch retrogradation and partly moisture redistribution. It is not a failure."),
+
+        new("burst-side", "💥", "Burst on the side or bottom — not along the score", "Crust", "Common", "common",
+            [
+                "Score too shallow — crust sealed before the gas could escape at the score",
+                "Score too late — crust partially set in the oven before the gas expanded",
+                "Under-proofed dough — too much gas-producing capacity left to release in the oven",
+                "Score angle wrong — too steep prevents a proper ear forming and redirects the burst",
+            ],
+            [
+                "Score 5–15 mm deep with one swift, confident stroke; use a fresh blade",
+                "Shallow angle (30–45°) for an ear; reduce angle if the loaf keeps bursting at the side",
+                "Load dough cold and score immediately before loading — do not pre-score and leave",
+                "Extend proof slightly or cold retard for longer if under-proof is the culprit",
+            ],
+            ""),
+
+        // ── Shape & Volume ───────────────────────────────────────────────────
+        new("flat-spreading", "🫓", "Loaf spreads flat — wide and low instead of tall", "Shape", "Very common", "common",
+            [
+                "Over-proofed — gluten exhausted, gas has escaped, no spring left",
+                "Insufficient surface tension during shaping — dough not tight enough",
+                "Dough too hydrated for the flour's protein content",
+                "Bulk fermentation too long at too warm a temperature",
+                "Banneton not used or no cold retard to firm the dough",
+            ],
+            [
+                "Shape with more tension: drag the dough across an unfloured bench to build a taut skin",
+                "Cold retard in the banneton for 8–16 h — cold dough holds its shape through the first half of baking",
+                "Reduce hydration 5% until you can handle the dough confidently, then increase again",
+                "Check bulk fermentation end point: 50–75% rise, edges just beginning to dome, bubbles visible",
+                "Use the poke test before loading: slow spring-back, not snap-back",
+            ],
+            "Over-proofing is the most common cause of flat bread. A dough that is correctly proof will spring back slowly when poked; over-proofed dough either collapses under the poke or doesn't spring back at all."),
+
+        new("no-oven-spring", "↕️", "No oven spring — the loaf comes out the same size as it went in", "Shape", "Common", "common",
+            [
+                "Over-proofed dough — all gas capacity exhausted before baking",
+                "Oven or Dutch oven not hot enough",
+                "Score too shallow or no score — gas cannot escape in a controlled way",
+                "Seam not at bottom (or seam at top without a score) — gas escapes through the wrong face",
+            ],
+            [
+                "Proof less: reduce bulk time or cold retard, or bake earlier in the retard window",
+                "Preheat Dutch oven for at least 45 min at 250 °C",
+                "Score 5–15 mm deep with a sharp lame at 30–45° angle",
+                "Place shaped loaf seam-side down in banneton (seam up when loaded into Dutch oven)",
+            ],
+            ""),
+
+        new("tunnelling", "🕳", "Tunnel running through the crumb from end to end", "Shape", "Less common", "info",
+            [
+                "Levain or salt not fully incorporated — a dry streak of unmixed flour becomes a tunnel",
+                "Large air bubble trapped during shaping",
+                "Very high hydration dough shaped without degassing the surface pockets",
+            ],
+            [
+                "Incorporate levain thoroughly before adding salt",
+                "During pre-shape, gently degas the surface without destroying gas throughout",
+                "During final shape, use smooth, even tension rather than folding in air pockets",
+            ],
+            ""),
+
+        // ── Fermentation & Flavour ───────────────────────────────────────────
+        new("not-sour", "😐", "Bread not sour enough — tastes bland", "Flavour", "Very common", "common",
+            [
+                "Fermentation too warm and short — lactic (mild) rather than acetic (sharp) acid dominates",
+                "Starter too young or not sour enough itself",
+                "No cold retard — acetic acid builds primarily at cold temperatures",
+                "Levain hydration too high — liquid levain favours lactic acid",
+            ],
+            [
+                "Add a long cold retard (12–20 h at 4–5 °C) after shaping",
+                "Lower the fermentation temperature for bulk: 18–20 °C rather than 25 °C",
+                "Use a stiff levain (50–65% hydration) to encourage acetic acid",
+                "Use whole grain or rye flour in the levain to feed a more complex bacterial population",
+                "Feed your starter less frequently before a bake to let acidity build up",
+            ],
+            "Sourness in sourdough is primarily controlled by the ratio of lactic to acetic acid. Acetic acid (sharp, vinegary) builds at cool temperatures, low hydration, and longer fermentation. Lactic acid (mild, yogurt-like) dominates warm, fast ferments."),
+
+        new("too-sour", "😬", "Bread too sour — unpleasantly acidic", "Flavour", "Common", "common",
+            [
+                "Over-fermented bulk at cool temperature — too much acetic acid",
+                "Retard too long",
+                "Starter at its most acidic (past peak, beginning to collapse) used for levain",
+            ],
+            [
+                "Shorten the cold retard to 6–10 h",
+                "Use levain at peak, not after it has begun to recede",
+                "Ferment bulk at a slightly warmer temperature (22–24 °C) to favour lactic over acetic",
+                "Increase the hydration of the levain (liquid levain produces less acetic acid)",
+            ],
+            ""),
+
+        new("yeasty-smell", "🍺", "Strong alcohol or yeasty smell — bread smells like beer", "Flavour", "Common", "common",
+            [
+                "Over-fermented dough — yeast produced too much ethanol",
+                "Over-proofed at warm temperature",
+                "Starter past its peak and heavily alcoholic when used for levain",
+            ],
+            [
+                "Use levain at or just before peak — not hours after",
+                "Monitor bulk fermentation closely at warm temperatures (25+ °C ferments fast)",
+                "The alcoholic smell is a signal of over-fermentation; reduce temperature or time",
+            ],
+            ""),
+
+        new("starter-not-rising", "😴", "Starter not rising or doubling", "Starter", "Very common", "common",
+            [
+                "Starter too cold — below 20 °C the yeast and bacteria are very slow",
+                "Starter too young — a new starter may need 7–14 days of regular feeding to be reliable",
+                "Feed ratio too high — 1:10:10 will take 18+ h even at 24 °C",
+                "Chlorinated tap water killing the microbes",
+                "Flour changed — very low enzyme activity (high falling number) in new flour bag",
+            ],
+            [
+                "Move starter to a warm spot (24–26 °C) — on top of a fridge, near a radiator, in a warm oven with the light on",
+                "Feed at a lower ratio (1:2:2 or 1:3:3) to get faster peaks",
+                "Use filtered or bottled water, or let tap water stand overnight before use",
+                "Switch to wholemeal or rye flour in the refresh — more enzymes and wild microbes",
+                "Be patient: a young or neglected starter can take 5–7 days of twice-daily feeds to recover",
+            ],
+            "A healthy starter at 24 °C with a 1:3:3 feed should double within 4–6 hours and pass the float test at peak."),
+
+        new("hooch", "🍶", "Grey or dark liquid on top of starter (hooch)", "Starter", "Common", "common",
+            [
+                "Starter hungry and very acidic — the microbes have consumed all available sugars",
+                "Starter stored in the fridge and not fed for a week or more",
+                "Feed ratio too low for the frequency of feeding",
+            ],
+            [
+                "Pour off the hooch (it is not harmful — just unpleasant) and feed as normal",
+                "Increase feed frequency or ratio so the starter doesn't reach this level of acidity",
+                "A fridge starter should be fed at least once a week",
+                "Hooch is not a sign of failure — it is simply a hungry starter",
+            ],
+            "Hooch is a slang term for the grey liquid (ethanol + acids + water) that separates on top of an overly acidic starter. It is not mould and the starter is recoverable."),
+    ];
+}

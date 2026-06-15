@@ -5957,3 +5957,171 @@ body {
     line-height: 1.5;
     margin-top: 2px;
 }
+
+/* ── M34: Troubleshooting ────────────────────────────────── */
+
+.troubleshoot-page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+}
+
+.troubleshoot-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.troubleshoot-title-group { flex: 1; }
+.troubleshoot-title   { font-size: 1.5rem; font-weight: 700; margin: 0 0 4px; color: var(--text); }
+.troubleshoot-subtitle { font-size: .85rem; color: var(--text-muted); margin: 0; }
+
+.troubleshoot-search-row {
+    margin-bottom: 12px;
+}
+
+.troubleshoot-search {
+    width: 100%;
+    padding: 9px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--panel);
+    color: var(--text);
+    font-size: .88rem;
+    box-sizing: border-box;
+}
+
+.troubleshoot-search:focus { outline: 2px solid var(--accent); border-color: var(--accent); }
+
+.troubleshoot-categories {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.troubleshoot-cat {
+    padding: 5px 12px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: var(--panel);
+    color: var(--text-muted);
+    font-size: .8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+}
+
+.troubleshoot-cat:hover { background: var(--hover); color: var(--text); }
+.troubleshoot-cat.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+.troubleshoot-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.troubleshoot-empty {
+    color: var(--text-muted);
+    font-size: .88rem;
+    text-align: center;
+    padding: 32px 0;
+}
+
+/* Trouble card */
+.trouble-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+
+.trouble-card-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 16px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+}
+
+.trouble-card-header:hover { background: var(--hover); }
+
+.trouble-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+}
+
+.trouble-severity {
+    font-size: .66rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 10px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    flex-shrink: 0;
+}
+
+.trouble-severity--common { background: color-mix(in srgb, #f59e0b 15%, var(--panel)); color: #b45309; }
+.trouble-severity--info   { background: color-mix(in srgb, #06b6d4 15%, var(--panel)); color: #0e7490; }
+
+.trouble-icon    { font-size: 1.3rem; flex-shrink: 0; }
+.trouble-symptom { font-weight: 700; font-size: .88rem; color: var(--text); }
+.trouble-cat-badge {
+    font-size: .72rem;
+    color: var(--text-muted);
+    margin-top: 1px;
+}
+
+.trouble-chevron { font-size: .8rem; color: var(--text-muted); flex-shrink: 0; }
+
+/* Expanded body */
+.trouble-body {
+    border-top: 1px solid var(--border);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.trouble-causes-label,
+.trouble-fixes-label {
+    font-size: .72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    margin-bottom: 6px;
+}
+
+.trouble-causes-label { color: #b45309; }
+.trouble-fixes-label  { color: #166534; }
+
+.trouble-cause,
+.trouble-fix {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: .82rem;
+    line-height: 1.55;
+    padding: 4px 0;
+}
+
+.trouble-cause-icon { color: #f59e0b; flex-shrink: 0; margin-top: 1px; }
+.trouble-fix-icon   { color: #22c55e; flex-shrink: 0; margin-top: 1px; }
+
+.trouble-explanation {
+    margin: 0;
+    font-size: .8rem;
+    color: var(--text-muted);
+    font-style: italic;
+    line-height: 1.6;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+}
