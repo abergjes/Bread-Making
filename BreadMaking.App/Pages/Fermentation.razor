@@ -1,0 +1,350 @@
+@page "/fermentation"
+@inject NavigationManager Nav
+
+<div class="ferm-page">
+
+    <div class="ferm-header">
+        <button class="back-btn" @onclick='() => Nav.NavigateTo("/history")'>← History</button>
+        <div class="ferm-title-group">
+            <h2 class="ferm-title">Fermentation Guide</h2>
+            <p class="ferm-subtitle">How temperature shapes timing — bulk fermentation, cold retard, and seasonal adjustment</p>
+        </div>
+    </div>
+
+    <div class="ferm-tabs">
+        @foreach (var t in _tabs)
+        {
+            <button class="ferm-tab @(_activeTab == t.Id ? "ferm-tab--active" : "")"
+                    @onclick="() => _activeTab = t.Id">@t.Label</button>
+        }
+    </div>
+
+    @if (_activeTab == "bulk")
+    {
+        <section class="ferm-section">
+            <p class="ferm-intro">
+                Temperature is the primary dial for fermentation speed. A 5 °C rise roughly doubles yeast and
+                bacterial activity. The table below gives typical bulk durations for an 80–85% active sourdough
+                levain at 20% inoculation. Adjust for your starter's peak time and flour type.
+            </p>
+
+            <div class="ferm-matrix-card">
+                <div class="ferm-matrix-title">Bulk fermentation duration by temperature</div>
+                <div class="ferm-matrix-subtitle">Sourdough · 20% levain · 75–78% hydration · target 50–75% rise</div>
+                <div class="ferm-matrix">
+                    <div class="ferm-matrix-header">
+                        <span>Temp</span>
+                        <span>Bulk time</span>
+                        <span>Folds</span>
+                        <span>Notes</span>
+                    </div>
+                    @foreach (var row in _bulkRows)
+                    {
+                        <div class="ferm-matrix-row ferm-matrix-row--@row.ZoneClass">
+                            <span class="ferm-temp-cell"><strong>@row.Temp</strong></span>
+                            <span class="ferm-time-cell">@row.Duration</span>
+                            <span class="ferm-fold-cell">@row.Folds</span>
+                            <span class="ferm-note-cell">@row.Note</span>
+                        </div>
+                    }
+                </div>
+                <div class="ferm-matrix-legend">
+                    <span class="ferm-legend-dot ferm-legend-dot--cool"></span> Cool
+                    <span class="ferm-legend-dot ferm-legend-dot--ideal"></span> Ideal range
+                    <span class="ferm-legend-dot ferm-legend-dot--warm"></span> Warm
+                    <span class="ferm-legend-dot ferm-legend-dot--hot"></span> Hot / risky
+                </div>
+            </div>
+
+            <div class="ferm-signs-grid">
+                <div class="ferm-signs-card ferm-signs-card--ready">
+                    <div class="ferm-signs-title">✅ Bulk is ready when…</div>
+                    <ul class="ferm-signs-list">
+                        <li>Dough has risen 50–75% (mark the container side with tape or a rubber band)</li>
+                        <li>Surface shows a dome and slight jiggle — the dough moves as one cohesive mass</li>
+                        <li>Bubbles visible through the container sides and across the surface</li>
+                        <li>Dough feels airy and billowy, not dense or heavy</li>
+                        <li>Aliquot jar (small sample in water) has risen 50–75% and dome-domed</li>
+                        <li>Smell: sweet, yoghurt-like, mildly acidic — not sharp or boozy</li>
+                    </ul>
+                </div>
+                <div class="ferm-signs-card ferm-signs-card--warning">
+                    <div class="ferm-signs-title">⚠️ Signs of over-fermentation</div>
+                    <ul class="ferm-signs-list">
+                        <li>Rise exceeds 100% — dough collapses when touched</li>
+                        <li>Surface is flat, sticky, and pockmarked rather than domed</li>
+                        <li>Slack and unworkable when you try to shape — tears easily</li>
+                        <li>Smell is sharply sour, alcoholic, or acetone-like</li>
+                        <li>Crumb will be gummy and dense after baking</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="ferm-inoculation-card">
+                <div class="ferm-inoculation-title">Adjusting inoculation by season</div>
+                <div class="ferm-inoculation-grid">
+                    @foreach (var row in _inoculationRows)
+                    {
+                        <div class="ferm-inoc-row">
+                            <span class="ferm-inoc-season">@row.Season</span>
+                            <span class="ferm-inoc-temp">@row.Temp</span>
+                            <span class="ferm-inoc-pct">@row.Inoculation</span>
+                            <span class="ferm-inoc-note">@row.Note</span>
+                        </div>
+                    }
+                </div>
+                <p class="ferm-inoc-footnote">
+                    Halving the levain roughly doubles bulk time; doubling it roughly halves it. Always adjust inoculation
+                    or temperature — never both at once or tracking causality becomes impossible.
+                </p>
+            </div>
+        </section>
+    }
+    else if (_activeTab == "retard")
+    {
+        <section class="ferm-section">
+            <p class="ferm-intro">
+                Cold retarding — proofing the shaped dough in the refrigerator (3–5 °C) — slows yeast and lets
+                lactic acid bacteria continue developing flavour compounds. It also firms the dough, making it
+                easier to score, and improves crust colour through enhanced Maillard reaction.
+            </p>
+
+            <div class="retard-benefits-grid">
+                @foreach (var b in _retardBenefits)
+                {
+                    <div class="retard-benefit-card">
+                        <span class="retard-benefit-icon">@b.Icon</span>
+                        <div class="retard-benefit-name">@b.Name</div>
+                        <p class="retard-benefit-desc">@b.Description</p>
+                    </div>
+                }
+            </div>
+
+            <div class="retard-timing-card">
+                <div class="retard-timing-title">Cold proof timing guide (3–5 °C fridge)</div>
+                <div class="retard-timing-grid">
+                    @foreach (var row in _retardTimings)
+                    {
+                        <div class="retard-timing-row">
+                            <span class="retard-timing-duration">@row.Duration</span>
+                            <span class="retard-timing-label retard-timing-label--@row.LevelClass">@row.Level</span>
+                            <span class="retard-timing-effect">@row.Effect</span>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="retard-protocol-card">
+                <div class="retard-protocol-title">Standard retard protocol</div>
+                <ol class="retard-protocol-steps">
+                    <li><strong>Bulk at room temp</strong> until 40–50% rise (slightly under the room-temp endpoint — the fridge adds ~10–20% more rise overnight).</li>
+                    <li><strong>Shape</strong> as normal; place in a well-floured banneton.</li>
+                    <li><strong>Cover tightly</strong> with a shower cap or plastic bag — the fridge dries surfaces quickly.</li>
+                    <li><strong>Refrigerate</strong> immediately at 3–5 °C for 8–16 h. Longer is fine up to ~18 h for most formulas.</li>
+                    <li><strong>Preheat</strong> oven with vessel (Dutch oven or combo cooker) to 250 °C for at least 45–60 min.</li>
+                    <li><strong>Score directly from the fridge</strong> — cold dough scores cleanly and holds its shape while you load it.</li>
+                    <li><strong>No room-temp rest needed</strong> unless dough feels very firm — most doughs bake better straight from cold.</li>
+                </ol>
+            </div>
+
+            <div class="retard-vars-card">
+                <div class="retard-vars-title">Variables that change retard behaviour</div>
+                <div class="retard-vars-grid">
+                    @foreach (var v in _retardVariables)
+                    {
+                        <div class="retard-var">
+                            <span class="retard-var-icon">@v.Icon</span>
+                            <div>
+                                <div class="retard-var-name">@v.Name</div>
+                                <div class="retard-var-text">@v.Text</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </section>
+    }
+    else if (_activeTab == "seasons")
+    {
+        <section class="ferm-section">
+            <p class="ferm-intro">
+                Kitchen temperature varies 10–15 °C across seasons, which can shift bulk time by 3–5 hours. The same
+                formula that works in winter will over-ferment in summer unless you actively compensate.
+            </p>
+
+            <div class="season-cards-grid">
+                @foreach (var s in _seasons)
+                {
+                    <div class="season-card season-card--@s.SeasonClass">
+                        <div class="season-card-header">
+                            <span class="season-icon">@s.Icon</span>
+                            <div>
+                                <div class="season-name">@s.Name</div>
+                                <div class="season-temp-range">@s.TempRange</div>
+                            </div>
+                        </div>
+                        <div class="season-adjustments">
+                            @foreach (var adj in s.Adjustments)
+                            {
+                                <div class="season-adj">
+                                    <span class="season-adj-icon">@adj.Icon</span>
+                                    <div>
+                                        <div class="season-adj-label">@adj.Label</div>
+                                        <div class="season-adj-text">@adj.Text</div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="season-tools-card">
+                <div class="season-tools-title">Tools for controlling fermentation temperature</div>
+                <div class="season-tools-grid">
+                    @foreach (var tool in _tempTools)
+                    {
+                        <div class="season-tool">
+                            <div class="season-tool-header">
+                                <span>@tool.Icon</span>
+                                <strong>@tool.Name</strong>
+                                <span class="season-tool-tag season-tool-tag--@tool.SeasonClass">@tool.Season</span>
+                            </div>
+                            <p class="season-tool-desc">@tool.Description</p>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="ferm-ddt-callout">
+                <span class="ferm-ddt-icon">🌡️</span>
+                <div>
+                    <div class="ferm-ddt-title">Use the DDT calculator to hit your target dough temperature</div>
+                    <p class="ferm-ddt-text">
+                        The Desired Dough Temperature (DDT) calculator on the Calculators page computes the exact
+                        water temperature needed to reach your target dough temp, accounting for flour temperature,
+                        ambient temperature, and your mixing method's friction factor.
+                    </p>
+                    <button class="btn-secondary ferm-ddt-btn" @onclick='() => Nav.NavigateTo("/calculators")'>
+                        Open calculators →
+                    </button>
+                </div>
+            </div>
+        </section>
+    }
+
+</div>
+
+@code {
+    private string _activeTab = "bulk";
+
+    private record Tab(string Id, string Label);
+    private readonly Tab[] _tabs =
+    [
+        new("bulk",    "Bulk fermentation"),
+        new("retard",  "Cold retard"),
+        new("seasons", "Seasonal adjustment"),
+    ];
+
+    private record BulkRow(string Temp, string Duration, string Folds, string Note, string ZoneClass);
+    private readonly BulkRow[] _bulkRows =
+    [
+        new("15 °C", "12–18 h", "2–3 sets", "Very slow; good overnight with small levain (10%)", "cool"),
+        new("18 °C", "9–12 h",  "3–4 sets", "Cool kitchen; suits cold-weather winter baking",    "cool"),
+        new("20 °C", "7–9 h",   "4 sets",   "Typical autumn/spring baseline",                    "ideal"),
+        new("22 °C", "5–7 h",   "4 sets",   "The most commonly quoted 'room temperature' target", "ideal"),
+        new("24 °C", "4–5 h",   "3–4 sets", "Warm kitchen; watch closely after hour 3",           "ideal"),
+        new("26 °C", "3–4 h",   "3 sets",   "Summer baseline; reduce levain to 15% or less",      "warm"),
+        new("28 °C", "2–3 h",   "2–3 sets", "Very active; consider ice water or shorter bulk",    "warm"),
+        new("30 °C+","1.5–2 h", "2 sets",   "Move dough to fridge after 1 h if possible",         "hot"),
+    ];
+
+    private record InoculationRow(string Season, string Temp, string Inoculation, string Note);
+    private readonly InoculationRow[] _inoculationRows =
+    [
+        new("Winter", "16–19 °C", "20–25%", "Higher levain to compensate for cold kitchen"),
+        new("Spring", "20–22 °C", "18–20%", "Standard formula; minimal adjustment"),
+        new("Summer", "24–28 °C", "10–15%", "Reduce levain; use cold water; consider retard"),
+        new("Heat wave", "28–32 °C", "6–10%", "Minimal levain; bulk 1–2 h max; retard heavily"),
+    ];
+
+    private record RetardBenefit(string Icon, string Name, string Description);
+    private readonly RetardBenefit[] _retardBenefits =
+    [
+        new("🍋", "Flavour depth", "Lactic acid bacteria remain active at low temperatures, continuing to produce acetic and lactic acids without the yeast over-producing CO₂."),
+        new("🔪", "Score-ability", "Cold, firm dough holds its shape under a blade and springs open cleanly. Warm dough gums up and drags."),
+        new("⏰", "Schedule freedom", "Retard decouples shaping from baking. Shape Saturday night; bake Sunday morning at your leisure."),
+        new("🟫", "Crust colour", "Residual sugars concentrate at the surface during retard, boosting Maillard browning for a deeper, more complex crust colour."),
+        new("🕳️", "Open crumb", "Slow, cold fermentation favours larger, more irregular gas cells compared to a warm, fast bulk."),
+        new("🔬", "Consistency", "Cold proof slows the fermentation clock — a 30-min deviation at 4 °C has far less impact than the same deviation at 24 °C."),
+    ];
+
+    private record RetardTiming(string Duration, string Level, string LevelClass, string Effect);
+    private readonly RetardTiming[] _retardTimings =
+    [
+        new("4–6 h",   "Short",   "short",  "Mild additional flavour; useful if bulk ran long. Dough firms up but acidity change is modest."),
+        new("8–12 h",  "Standard","standard","The classic overnight retard. Good balance of flavour development and schedule flexibility."),
+        new("12–16 h", "Long",    "long",    "Noticeably more sour; open crumb; excellent crust colour. Ensure bulk was not over-done."),
+        new("16–24 h", "Extended","extended","Very sour; works well for whole-grain or high-rye formulas. Risk of over-proofing increases."),
+        new("24–48 h", "Max",     "max",     "Strong sour character; best with lower hydration and reduced levain. Check firmness before baking."),
+    ];
+
+    private record RetardVariable(string Icon, string Name, string Text);
+    private readonly RetardVariable[] _retardVariables =
+    [
+        new("🧫", "Starter activity",     "A very active, recently fed starter will continue working in the fridge longer than a sluggish one."),
+        new("💧", "Hydration",            "High-hydration doughs (80%+) are more active and over-proof faster during retard."),
+        new("🌾", "Flour type",           "Whole-grain and rye flours have more natural enzymes — they ferment faster both at room temp and in the fridge."),
+        new("🌡️", "Fridge temperature",   "A fridge at 2 °C slows things much more than one at 6 °C. Measure your actual fridge temp with a thermometer."),
+        new("📦", "Container coverage",   "An uncovered banneton dries the surface — this is desirable for scoring but can crack thin doughs. Cover if skin forms."),
+        new("🔢", "Inoculation",          "10% levain can retard 20+ hours safely. 25% levain may over-proof in 10 h at the same fridge temp."),
+    ];
+
+    private record SeasonAdj(string Icon, string Label, string Text);
+    private record SeasonCard(string Icon, string Name, string TempRange, string SeasonClass, SeasonAdj[] Adjustments);
+    private readonly SeasonCard[] _seasons =
+    [
+        new("❄️", "Winter", "14–19 °C kitchen",  "winter",
+        [
+            new("🧫", "Levain",       "Increase to 20–25%; feed 6–8 h before baking."),
+            new("🌡️", "Water temp",   "Use warm water (32–36 °C) to hit DDT of 24–26 °C."),
+            new("📍", "Proof spot",   "Near the oven, on top of the fridge, or in an oven with just the light on (~27 °C)."),
+            new("⏱️", "Bulk time",    "Expect 8–12 h for a standard formula; plan an overnight bulk."),
+            new("❄️", "Retard",       "Optional — winter kitchens are already cold enough that retard slows things dramatically."),
+        ]),
+        new("🌸", "Spring / Autumn", "20–23 °C kitchen", "spring",
+        [
+            new("🧫", "Levain",       "Standard 18–20%; no adjustment needed for most formulas."),
+            new("💧", "Water temp",   "Ambient or slightly cool (18–22 °C) water to hit DDT of 24 °C."),
+            new("⏱️", "Bulk time",    "5–8 h is typical. Use aliquot jar rather than clock."),
+            new("❄️", "Retard",       "8–12 h cold proof works very reliably in this temperature range."),
+        ]),
+        new("☀️", "Summer", "24–28 °C kitchen", "summer",
+        [
+            new("🧫", "Levain",       "Reduce to 10–15%; feed 4–5 h before baking so it peaks at use."),
+            new("🧊", "Water temp",   "Use cold tap water or add a few ice cubes. Target DDT of 22–24 °C."),
+            new("⏱️", "Bulk time",    "3–5 h max; bulk can complete in 2–3 h on very hot days."),
+            new("❄️", "Retard",       "Essential in summer — shape early, cold proof overnight, bake in the morning before the kitchen heats up."),
+            new("🕑", "Timing",       "Start your bake early morning. By midday, room-temp fermentation is often uncontrollable."),
+        ]),
+        new("🔥", "Heat wave", "28–34 °C kitchen", "heatwave",
+        [
+            new("🧫", "Levain",       "Drop to 5–8%; or switch to commercial yeast for predictability."),
+            new("🧊", "Water",        "Ice-cold water; consider adding ice directly to the bowl. Target DDT ≤ 22 °C."),
+            new("⏱️", "Bulk",         "Bulk 60–90 min maximum at room temp; transfer to fridge immediately after."),
+            new("❄️", "Full cold bulk","Consider bulk-fermenting in the fridge (8–12 h at 4 °C) for complete control."),
+            new("🏠", "Environment",  "Seek the coolest room: basement, stone floor, north-facing room. Avoid the kitchen while the oven is on."),
+        ]),
+    ];
+
+    private record TempTool(string Icon, string Name, string Season, string SeasonClass, string Description);
+    private readonly TempTool[] _tempTools =
+    [
+        new("💡", "Oven with light on",  "Winter", "winter", "Most ovens with just the interior light on maintain 26–30 °C. Measure with a thermometer — bulb wattage varies."),
+        new("🍦", "Proofing box / cooler","Year-round", "all", "A cooler with a small bowl of warm water (changed every 2 h) holds ~26 °C reliably. Low cost, no electricity."),
+        new("🧊", "Ice-water float",     "Summer", "summer", "Float the mixing bowl in a larger bowl of ice water for the first hour of bulk to keep dough temp in range."),
+        new("❄️", "Fridge for bulk",     "Summer", "summer", "After mixing, allow 1 h at room temp then move the whole bulk container to the fridge at 4 °C for 8–12 h."),
+        new("🌡️", "Instant-read probe",  "Year-round", "all", "Check dough temperature every hour during bulk. Dough temp tracks ambient closely — if dough is at 26 °C, it is fermenting as fast as a 26 °C bulk."),
+        new("💧", "DDT water temperature","Year-round", "all", "Adjust your water temperature so the mixed dough exits at exactly your target DDT. This is the single most controllable lever. Use the Calculators page."),
+    ];
+}

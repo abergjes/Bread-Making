@@ -6724,3 +6724,177 @@ body {
 .wp-caveats-grid { display: flex; flex-direction: column; gap: 14px; }
 .wp-caveat { display: flex; gap: 12px; align-items: flex-start; font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6; }
 .wp-caveat span { font-size: 1.3rem; flex-shrink: 0; }
+
+/* ── M38 Fermentation Guide ──────────────────────────────────── */
+.ferm-page { max-width: 900px; margin: 0 auto; padding: 24px 16px 60px; }
+
+.ferm-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
+.ferm-title-group { flex: 1; }
+.ferm-title { font-size: 1.6rem; font-weight: 700; color: var(--text-primary); margin: 0 0 4px; }
+.ferm-subtitle { color: var(--text-muted); margin: 0; font-size: 0.95rem; }
+
+.ferm-tabs { display: flex; gap: 8px; margin-bottom: 28px; flex-wrap: wrap; }
+.ferm-tab {
+    padding: 8px 18px; border-radius: 20px; font-size: 0.9rem; font-weight: 500; cursor: pointer;
+    border: 1.5px solid var(--border-color); background: var(--card-bg); color: var(--text-secondary);
+    transition: all 0.15s;
+}
+.ferm-tab:hover { border-color: var(--accent); color: var(--accent); }
+.ferm-tab--active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+.ferm-section { }
+.ferm-intro { color: var(--text-secondary); margin: 0 0 24px; line-height: 1.65; }
+
+/* Bulk matrix */
+.ferm-matrix-card {
+    background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px;
+    padding: 20px; margin-bottom: 20px; overflow-x: auto;
+}
+.ferm-matrix-title { font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+.ferm-matrix-subtitle { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 16px; }
+.ferm-matrix { display: flex; flex-direction: column; gap: 4px; min-width: 480px; }
+.ferm-matrix-header {
+    display: grid; grid-template-columns: 80px 110px 90px 1fr;
+    gap: 12px; padding: 6px 10px;
+    font-size: 0.78rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em;
+}
+.ferm-matrix-row {
+    display: grid; grid-template-columns: 80px 110px 90px 1fr;
+    gap: 12px; padding: 9px 10px; border-radius: 8px; font-size: 0.88rem; align-items: center;
+}
+.ferm-matrix-row--cool    { background: #edf4fb; }
+.ferm-matrix-row--ideal   { background: #edfaf3; }
+.ferm-matrix-row--warm    { background: #fdf8e0; }
+.ferm-matrix-row--hot     { background: #fdecea; }
+.ferm-temp-cell  { font-weight: 600; color: var(--text-primary); }
+.ferm-time-cell  { color: var(--text-primary); font-weight: 500; }
+.ferm-fold-cell  { color: var(--text-secondary); }
+.ferm-note-cell  { color: var(--text-muted); font-size: 0.82rem; }
+.ferm-matrix-legend { display: flex; align-items: center; gap: 12px; margin-top: 12px; font-size: 0.8rem; color: var(--text-muted); flex-wrap: wrap; }
+.ferm-legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+.ferm-legend-dot--cool  { background: #3a82c4; }
+.ferm-legend-dot--ideal { background: #38a169; }
+.ferm-legend-dot--warm  { background: #d97706; }
+.ferm-legend-dot--hot   { background: #e53e3e; }
+
+.ferm-signs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; margin-bottom: 20px; }
+.ferm-signs-card {
+    background: var(--card-bg); border: 1.5px solid var(--border-color); border-radius: 12px; padding: 18px;
+}
+.ferm-signs-card--ready   { border-color: #38a169; }
+.ferm-signs-card--warning { border-color: #d97706; }
+.ferm-signs-title { font-weight: 700; color: var(--text-primary); margin-bottom: 10px; }
+.ferm-signs-list { margin: 0; padding-left: 20px; color: var(--text-secondary); font-size: 0.88rem; }
+.ferm-signs-list li { margin-bottom: 6px; line-height: 1.55; }
+
+.ferm-inoculation-card {
+    background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;
+}
+.ferm-inoculation-title { font-weight: 700; color: var(--text-primary); margin-bottom: 14px; }
+.ferm-inoculation-grid { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.ferm-inoc-row {
+    display: grid; grid-template-columns: 100px 110px 80px 1fr;
+    gap: 12px; padding: 8px 10px; border-radius: 8px;
+    background: var(--bg-subtle, #f8f8f8); font-size: 0.87rem; align-items: center;
+}
+.ferm-inoc-season { font-weight: 600; color: var(--text-primary); }
+.ferm-inoc-temp   { color: var(--text-muted); }
+.ferm-inoc-pct    { font-weight: 600; color: var(--accent); }
+.ferm-inoc-note   { color: var(--text-secondary); }
+.ferm-inoc-footnote { font-size: 0.82rem; color: var(--text-muted); line-height: 1.55; margin: 0; }
+
+/* Retard */
+.retard-benefits-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; margin-bottom: 20px; }
+.retard-benefit-card {
+    background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px;
+    padding: 18px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px;
+}
+.retard-benefit-icon { font-size: 2rem; }
+.retard-benefit-name { font-weight: 700; font-size: 0.95rem; color: var(--text-primary); }
+.retard-benefit-desc { font-size: 0.84rem; color: var(--text-secondary); line-height: 1.55; margin: 0; }
+
+.retard-timing-card {
+    background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px;
+    padding: 20px; margin-bottom: 16px; overflow-x: auto;
+}
+.retard-timing-title { font-weight: 700; color: var(--text-primary); margin-bottom: 14px; }
+.retard-timing-grid { display: flex; flex-direction: column; gap: 6px; min-width: 400px; }
+.retard-timing-row {
+    display: grid; grid-template-columns: 90px 100px 1fr;
+    gap: 12px; padding: 9px 10px; border-radius: 8px;
+    background: var(--bg-subtle, #f8f8f8); align-items: center; font-size: 0.88rem;
+}
+.retard-timing-duration { font-weight: 600; color: var(--text-primary); }
+.retard-timing-label {
+    font-size: 0.75rem; font-weight: 700; padding: 2px 8px; border-radius: 10px; text-align: center;
+}
+.retard-timing-label--short    { background: #edf7ed; color: #2d7a2d; }
+.retard-timing-label--standard { background: #edf4fb; color: #1a6fa3; }
+.retard-timing-label--long     { background: #fdf8e0; color: #a07a00; }
+.retard-timing-label--extended { background: #fde8d0; color: #a04a00; }
+.retard-timing-label--max      { background: #fdecea; color: #b32a2a; }
+.retard-timing-effect { color: var(--text-secondary); font-size: 0.84rem; }
+
+.retard-protocol-card {
+    background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px;
+    padding: 20px; margin-bottom: 16px;
+}
+.retard-protocol-title { font-weight: 700; color: var(--text-primary); margin-bottom: 12px; }
+.retard-protocol-steps { margin: 0; padding-left: 20px; color: var(--text-secondary); font-size: 0.88rem; }
+.retard-protocol-steps li { margin-bottom: 8px; line-height: 1.6; }
+
+.retard-vars-card {
+    background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px;
+}
+.retard-vars-title { font-weight: 700; color: var(--text-primary); margin-bottom: 14px; }
+.retard-vars-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.retard-var { display: flex; gap: 12px; align-items: flex-start; }
+.retard-var-icon { font-size: 1.3rem; flex-shrink: 0; }
+.retard-var-name { font-size: 0.88rem; font-weight: 600; color: var(--text-primary); margin-bottom: 3px; }
+.retard-var-text { font-size: 0.83rem; color: var(--text-secondary); line-height: 1.5; }
+
+/* Seasons */
+.season-cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; margin-bottom: 20px; }
+.season-card {
+    background: var(--card-bg); border: 2px solid var(--border-color); border-radius: 12px; padding: 20px;
+    display: flex; flex-direction: column; gap: 14px;
+}
+.season-card--winter  { border-color: #3a82c4; }
+.season-card--spring  { border-color: #38a169; }
+.season-card--summer  { border-color: #d97706; }
+.season-card--heatwave{ border-color: #e53e3e; }
+.season-card-header { display: flex; align-items: flex-start; gap: 14px; }
+.season-icon { font-size: 2rem; flex-shrink: 0; }
+.season-name { font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin-bottom: 3px; }
+.season-temp-range { font-size: 0.82rem; color: var(--text-muted); }
+.season-adjustments { display: flex; flex-direction: column; gap: 10px; }
+.season-adj { display: flex; gap: 10px; align-items: flex-start; }
+.season-adj-icon { font-size: 1.1rem; flex-shrink: 0; }
+.season-adj-label { font-size: 0.83rem; font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
+.season-adj-text  { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5; }
+
+.season-tools-card {
+    background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px;
+    padding: 20px; margin-bottom: 20px;
+}
+.season-tools-title { font-weight: 700; color: var(--text-primary); margin-bottom: 16px; }
+.season-tools-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.season-tool { display: flex; flex-direction: column; gap: 6px; }
+.season-tool-header { display: flex; align-items: center; gap: 8px; font-size: 0.9rem; }
+.season-tool-tag {
+    font-size: 0.72rem; font-weight: 600; padding: 2px 7px; border-radius: 10px; margin-left: auto;
+}
+.season-tool-tag--winter { background: #edf4fb; color: #1a6fa3; }
+.season-tool-tag--summer { background: #fdf8e0; color: #a07a00; }
+.season-tool-tag--all    { background: #edf7ed; color: #2d7a2d; }
+.season-tool-desc { font-size: 0.83rem; color: var(--text-secondary); line-height: 1.55; margin: 0; }
+
+.ferm-ddt-callout {
+    display: flex; gap: 16px; align-items: flex-start;
+    background: var(--accent-light, #eef2ff); border: 1.5px solid var(--accent);
+    border-radius: 12px; padding: 18px;
+}
+.ferm-ddt-icon { font-size: 2rem; flex-shrink: 0; }
+.ferm-ddt-title { font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+.ferm-ddt-text  { font-size: 0.88rem; color: var(--text-secondary); line-height: 1.6; margin: 0 0 12px; }
+.ferm-ddt-btn   { font-size: 0.88rem; }
