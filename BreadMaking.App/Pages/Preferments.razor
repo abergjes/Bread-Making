@@ -1,0 +1,416 @@
+@page "/preferments"
+@inject NavigationManager Nav
+
+<div class="pref-page">
+
+    <div class="pref-header">
+        <button class="back-btn" @onclick='() => Nav.NavigateTo("/history")'>← History</button>
+        <div class="pref-title-group">
+            <h2 class="pref-title">Preferment Guide</h2>
+            <p class="pref-subtitle">Poolish, biga, pâte fermentée, levain — what they are, how to build them, and when to use each</p>
+        </div>
+    </div>
+
+    <div class="pref-tabs">
+        @foreach (var t in _tabs)
+        {
+            <button class="pref-tab @(_activeTab == t.Id ? "pref-tab--active" : "")"
+                    @onclick="() => _activeTab = t.Id">@t.Label</button>
+        }
+    </div>
+
+    @if (_activeTab == "why")
+    {
+        <section class="pref-section">
+            <p class="pref-intro">
+                A preferment is a portion of the dough — flour, water, and leavening — mixed and fermented before
+                the main dough is built. It extends total fermentation time without over-acidifying the final dough,
+                producing more complex flavour, better extensibility, and improved shelf life.
+            </p>
+
+            <div class="pref-benefits-grid">
+                @foreach (var b in _benefits)
+                {
+                    <div class="pref-benefit-card">
+                        <span class="pref-benefit-icon">@b.Icon</span>
+                        <div class="pref-benefit-name">@b.Name</div>
+                        <p class="pref-benefit-desc">@b.Description</p>
+                    </div>
+                }
+            </div>
+
+            <div class="pref-compare-card">
+                <div class="pref-compare-title">Preferment comparison</div>
+                <div class="pref-compare-table-wrap">
+                    <div class="pref-compare-table">
+                        <div class="pref-compare-header">
+                            <span>Type</span><span>Hydration</span><span>Yeast</span>
+                            <span>Flour %</span><span>Room-temp time</span><span>Flavour</span>
+                        </div>
+                        @foreach (var row in _compareRows)
+                        {
+                            <div class="pref-compare-row">
+                                <span class="pref-compare-name">@row.Name</span>
+                                <span>@row.Hydration</span>
+                                <span>@row.YeastType</span>
+                                <span>@row.FlourPct</span>
+                                <span>@row.Time</span>
+                                <span class="pref-compare-flavour">@row.Flavour</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="pref-when-card">
+                <div class="pref-when-title">How to choose</div>
+                <div class="pref-when-grid">
+                    @foreach (var w in _whenToUse)
+                    {
+                        <div class="pref-when-item">
+                            <span class="pref-when-icon">@w.Icon</span>
+                            <div>
+                                <div class="pref-when-label">@w.Scenario</div>
+                                <div class="pref-when-choice">→ @w.Choice</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </section>
+    }
+    else if (_activeTab == "commercial")
+    {
+        <section class="pref-section">
+            <p class="pref-intro">
+                Commercial-yeast preferments use baker's yeast for reliable, fast fermentation. They deliver flavour
+                complexity without sourdough acidity — ideal for baguettes, ciabatta, pizza, and enriched breads where
+                tang would be intrusive.
+            </p>
+
+            @foreach (var p in _commercialPreferments)
+            {
+                <div class="pref-type-card">
+                    <div class="pref-type-header">
+                        <span class="pref-type-icon">@p.Icon</span>
+                        <div class="pref-type-meta">
+                            <div class="pref-type-name">@p.Name</div>
+                            <div class="pref-type-origin">@p.Origin</div>
+                        </div>
+                        <div class="pref-type-chips">
+                            <span class="pref-chip pref-chip--hydration">@p.Hydration hydration</span>
+                            <span class="pref-chip pref-chip--flour">@p.FlourPct flour</span>
+                            <span class="pref-chip pref-chip--time">@p.Time</span>
+                        </div>
+                    </div>
+
+                    <p class="pref-type-desc">@p.Description</p>
+
+                    <div class="pref-type-body">
+                        <div class="pref-type-col">
+                            <div class="pref-col-title">How to build</div>
+                            <ol class="pref-steps">
+                                @foreach (var step in p.Steps)
+                                {
+                                    <li>@step</li>
+                                }
+                            </ol>
+                        </div>
+                        <div class="pref-type-col">
+                            <div class="pref-col-title">Readiness signs</div>
+                            <ul class="pref-ready-list">
+                                @foreach (var sign in p.ReadinessSigns)
+                                {
+                                    <li>@sign</li>
+                                }
+                            </ul>
+                            <div class="pref-col-title" style="margin-top:14px">Best for</div>
+                            <div class="pref-best-for-chips">
+                                @foreach (var bf in p.BestFor)
+                                {
+                                    <span class="pref-best-chip">@bf</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (p.Tips.Length > 0)
+                    {
+                        <div class="pref-tips-row">
+                            @foreach (var tip in p.Tips)
+                            {
+                                <div class="pref-tip">💡 @tip</div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </section>
+    }
+    else if (_activeTab == "natural")
+    {
+        <section class="pref-section">
+            <p class="pref-intro">
+                Natural preferments use wild yeast and bacteria. They produce more complex, layered flavour than
+                commercial-yeast preferments, and their organic acids improve dough extensibility and shelf life.
+                Timing is more variable — watch the preferment, not the clock.
+            </p>
+
+            @foreach (var p in _naturalPreferments)
+            {
+                <div class="pref-type-card">
+                    <div class="pref-type-header">
+                        <span class="pref-type-icon">@p.Icon</span>
+                        <div class="pref-type-meta">
+                            <div class="pref-type-name">@p.Name</div>
+                            <div class="pref-type-origin">@p.Origin</div>
+                        </div>
+                        <div class="pref-type-chips">
+                            <span class="pref-chip pref-chip--hydration">@p.Hydration hydration</span>
+                            <span class="pref-chip pref-chip--flour">@p.FlourPct flour</span>
+                            <span class="pref-chip pref-chip--time">@p.Time</span>
+                        </div>
+                    </div>
+
+                    <p class="pref-type-desc">@p.Description</p>
+
+                    <div class="pref-type-body">
+                        <div class="pref-type-col">
+                            <div class="pref-col-title">How to build</div>
+                            <ol class="pref-steps">
+                                @foreach (var step in p.Steps)
+                                {
+                                    <li>@step</li>
+                                }
+                            </ol>
+                        </div>
+                        <div class="pref-type-col">
+                            <div class="pref-col-title">Readiness signs</div>
+                            <ul class="pref-ready-list">
+                                @foreach (var sign in p.ReadinessSigns)
+                                {
+                                    <li>@sign</li>
+                                }
+                            </ul>
+                            <div class="pref-col-title" style="margin-top:14px">Best for</div>
+                            <div class="pref-best-for-chips">
+                                @foreach (var bf in p.BestFor)
+                                {
+                                    <span class="pref-best-chip">@bf</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    @if (p.Tips.Length > 0)
+                    {
+                        <div class="pref-tips-row">
+                            @foreach (var tip in p.Tips)
+                            {
+                                <div class="pref-tip">💡 @tip</div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </section>
+    }
+
+</div>
+
+@code {
+    private string _activeTab = "why";
+
+    private record Tab(string Id, string Label);
+    private readonly Tab[] _tabs =
+    [
+        new("why",        "Why preferments"),
+        new("commercial", "Poolish & Biga"),
+        new("natural",    "Levain & Pâte fermentée"),
+    ];
+
+    private record Benefit(string Icon, string Name, string Description);
+    private readonly Benefit[] _benefits =
+    [
+        new("🍋", "Deeper flavour",
+            "Extended fermentation generates acetic and lactic acids, esters, and aldehydes that a short straight-dough cannot develop."),
+        new("🕳️", "Open crumb",
+            "Organic acids from the preferment weaken gluten bonds, increasing extensibility and enabling larger, more irregular gas cells."),
+        new("📅", "Extended shelf life",
+            "The same acids that add flavour inhibit mould and retard staling — preferment loaves stay fresh 1–2 days longer than straight doughs."),
+        new("⏰", "Schedule flexibility",
+            "Building the preferment the night before breaks bake day into two short windows instead of one long continuous session."),
+        new("🔬", "Enzyme activity",
+            "Longer, slower fermentation allows amylases to break starches into sugars, improving crust colour, crumb moisture, and flavour."),
+        new("🍞", "Tolerance",
+            "Prefermented doughs are more forgiving of timing variations during the final bulk and proof — the preferment has already done most of the work."),
+    ];
+
+    private record CompareRow(string Name, string Hydration, string YeastType, string FlourPct, string Time, string Flavour);
+    private readonly CompareRow[] _compareRows =
+    [
+        new("Poolish",          "100%",  "Commercial", "20–40%", "12–16 h / 22 °C", "Sweet, mild, creamy"),
+        new("Biga",             "50–60%","Commercial", "30–50%", "12–18 h / 18 °C", "Nutty, complex, wheaty"),
+        new("Pâte fermentée",   "65–70%","Commercial", "20–40%", "12–16 h / 22 °C", "Balanced, rounded, mild sour"),
+        new("Liquid levain",    "100%",  "Wild",       "15–25%", "4–12 h / 24 °C",  "Lactic, yoghurt, tangy"),
+        new("Stiff levain",     "50–65%","Wild",       "15–20%", "10–16 h / 22 °C", "Acetic, sharp, complex"),
+    ];
+
+    private record WhenToUse(string Icon, string Scenario, string Choice);
+    private readonly WhenToUse[] _whenToUse =
+    [
+        new("🥖", "Baguettes / ciabatta",            "Poolish — enhances open crumb and creamy flavour without tang"),
+        new("🍕", "Pizza / focaccia",                "Poolish or biga — both work; biga for chewier crust"),
+        new("🫓", "Italian breads (Pugliese, Pane)",  "Biga — traditional and produces characteristic wheaty depth"),
+        new("🍞", "Everyday sourdough",               "Liquid levain — most predictable, easiest to manage"),
+        new("🧀", "High-sour country loaves",         "Stiff levain — maximises acetic acid, pronounced tang"),
+        new("🥐", "Enriched doughs / brioche",        "Pâte fermentée — adds flavour without sourdough acidity"),
+        new("🏃", "Same-day bake with depth",         "Poolish (8 h) or quick levain build from active starter"),
+        new("🌙", "Overnight / next-day bake",        "Biga or pâte fermentée — tolerates long cold rest better"),
+    ];
+
+    private record PrefermentType(
+        string Icon, string Name, string Origin, string Hydration, string FlourPct, string Time,
+        string Description, string[] Steps, string[] ReadinessSigns, string[] BestFor, string[] Tips);
+
+    private readonly PrefermentType[] _commercialPreferments =
+    [
+        new(
+            "💧", "Poolish", "French / Polish origin",
+            "100%", "20–40% of total flour", "12–16 h at 22 °C  |  or 1 h at 22 °C + 12 h at 4 °C",
+            "A liquid (100% hydration) preferment made with a tiny amount of commercial yeast. " +
+            "The high hydration accelerates yeast and enzyme activity, producing a creamy, sweet flavour " +
+            "with a slightly translucent, almost batter-like consistency when ready.",
+            [
+                "Weigh flour and equal-weight water (e.g. 200 g flour + 200 g water = 400 g poolish).",
+                "Dissolve a pinch of instant yeast (0.1–0.2% of poolish flour weight) in the water.",
+                "Combine with the flour and stir until no dry flour remains — no kneading needed.",
+                "Cover with plastic wrap or a lid; leave at 22 °C for 12–16 h, or 1 h at room temp then refrigerate.",
+                "Use when fully ripe (see readiness signs).",
+            ],
+            [
+                "Domed surface — slightly domed or just-starting-to-flatten at the centre",
+                "Surface covered in fine bubbles; some small craters",
+                "Interior is webbed with gas when you scrape the side of the container",
+                "Smells sweet and lightly yeasty — not sharp or alcoholic",
+                "Float test: a spoonful dropped in water floats (similar to sourdough starter)",
+            ],
+            ["Baguettes", "Ciabatta", "Focaccia", "Pizza", "Soft rolls"],
+            [
+                "Too much yeast gives a harsh, boozy smell — halve the yeast and extend the time rather than using more.",
+                "An over-ripe poolish (fully collapsed, very sour) can be used at 20–30% if the main dough is adjusted, but flavour will be more acidic.",
+            ]
+        ),
+        new(
+            "🧱", "Biga", "Italian origin",
+            "50–60%", "30–50% of total flour", "12–18 h at 18 °C  |  longer in a cooler room",
+            "A stiff (50–60% hydration) Italian preferment. Lower hydration slows yeast, extending fermentation " +
+            "and favouring the production of complex flavour compounds. Produces a dough that is initially " +
+            "crumbly and difficult to handle but transforms into an extensible, supple mass once incorporated.",
+            [
+                "Weigh flour; calculate water at 50–60% of flour weight.",
+                "Dissolve 0.3–0.5% instant yeast (of biga flour) in water.",
+                "Mix flour and water until just combined — a rough, shaggy mass. Do not smooth.",
+                "Cover tightly (the stiff dough dries out quickly) and leave at 16–18 °C for 12–18 h.",
+                "Biga is ready to use; or refrigerate up to 24 h for more flavour.",
+            ],
+            [
+                "Volume has doubled or slightly more",
+                "Surface is domed, possibly showing cracks or small bubbles",
+                "Interior is honeycombed with irregular gas pockets when torn open",
+                "Smells sweet, wheaty, and slightly nutty — not sharp",
+                "Dough should feel extensible and slightly tacky, not dry",
+            ],
+            ["Ciabatta", "Pugliese", "Pane di Como", "Pizza Napoletana", "Focaccia genovese"],
+            [
+                "Tearing the biga into small pieces before adding to the main dough helps it incorporate without leaving lumps.",
+                "A biga fermented at 18 °C or lower produces more flavour than one rushed at 22 °C.",
+                "Increase water in the main dough slightly (1–2%) to compensate for moisture absorbed by the stiff biga.",
+            ]
+        ),
+        new(
+            "🍞", "Pâte Fermentée", "French origin (old dough)",
+            "65–70%", "20–40% of total flour", "12–16 h at 22 °C  |  up to 3 days at 4 °C",
+            "Old dough — a portion of yesterday's bread dough reserved before baking and added to today's mix. " +
+            "Unlike poolish or biga, pâte fermentée contains salt, which slows fermentation and extends the " +
+            "window it can be held. It adds flavour complexity without sourdough acidity, making it excellent " +
+            "for enriched breads where tang is unwelcome.",
+            [
+                "Reserve 20–40% of a finished bread dough before shaping.",
+                "Wrap tightly in plastic and refrigerate immediately.",
+                "Use within 1–3 days — longer produces a more acidic, complex flavour.",
+                "Bring to room temperature (30–60 min) before incorporating to avoid cold-shocking the main dough.",
+                "Tear into pieces and mix into the main dough as the first step.",
+            ],
+            [
+                "Dough has relaxed and is soft and extensible when pulled",
+                "Smells yeasty with a mild background sourness",
+                "Should not smell strongly acidic or alcoholic",
+                "Interior shows some gas bubbles when torn open",
+            ],
+            ["Baguettes de tradition", "Brioche (for depth without tang)", "Rolls", "Pan loaves"],
+            [
+                "Salt in pâte fermentée inhibits yeast — it behaves more like a flavour addition than a leavener.",
+                "If you do not have yesterday's dough, make a fresh batch with 65% hydration, 2% salt, 0.5% yeast, rest 1 h then refrigerate.",
+            ]
+        ),
+    ];
+
+    private readonly PrefermentType[] _naturalPreferments =
+    [
+        new(
+            "💦", "Liquid Levain", "Sourdough tradition",
+            "100%", "15–25% of total flour", "4–10 h at 24 °C  |  varies with starter activity and temp",
+            "A 100% hydration build from an active sourdough starter. High hydration speeds fermentation and " +
+            "favours lactic acid bacteria, producing a creamy, yoghurt-like tang. The most commonly used natural " +
+            "preferment — it is predictable, easy to incorporate, and suits a wide range of doughs.",
+            [
+                "Weigh active starter (usually 5–20% of total levain weight).",
+                "Add equal weights of flour and water (e.g. 20 g starter + 100 g flour + 100 g water).",
+                "Mix thoroughly until smooth; cover and leave at 24–26 °C.",
+                "Peak occurs at 4–8 h for an active starter in warm conditions; mark the container to track rise.",
+                "Use at or just past peak (slight dome or just starting to recede).",
+            ],
+            [
+                "Volume has risen 75–100% (roughly doubled) from the build",
+                "Surface is domed with a network of bubbles",
+                "Float test: a spoonful drops in water and floats",
+                "Smells sweet, yoghurt-like, and mildly sour",
+                "Interior is webbed and airy when spooned out",
+            ],
+            ["Country sourdough", "Tartine-style loaves", "Whole grain breads", "Rye"],
+            [
+                "Using the levain at peak (max rise) gives maximum leavening power. Just past peak gives more flavour with slightly less lift.",
+                "Refrigerating the levain after it peaks can extend the window by 8–12 h if your schedule slips.",
+                "Adjusting the flour blend in the build changes flavour — whole rye or wheat makes a more active, complex levain.",
+            ]
+        ),
+        new(
+            "🧱", "Stiff Levain", "San Francisco sourdough tradition",
+            "50–65%", "15–20% of total flour", "10–16 h at 22 °C  |  longer at lower temp",
+            "A low-hydration build from sourdough starter. The stiffer environment slows lactic bacteria " +
+            "and favours acetic acid production — the compound responsible for the sharp, vinegary tang in " +
+            "San Francisco-style sourdough. More complex to handle than liquid levain but produces distinctive " +
+            "and pronounced flavour. Often used in conjunction with a cold final proof.",
+            [
+                "Build at 50% hydration: e.g. 15 g starter + 85 g flour + 50 g water.",
+                "Mix into a stiff, smooth dough — knead briefly to ensure no dry flour remains.",
+                "Form into a ball, place in a jar or small bowl, and cover tightly.",
+                "Leave at 21–22 °C for 10–16 h; expect slower, less dramatic rise than liquid levain.",
+                "Use when just domed — do not wait for it to collapse.",
+            ],
+            [
+                "Volume has risen 50–75% (not as dramatic as liquid levain)",
+                "Surface domed; slight cracks may appear",
+                "Smells noticeably sharper and more sour than liquid levain",
+                "Interior shows irregular holes when cut open",
+            ],
+            ["High-sour country loaves", "Whole-grain sourdough", "Long-retard loaves"],
+            [
+                "Stiff levain is less active than liquid levain — build quantities and timing must account for its slower lift.",
+                "Refrigerating a stiff levain after 8 h at room temp extends flavour development without collapse.",
+                "Use with a cold, long final proof (retard) for the most complex flavour — the acetic acid profile suits cold conditions.",
+            ]
+        ),
+    ];
+}
