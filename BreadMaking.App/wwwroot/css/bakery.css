@@ -4256,3 +4256,64 @@ body {
     color: var(--text);
 }
 
+/* ===== M16 — PWA: offline banner + install nudge ===== */
+
+.offline-banner {
+    background: #fff7e0;
+    border: 1.5px solid #f59e0b;
+    border-left: 4px solid #f59e0b;
+    border-radius: var(--radius-sm);
+    padding: 10px 16px;
+    font-size: .875rem;
+    color: #7a5200;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+#install-nudge {
+    display: none;
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    align-items: center;
+    gap: 10px;
+    background: var(--panel);
+    border: 1.5px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 10px 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,.18);
+    z-index: 9000;
+    font-size: .875rem;
+    color: var(--text);
+    white-space: nowrap;
+}
+
+#install-btn {
+    padding: 6px 14px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: var(--accent);
+    color: #fff;
+    font-size: .85rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: var(--font-body);
+    transition: background .15s;
+}
+
+#install-btn:hover { background: var(--accent-dark); }
+
+#install-dismiss {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 2px 4px;
+    line-height: 1;
+    transition: color .15s;
+}
+
+#install-dismiss:hover { color: var(--text); }
+

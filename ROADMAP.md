@@ -2,7 +2,7 @@
 
 ## Current state (v8, June 2026)
 
-Milestones M0–M15 and M17–M23 are complete (M16 deferred). The app is a hosted Blazor WASM solution with a full ASP.NET Core backend, EF Core + SQLite persistence, live bake execution, per-step notes, measurements, visualisations, history with star ratings and tags, SignalR notifications, audible alerts, outcome capture with photo upload, formula fields on every bake, a starter journal, a user recipe library with save-from-advisor flow, a six-tab baker's calculators page, a food safety reference page with StorageAdvisor chip, an equipment & kit guide with preheat calculator, steam-method ranking, tiered buying guide, and scoring reference, full steamed-bread support (Mantou/Baozi), and enriched dough / Shokupan support with butter/egg/sugar/milk formula fields, Pullman-tin flag, Tangzhong live-preview panel wired to the roux calculator, 11-step seeded timeline, enriched troubleshooting, and storage advice. M16 (PWA/offline) remains planned.
+All milestones M0–M23 are complete. The app is a hosted Blazor WASM solution with a full ASP.NET Core backend, EF Core + SQLite persistence, live bake execution, per-step notes, measurements, visualisations, history with star ratings and tags, SignalR notifications, audible alerts, outcome capture with photo upload, formula fields on every bake, a starter journal, a user recipe library with save-from-advisor flow, a six-tab baker's calculators page, a food safety reference page with StorageAdvisor chip, an equipment & kit guide with preheat calculator, steam-method ranking, tiered buying guide, and scoring reference, full steamed-bread support (Mantou/Baozi), enriched dough / Shokupan support with butter/egg/sugar/milk formula fields, Pullman-tin flag, Tangzhong live-preview panel wired to the roux calculator, 11-step seeded timeline, enriched troubleshooting, and storage advice, and PWA/offline support with service worker caching of active-bake API responses, IndexedDB step-action queue with auto-replay on reconnect, web-app manifest for Add-to-Home-Screen, and dismissible install nudge.
 
 ## Vision
 
@@ -38,7 +38,7 @@ Before any milestone work begins, the solution is converted from a standalone WA
 | M13 | Starter journal | Starter + StarterFeedLog entities; /starter page; link bake to feed log entry | M15 | ✅ Complete |
 | M14 | Recipe library | User-created recipes with baker's %-formula; save-from-advisor flow; IsUserDefined flag | — | ✅ Complete |
 | M15 | Analytics & trends | Scatter correlations, personal bests, season trend, bake-to-bake diff view | — | ✅ Done |
-| M16 | PWA & offline | Service worker, offline step progression via IndexedDB queue, app manifest | — | 📋 Planned |
+| M16 | PWA & offline | Service worker, offline step progression via IndexedDB queue, app manifest | — | ✅ Done |
 | M17 | Grain encyclopedia | FlavorNotes / NutritionHighlights / UsageNotes / HistoricalOrigin on GrainProfile; 17 grain seeds; profile cards on comparison page | M15 | ✅ Done |
 | M18 | Crumb reading & troubleshooting | CrumbNotes on BakeOutcome; OutcomeSheet textarea; proofing-result enum; history card excerpt | M9, M15 | ✅ Done |
 | M19 | Baker's calculators | `/calculators` page: baker's-% scaling, batch scaling with yield/loss, DDT water-temperature, levain split & true hydration, cost-per-loaf, tangzhong/yudane roux fold — all from baker's guide §48 + §54 | M14 | ✅ Done |

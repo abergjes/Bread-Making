@@ -23,6 +23,13 @@ else
 {
     <div class="live-bake-page">
 
+        @if (_isOffline)
+        {
+            <div class="offline-banner">
+                ⚡ Working offline — timer still running. Changes sync when reconnected.
+            </div>
+        }
+
         <div class="live-bake-header">
             <button class="back-btn" @onclick='() => Nav.NavigateTo("/")'>← Home</button>
             <button class="back-btn" style="margin-left:auto" @onclick='() => Nav.NavigateTo("/history")'>History →</button>
@@ -277,6 +284,8 @@ else
     private readonly HashSet<int> _alreadyAlertedPlanned = [];
     private readonly HashSet<int> _alreadyAlertedMax     = [];
     private bool _showOutcomeSheet;
+    private bool _isOffline;
+    private DotNetObjectReference<LiveBake>? _dotnetRef;
 
     private string? _notes;
     private string? _saveStatus;
@@ -329,12 +338,17 @@ else
         {
             // Notifications are optional — degrade silently if hub is unavailable.
         }
+
+        _dotnetRef = DotNetObjectReference.Create(this);
+        _isOffline = !(await JS.InvokeAsync<bool>("breadOfflineUtils.isOnline"));
+        await JS.InvokeVoidAsync("breadOfflineUtils.registerNetworkHandlers", _dotnetRef);
     }
 
     public async ValueTask DisposeAsync()
     {
         _ticker?.Dispose();
         _notesDebounceTicker?.Dispose();
+        _dotnetRef?.Dispose();
         if (_hub is not null)
             await _hub.DisposeAsync();
     }
@@ -405,18 +419,21 @@ else
 
     private async Task HandleStart(int id)
     {
+        if (_isOffline) { await JS.InvokeVoidAsync("breadOffline.enqueue", $"/api/steplogs/{id}/start", "POST", null); return; }
         await Http.PostAsync($"/api/steplogs/{id}/start", null);
         await RefreshBake();
     }
 
     private async Task HandlePause(int id)
     {
+        if (_isOffline) { await JS.InvokeVoidAsync("breadOffline.enqueue", $"/api/steplogs/{id}/pause", "POST", null); return; }
         await Http.PostAsync($"/api/steplogs/{id}/pause", null);
         await RefreshBake();
     }
 
     private async Task HandleComplete(int id)
     {
+        if (_isOffline) { await JS.InvokeVoidAsync("breadOffline.enqueue", $"/api/steplogs/{id}/complete", "POST", null); return; }
         await Http.PostAsync($"/api/steplogs/{id}/complete", null);
         await RefreshBake();
     }
@@ -444,5 +461,20 @@ else
     {
         _showOutcomeSheet = false;
         await RefreshBake();
+    }
+
+    [JSInvokable]
+    public async Task OnBackOnline()
+    {
+        _isOffline = false;
+        await RefreshBake();
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public void OnGoOffline()
+    {
+        _isOffline = true;
+        StateHasChanged();
     }
 }

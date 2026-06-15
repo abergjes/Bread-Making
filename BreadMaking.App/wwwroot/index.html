@@ -12,6 +12,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="css/bakery.css" />
     <link rel="icon" type="image/png" href="favicon.png" />
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#7a4f2e" />
     <link href="BreadMaking.App.styles.css" rel="stylesheet" />
     <script type="importmap"></script>
 </head>
@@ -29,8 +31,43 @@
         <a href="." class="reload">Reload</a>
         <span class="dismiss">🗙</span>
     </div>
+    <div id="install-nudge">
+        <span>📱 Add to your home screen for offline use.</span>
+        <button id="install-btn">Install</button>
+        <button id="install-dismiss">×</button>
+    </div>
+
     <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
     <script src="js/audio.js"></script>
+    <script src="js/offlineQueue.js"></script>
+    <script>
+        (function () {
+            var _deferred = null;
+            window.addEventListener('beforeinstallprompt', function (e) {
+                e.preventDefault();
+                _deferred = e;
+                if (!localStorage.getItem('pwa-nudge-dismissed')) {
+                    document.getElementById('install-nudge').style.display = 'flex';
+                }
+            });
+            document.getElementById('install-btn').addEventListener('click', function () {
+                if (!_deferred) return;
+                _deferred.prompt();
+                _deferred.userChoice.then(function () {
+                    document.getElementById('install-nudge').style.display = 'none';
+                    localStorage.setItem('pwa-nudge-dismissed', '1');
+                    _deferred = null;
+                });
+            });
+            document.getElementById('install-dismiss').addEventListener('click', function () {
+                document.getElementById('install-nudge').style.display = 'none';
+                localStorage.setItem('pwa-nudge-dismissed', '1');
+            });
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/service-worker.js');
+            }
+        })();
+    </script>
 </body>
 
 </html>

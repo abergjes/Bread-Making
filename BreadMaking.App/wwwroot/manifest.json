@@ -1,0 +1,12 @@
+{
+  "name": "Bread-Making",
+  "short_name": "Bread",
+  "description": "Autolyse & fermentolyse advisor with live bake timer",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f9f3ea",
+  "theme_color": "#7a4f2e",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
