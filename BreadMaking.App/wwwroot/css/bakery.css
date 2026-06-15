@@ -6301,3 +6301,294 @@ body {
     color: var(--accent);
     font-style: italic;
 }
+
+/* ── M36: Formula Book ───────────────────────────────────── */
+
+.formulas-page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+}
+
+.formulas-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 22px;
+}
+
+.formulas-title-group { flex: 1; }
+.formulas-title    { font-size: 1.5rem; font-weight: 700; margin: 0 0 4px; color: var(--text); }
+.formulas-subtitle  { font-size: .85rem; color: var(--text-muted); margin: 0; }
+
+.formulas-new-btn { flex-shrink: 0; }
+
+.formulas-loading { color: var(--text-muted); font-size: .88rem; padding: 20px 0; }
+
+.formulas-empty {
+    text-align: center;
+    padding: 48px 20px;
+    color: var(--text-muted);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.formulas-empty p { margin: 0; }
+.formulas-empty-hint { font-size: .83rem; max-width: 360px; line-height: 1.55; }
+
+/* ── Editor ──────────────────────────────────────────────── */
+.formula-editor {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.formula-editor-title { font-size: 1.05rem; font-weight: 700; color: var(--text); margin: 0; }
+
+.formula-editor-fields { display: flex; flex-direction: column; gap: 10px; }
+
+.formula-field { display: flex; flex-direction: column; gap: 4px; }
+
+.formula-label {
+    font-size: .8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.formula-required { color: #ef4444; }
+.formula-hint { font-size: .74rem; color: var(--text-muted); font-weight: 400; text-transform: none; letter-spacing: 0; }
+
+.formula-input {
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg);
+    color: var(--text);
+    font-size: .85rem;
+}
+
+.formula-input:focus { outline: 2px solid var(--accent); border-color: var(--accent); }
+
+.formula-textarea {
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--bg);
+    color: var(--text);
+    font-size: .85rem;
+    resize: vertical;
+    font-family: inherit;
+}
+
+.formula-textarea:focus { outline: 2px solid var(--accent); border-color: var(--accent); }
+
+/* Ingredient table */
+.formula-ingredients-section { display: flex; flex-direction: column; gap: 8px; }
+
+.formula-ingredients-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.formula-ing-table { display: flex; flex-direction: column; gap: 4px; }
+
+.formula-ing-header-row {
+    display: grid;
+    grid-template-columns: 1fr 100px 28px;
+    gap: 8px;
+    padding: 4px 6px;
+    font-size: .74rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.formula-ing-row {
+    display: grid;
+    grid-template-columns: 1fr 100px 28px;
+    gap: 8px;
+    align-items: center;
+}
+
+.formula-ing-name { width: 100%; }
+.formula-ing-pct  { width: 70px; text-align: right; }
+
+.formula-ing-pct-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.formula-unit { font-size: .78rem; color: var(--text-muted); flex-shrink: 0; }
+
+.formula-ing-remove {
+    width: 24px;
+    height: 24px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: .72rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.formula-ing-remove:hover { background: color-mix(in srgb, #ef4444 10%, var(--panel)); border-color: #ef4444; color: #ef4444; }
+
+.formula-ing-add {
+    font-size: .8rem;
+    color: var(--accent);
+    background: none;
+    border: 1px dashed var(--accent);
+    border-radius: var(--radius);
+    padding: 6px 12px;
+    cursor: pointer;
+    width: fit-content;
+    margin-top: 4px;
+}
+
+.formula-ing-add:hover { background: color-mix(in srgb, var(--accent) 8%, var(--panel)); }
+
+.formula-total-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 8px;
+    background: var(--hover);
+    border-radius: var(--radius);
+    font-size: .82rem;
+}
+
+.formula-total-pct { font-weight: 700; color: var(--accent); }
+
+.formula-error { color: #ef4444; font-size: .82rem; margin: 0; }
+
+.formula-editor-actions {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+/* ── Formula cards ───────────────────────────────────────── */
+.formula-list { display: flex; flex-direction: column; gap: 12px; }
+
+.formula-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.formula-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.formula-card-name { font-size: 1rem; font-weight: 700; color: var(--text); }
+
+.formula-card-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 4px; }
+
+.formula-tag {
+    font-size: .7rem;
+    padding: 1px 8px;
+    background: color-mix(in srgb, var(--accent) 12%, var(--panel));
+    color: var(--accent);
+    border-radius: 10px;
+    font-weight: 500;
+}
+
+.formula-card-date { font-size: .74rem; color: var(--text-muted); margin-top: 2px; }
+
+.formula-card-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+.formula-card-notes {
+    margin: 0;
+    font-size: .82rem;
+    color: var(--text-muted);
+    font-style: italic;
+    line-height: 1.5;
+}
+
+/* Ingredient rows in card */
+.formula-card-ingredients { display: flex; flex-direction: column; gap: 2px; }
+
+.formula-card-ing-row {
+    display: grid;
+    grid-template-columns: 1fr 60px 70px;
+    gap: 8px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    font-size: .83rem;
+}
+
+.formula-card-ing-row:hover { background: var(--hover); }
+
+.formula-ing-flour { font-weight: 600; }
+
+.formula-card-ing-name { color: var(--text); }
+.formula-card-ing-pct  { color: var(--text-muted); text-align: right; font-variant-numeric: tabular-nums; }
+.formula-card-ing-grams {
+    color: var(--accent);
+    font-weight: 600;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.formula-card-ing-total {
+    border-top: 1px solid var(--border);
+    margin-top: 4px;
+    padding-top: 6px;
+    font-weight: 700;
+    color: var(--text-muted);
+}
+
+/* Scale row */
+.formula-scale-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: color-mix(in srgb, var(--accent) 6%, var(--panel));
+    border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--border));
+    border-radius: var(--radius);
+    padding: 8px 12px;
+}
+
+.formula-scale-row .formula-label { white-space: nowrap; }
+
+/* Delete confirm */
+.formula-delete-confirm {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: color-mix(in srgb, #ef4444 8%, var(--panel));
+    border: 1px solid color-mix(in srgb, #ef4444 25%, var(--border));
+    border-radius: var(--radius);
+    font-size: .82rem;
+    color: var(--text);
+    flex-wrap: wrap;
+}
+
+@media (max-width: 600px) {
+    .formulas-header     { flex-wrap: wrap; }
+    .formulas-new-btn    { width: 100%; }
+    .formula-card-header { flex-direction: column; }
+    .formula-card-actions { align-self: flex-start; }
+}

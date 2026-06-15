@@ -1,0 +1,332 @@
+@page "/formulas"
+@inject NavigationManager Nav
+@inject HttpClient Http
+
+<div class="formulas-page">
+
+    <div class="formulas-header">
+        <button class="back-btn" @onclick='() => Nav.NavigateTo("/history")'>← History</button>
+        <div class="formulas-title-group">
+            <h2 class="formulas-title">Formula Book</h2>
+            <p class="formulas-subtitle">Save your bread recipes as baker's percentages — scale to any batch size</p>
+        </div>
+        <button class="btn-primary formulas-new-btn" @onclick="StartNew">+ New formula</button>
+    </div>
+
+    @if (_creating)
+    {
+        <div class="formula-editor">
+            <h3 class="formula-editor-title">@(_editId.HasValue ? "Edit formula" : "New formula")</h3>
+
+            <div class="formula-editor-fields">
+                <div class="formula-field">
+                    <label class="formula-label">Name <span class="formula-required">*</span></label>
+                    <input class="formula-input" type="text" placeholder="e.g. Country sourdough 72%"
+                           @bind="_draftName" @bind:event="oninput" maxlength="80" />
+                </div>
+                <div class="formula-field">
+                    <label class="formula-label">Tags <span class="formula-hint">(comma-separated)</span></label>
+                    <input class="formula-input" type="text" placeholder="e.g. sourdough, whole grain, weekend"
+                           @bind="_draftTags" @bind:event="oninput" maxlength="120" />
+                </div>
+                <div class="formula-field">
+                    <label class="formula-label">Notes</label>
+                    <textarea class="formula-textarea" rows="2" placeholder="Source, version notes, technique reminders…"
+                              @bind="_draftNotes" @bind:event="oninput"></textarea>
+                </div>
+            </div>
+
+            <div class="formula-ingredients-section">
+                <div class="formula-ingredients-header">
+                    <span class="formula-label">Ingredients (baker's %)</span>
+                    <span class="formula-hint">Flour = 100%</span>
+                </div>
+
+                <div class="formula-ing-table">
+                    <div class="formula-ing-header-row">
+                        <span>Ingredient</span><span>Baker's %</span><span></span>
+                    </div>
+                    @for (int i = 0; i < _draftIngredients.Count; i++)
+                    {
+                        var idx = i;
+                        <div class="formula-ing-row">
+                            <input class="formula-input formula-ing-name" type="text"
+                                   placeholder="e.g. Water"
+                                   value="@_draftIngredients[idx].Name"
+                                   @oninput="e => _draftIngredients[idx].Name = e.Value?.ToString() ?? string.Empty" />
+                            <div class="formula-ing-pct-row">
+                                <input class="formula-input formula-ing-pct" type="number" min="0" step="0.1"
+                                       value="@_draftIngredients[idx].Percent"
+                                       @oninput="e => { if (decimal.TryParse(e.Value?.ToString(), out var v)) _draftIngredients[idx].Percent = v; }" />
+                                <span class="formula-unit">%</span>
+                            </div>
+                            <button class="formula-ing-remove" title="Remove" @onclick="() => _draftIngredients.RemoveAt(idx)">✕</button>
+                        </div>
+                    }
+                    <button class="formula-ing-add" @onclick="AddIngredient">+ Add ingredient</button>
+                </div>
+
+                @if (_draftIngredients.Count > 0)
+                {
+                    <div class="formula-total-row">
+                        <span>Total formula</span>
+                        <span class="formula-total-pct">@_draftIngredients.Sum(i => i.Percent).ToString("F1")%</span>
+                    </div>
+                }
+            </div>
+
+            @if (!string.IsNullOrEmpty(_saveError))
+            {
+                <p class="formula-error">@_saveError</p>
+            }
+
+            <div class="formula-editor-actions">
+                <button class="btn-secondary" @onclick="CancelEdit">Cancel</button>
+                <button class="btn-primary" @onclick="SaveFormula" disabled="@_saving">
+                    @(_saving ? "Saving…" : "Save formula")
+                </button>
+            </div>
+        </div>
+    }
+
+    @if (_loading)
+    {
+        <p class="formulas-loading">Loading formulas…</p>
+    }
+    else if (_formulas.Count == 0 && !_creating)
+    {
+        <div class="formulas-empty">
+            <p>No formulas saved yet.</p>
+            <p class="formulas-empty-hint">Save your favourite recipes here as baker's percentages. You can scale them to any dough weight instantly.</p>
+            <button class="btn-primary" @onclick="StartNew">Save your first formula</button>
+        </div>
+    }
+    else
+    {
+        <div class="formula-list">
+            @foreach (var f in _formulas)
+            {
+                <div class="formula-card">
+                    <div class="formula-card-header">
+                        <div class="formula-card-meta">
+                            <div class="formula-card-name">@f.Name</div>
+                            @if (!string.IsNullOrEmpty(f.Tags))
+                            {
+                                <div class="formula-card-tags">
+                                    @foreach (var tag in f.Tags.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                                    {
+                                        <span class="formula-tag">@tag</span>
+                                    }
+                                </div>
+                            }
+                            <div class="formula-card-date">Saved @f.CreatedAt.ToLocalTime().ToString("d MMM yyyy")</div>
+                        </div>
+                        <div class="formula-card-actions">
+                            <button class="btn-bake-action btn-view"
+                                    @onclick="() => ToggleScale(f.Id)">
+                                @(_scaleId == f.Id ? "Hide scale" : "Scale")
+                            </button>
+                            <button class="btn-bake-action btn-similar"
+                                    @onclick="() => StartDelete(f.Id)">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(f.Notes))
+                    {
+                        <p class="formula-card-notes">@f.Notes</p>
+                    }
+
+                    <!-- Ingredient table -->
+                    <div class="formula-card-ingredients">
+                        @foreach (var ing in f.Ingredients.OrderBy(i => i.SortOrder))
+                        {
+                            <div class="formula-card-ing-row @(ing.Name.ToLower().Contains("flour") ? "formula-ing-flour" : "")">
+                                <span class="formula-card-ing-name">@ing.Name</span>
+                                <span class="formula-card-ing-pct">@ing.Percent.ToString("F1")%</span>
+                                @if (_scaleId == f.Id)
+                                {
+                                    <span class="formula-card-ing-grams">@ScaleGrams(f, ing.Percent) g</span>
+                                }
+                            </div>
+                        }
+                        <div class="formula-card-ing-row formula-card-ing-total">
+                            <span>Total formula</span>
+                            <span>@f.Ingredients.Sum(i => i.Percent).ToString("F1")%</span>
+                            @if (_scaleId == f.Id)
+                            {
+                                <span>@_scaleTargets.GetValueOrDefault(f.Id, 800m).ToString("F0") g</span>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Scale controls -->
+                    @if (_scaleId == f.Id)
+                    {
+                        <div class="formula-scale-row">
+                            <label class="formula-label">Target dough weight</label>
+                            <div class="formula-ing-pct-row">
+                                <input class="formula-input formula-ing-pct" type="number" min="1"
+                                       value="@_scaleTargets.GetValueOrDefault(f.Id, 800m)"
+                                       @oninput="e => { if (decimal.TryParse(e.Value?.ToString(), out var v)) _scaleTargets[f.Id] = v; }" />
+                                <span class="formula-unit">g</span>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Delete confirmation -->
+                    @if (_deleteId == f.Id)
+                    {
+                        <div class="formula-delete-confirm">
+                            <span>Delete "@f.Name"? This cannot be undone.</span>
+                            <button class="btn-bake-action btn-view" @onclick="CancelDelete">Cancel</button>
+                            <button class="btn-bake-action btn-export" @onclick="() => ConfirmDelete(f.Id)">Delete</button>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+
+</div>
+
+@code {
+    private bool _loading = true;
+    private bool _creating = false;
+    private bool _saving = false;
+    private string? _saveError;
+    private int? _scaleId;
+    private int? _deleteId;
+    private int? _editId;
+
+    private List<FormulaDto> _formulas = [];
+    private readonly Dictionary<int, decimal> _scaleTargets = [];
+
+    // Draft state for editor
+    private string _draftName  = "";
+    private string _draftTags  = "";
+    private string _draftNotes = "";
+    private List<FormulaIngredientDto> _draftIngredients = [];
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadFormulas();
+    }
+
+    private async Task LoadFormulas()
+    {
+        _loading = true;
+        try { _formulas = await Http.GetFromJsonAsync<List<FormulaDto>>("/api/formulas") ?? []; }
+        finally { _loading = false; }
+    }
+
+    private void StartNew()
+    {
+        _editId = null;
+        _draftName  = "";
+        _draftTags  = "";
+        _draftNotes = "";
+        _draftIngredients =
+        [
+            new() { Name = "Flour",  Percent = 100m, SortOrder = 0 },
+            new() { Name = "Water",  Percent = 72m,  SortOrder = 1 },
+            new() { Name = "Levain", Percent = 20m,  SortOrder = 2 },
+            new() { Name = "Salt",   Percent = 2m,   SortOrder = 3 },
+        ];
+        _saveError = null;
+        _creating = true;
+    }
+
+    private void AddIngredient()
+    {
+        _draftIngredients.Add(new FormulaIngredientDto
+        {
+            Name      = "",
+            Percent   = 0m,
+            SortOrder = _draftIngredients.Count,
+        });
+    }
+
+    private void CancelEdit()
+    {
+        _creating = false;
+        _saveError = null;
+    }
+
+    private async Task SaveFormula()
+    {
+        _saveError = null;
+        if (string.IsNullOrWhiteSpace(_draftName))
+        {
+            _saveError = "A name is required.";
+            return;
+        }
+        if (_draftIngredients.Count == 0)
+        {
+            _saveError = "Add at least one ingredient.";
+            return;
+        }
+        if (_draftIngredients.Any(i => string.IsNullOrWhiteSpace(i.Name)))
+        {
+            _saveError = "Every ingredient row needs a name.";
+            return;
+        }
+
+        _saving = true;
+        try
+        {
+            var req = new SaveFormulaRequest
+            {
+                Name  = _draftName.Trim(),
+                Notes = string.IsNullOrWhiteSpace(_draftNotes) ? null : _draftNotes.Trim(),
+                Tags  = string.IsNullOrWhiteSpace(_draftTags)  ? null : _draftTags.Trim(),
+                Ingredients = _draftIngredients
+                    .Select((i, idx) => new FormulaIngredientDto
+                    {
+                        Name      = i.Name.Trim(),
+                        Percent   = i.Percent,
+                        SortOrder = idx,
+                    })
+                    .ToList(),
+            };
+
+            var resp = await Http.PostAsJsonAsync("/api/formulas", req);
+            if (!resp.IsSuccessStatusCode)
+            {
+                _saveError = "Save failed — please try again.";
+                return;
+            }
+
+            _creating = false;
+            await LoadFormulas();
+        }
+        finally { _saving = false; }
+    }
+
+    private void ToggleScale(int id)
+    {
+        _scaleId = _scaleId == id ? null : id;
+        if (_scaleId.HasValue && !_scaleTargets.ContainsKey(id))
+            _scaleTargets[id] = 800m;
+    }
+
+    private void StartDelete(int id) { _deleteId = id; }
+    private void CancelDelete()      { _deleteId = null; }
+
+    private async Task ConfirmDelete(int id)
+    {
+        await Http.DeleteAsync($"/api/formulas/{id}");
+        _deleteId = null;
+        if (_scaleId == id) _scaleId = null;
+        await LoadFormulas();
+    }
+
+    private string ScaleGrams(FormulaDto formula, decimal pct)
+    {
+        var target = _scaleTargets.GetValueOrDefault(formula.Id, 800m);
+        var totalPct = formula.Ingredients.Sum(i => i.Percent);
+        if (totalPct == 0) return "—";
+        return (target * pct / totalPct).ToString("F1");
+    }
+}

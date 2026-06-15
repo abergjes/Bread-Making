@@ -15,6 +15,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
     public DbSet<BakeOutcome>        BakeOutcomes     => Set<BakeOutcome>();
     public DbSet<Starter>            Starters         => Set<Starter>();
     public DbSet<StarterFeedLog>     StarterFeedLogs  => Set<StarterFeedLog>();
+    public DbSet<BreadFormula>       BreadFormulas    => Set<BreadFormula>();
+    public DbSet<FormulaIngredient>  FormulaIngredients => Set<FormulaIngredient>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -46,6 +48,13 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasOne(f => f.Recipe)
             .WithOne(r => r.Formula)
             .HasForeignKey<RecipeFormula>(f => f.RecipeId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // FormulaIngredient → BreadFormula (cascade delete)
+        modelBuilder.Entity<FormulaIngredient>()
+            .HasOne(i => i.Formula)
+            .WithMany(f => f.Ingredients)
+            .HasForeignKey(i => i.FormulaId)
             .OnDelete(DeleteBehavior.Cascade);
 
         // Seed data
