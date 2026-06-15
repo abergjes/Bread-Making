@@ -16,6 +16,19 @@
     <meta name="theme-color" content="#7a4f2e" />
     <link href="BreadMaking.App.styles.css" rel="stylesheet" />
     <script type="importmap"></script>
+    <script>
+        (function () {
+            var t = localStorage.getItem('bread-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', t);
+            window.breadTheme = {
+                get: function () { return localStorage.getItem('bread-theme') || 'light'; },
+                set: function (t) {
+                    localStorage.setItem('bread-theme', t);
+                    document.documentElement.setAttribute('data-theme', t);
+                }
+            };
+        })();
+    </script>
 </head>
 
 <body>

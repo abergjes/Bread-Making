@@ -46,6 +46,7 @@ Before any milestone work begins, the solution is converted from a standalone WA
 | M21 | Equipment & kit guide | `/kit` reference page: tiered buying guide, steam-method comparison, preheat calculator, scoring tips (§50 + §51) | — | ✅ Done |
 | M22 | Steamed breads | Mantou/baozi support: new `BakeMethod.Steamed`, steaming step defaults, low-protein flour guidance, steam-time advisor (§52) | M1 | ✅ Done |
 | M23 | Enriched dough & milk breads | Shokupan/hokkaido support: enriched formula fields (butter %, egg %, sugar %), pullman-tin flag, milk-bread timeline, integrates roux from M19 (§53) | M19 | ✅ Done |
+| M24 | Dark mode | Warm dark palette via CSS custom-property overrides; theme toggle (fixed bottom-left); persisted to localStorage; no FOUC via inline head script | — | ✅ Done |
 
 ---
 
