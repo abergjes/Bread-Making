@@ -1,0 +1,62 @@
+@page "/breads"
+@inject NavigationManager Nav
+@using BreadMaking.App.Content
+
+<div class="breads-page">
+
+    <div class="breads-header">
+        <button class="back-btn" @onclick='() => Nav.NavigateTo("/history")'>← History</button>
+        <div class="breads-title-group">
+            <h2 class="breads-title">World Breads</h2>
+            <p class="breads-subtitle">France · Germany · Italy · Historical cultures</p>
+        </div>
+    </div>
+
+    <!-- Culture tab bar -->
+    <div class="breads-tabs" role="tablist">
+        @foreach (var culture in WorldBreadsCatalogue.Cultures)
+        {
+            <button class="breads-tab @(_activeId == culture.Id ? "breads-tab-active" : "")"
+                    role="tab"
+                    aria-selected="@(_activeId == culture.Id)"
+                    @onclick="() => _activeId = culture.Id">
+                <span class="breads-tab-icon">@culture.Icon</span>
+                <span>@culture.Name</span>
+            </button>
+        }
+    </div>
+
+    @{
+        var active = WorldBreadsCatalogue.Cultures.FirstOrDefault(c => c.Id == _activeId);
+    }
+
+    @if (active is not null)
+    {
+        <div class="breads-culture-panel">
+            <p class="breads-overview">@active.Overview</p>
+
+            <div class="breads-grid">
+                @foreach (var bread in active.Breads)
+                {
+                    <div class="bread-card">
+                        <div class="bread-card-header">
+                            <span class="bread-name">@bread.Name</span>
+                            <span class="bread-family-chip">@bread.Family</span>
+                        </div>
+                        <div class="bread-meta">
+                            <span class="bread-meta-chip bread-meta-flour" title="Flour">🌾 @bread.Flour</span>
+                            <span class="bread-meta-chip bread-meta-hydration" title="Hydration">💧 @bread.Hydration</span>
+                            <span class="bread-meta-chip bread-meta-method" title="Method">⚙️ @bread.Method</span>
+                        </div>
+                        <p class="bread-notes">@bread.Notes</p>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+</div>
+
+@code {
+    private string _activeId = "france";
+}
