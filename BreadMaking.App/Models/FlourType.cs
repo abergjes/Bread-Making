@@ -11,5 +11,6 @@ public enum FlourType
     Emmer,
     Kamut,
     Teff,
-    Sorghum
+    Sorghum,
+    LowProteinWheat
 }

@@ -48,6 +48,14 @@
 
     private StorageAdvice GetAdvice()
     {
+        if (Method == BakeMethod.Steamed)
+            return new("Airtight container or fridge", "1–2 room / 4–5 fridge",
+                "No crust barrier — moisture loss is fast. Steam from frozen 8–10 min to refresh.");
+
+        if (Method == BakeMethod.Enriched)
+            return new("Wrapped · room temp", "4–6",
+                "Fat content slows staling significantly. Wrap tightly in cling film or an airtight bag. Freeze sliced for longer storage.");
+
         bool isSourdough = Method is BakeMethod.Autolyse or BakeMethod.Fermentolyse;
         bool highActivity = StarterActivity is 2 or 3; // AtPeak or PastPeak
 

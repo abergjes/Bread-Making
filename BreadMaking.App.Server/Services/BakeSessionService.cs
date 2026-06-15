@@ -28,6 +28,12 @@ public class BakeSessionService(AppDbContext db) : IBakeSessionService
             SaltPct            = request.SaltPct,
             InoculationPct     = request.InoculationPct,
             StarterFeedLogId   = request.StarterFeedLogId,
+            ButterPct          = request.ButterPct,
+            EggPct             = request.EggPct,
+            SugarPct           = request.SugarPct,
+            MilkPct            = request.MilkPct,
+            MilkPowderPct      = request.MilkPowderPct,
+            IsPullmanTin       = request.IsPullmanTin,
             StepLogs           = recipe.Steps
                                        .OrderBy(s => s.Order)
                                        .Select(step => new BakeStepLog
@@ -105,6 +111,12 @@ public class BakeSessionService(AppDbContext db) : IBakeSessionService
             SaltPct            = bake.SaltPct,
             InoculationPct     = bake.InoculationPct,
             StarterFeedLogId   = bake.StarterFeedLogId,
+            ButterPct          = bake.ButterPct,
+            EggPct             = bake.EggPct,
+            SugarPct           = bake.SugarPct,
+            MilkPct            = bake.MilkPct,
+            MilkPowderPct      = bake.MilkPowderPct,
+            IsPullmanTin       = bake.IsPullmanTin,
         };
     }
 

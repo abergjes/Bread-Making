@@ -77,6 +77,40 @@
                     </div>
                 </div>
 
+                @if (BakeMethod == BakeMethod.Enriched)
+                {
+                    <div class="os-group-label" style="margin-top:12px">ENRICHED DOUGH TROUBLESHOOTING</div>
+                    <div class="os-steam-faults">
+                        @foreach (var (symptom, cause, fix) in _enrichedFaults)
+                        {
+                            <details class="os-steam-fault">
+                                <summary class="os-steam-fault-summary">@symptom</summary>
+                                <dl class="os-steam-fault-detail">
+                                    <dt>Cause</dt><dd>@cause</dd>
+                                    <dt>Fix</dt><dd>@fix</dd>
+                                </dl>
+                            </details>
+                        }
+                    </div>
+                }
+
+                @if (BakeMethod == BakeMethod.Steamed)
+                {
+                    <div class="os-group-label" style="margin-top:12px">STEAMED BREAD TROUBLESHOOTING</div>
+                    <div class="os-steam-faults">
+                        @foreach (var (symptom, cause, fix) in _steamFaults)
+                        {
+                            <details class="os-steam-fault">
+                                <summary class="os-steam-fault-summary">@symptom</summary>
+                                <dl class="os-steam-fault-detail">
+                                    <dt>Cause</dt><dd>@cause</dd>
+                                    <dt>Fix</dt><dd>@fix</dd>
+                                </dl>
+                            </details>
+                        }
+                    </div>
+                }
+
                 <div class="os-group-label" style="margin-top:12px">PHOTO</div>
 
                 <div class="os-photo-row">
@@ -148,6 +182,7 @@
     [Parameter, EditorRequired] public int              BakeId          { get; set; }
     [Parameter]                 public BakeOutcomeDto?  ExistingOutcome { get; set; }
     [Parameter]                 public bool             IsVisible       { get; set; }
+    [Parameter]                 public BakeMethod       BakeMethod      { get; set; }
     [Parameter]                 public EventCallback    OnSaved         { get; set; }
     [Parameter]                 public EventCallback    OnCancelled     { get; set; }
 
@@ -167,6 +202,22 @@
     private string?       _photoPreviewUrl;
     private bool          _saving;
     private string?       _error;
+
+    private static readonly (string Symptom, string Cause, string Fix)[] _enrichedFaults =
+    [
+        ("Dense or tight crumb",        "Gluten under-developed before butter was added, or bulk fermentation too short",          "Mix dough to window-pane stage before adding any butter; extend bulk until noticeably puffed and jiggling"),
+        ("Collapses or shrinks after baking", "Over-proofed — structure set too little to hold the gas",                          "Proof only to 80–90% of tin height; avoid warm final proof above 30 °C"),
+        ("Stales faster than expected",  "Insufficient roux (Tangzhong) or total hydration too low",                              "Increase roux flour share to 8–10%; ensure total dough hydration ≥65% when all enrichment is accounted for"),
+        ("Pale or uneven crust",         "Oven too hot or too cool; Pullman lid left on too long",                                 "Bake at 190 °C; for Pullman, remove lid the last 5 min; brush with egg wash before baking for even colour"),
+    ];
+
+    private static readonly (string Symptom, string Cause, string Fix)[] _steamFaults =
+    [
+        ("Wrinkled skin",    "Over-proofed, or lid opened too early causing temperature shock",         "Proof until just puffed (not doubled again); keep lid shut for first 10 min; rest lid ajar 2–3 min before full removal"),
+        ("Dense / gummy crumb", "Under-proofed, or wrong flour (too much protein)",                    "Proof until visibly puffed and soft to the touch; use cake or pastry flour (9–11% protein), not bread flour"),
+        ("Yellow tinge",    "Too much yeast or over-fermented dough",                                  "Reduce yeast; keep bulk fermentation shorter — just until doubled; use cooler proofing temperature"),
+        ("Rough or spotted skin", "Steam too vigorous, or condensation drops falling from unlined lid", "Line the lid with a clean cloth before steaming; keep simmer steady, not boiling violently"),
+    ];
 
     private string PhotoBtnLabel =>
         _pendingPhoto is not null           ? "Change photo"  :

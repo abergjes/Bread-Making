@@ -125,5 +125,18 @@ public static class GrainCatalogue
             HydrationNote: "Low water-holding — blend with rice flour or starches and add extra moisture.",
             MixingNote: "Always blend (30–50% of GF mix); never use as a stand-alone kneaded dough."
         ),
+        [FlourType.LowProteinWheat] = new GrainProfile(
+            DisplayName: "Low-protein wheat (Mantou / Baozi)",
+            Icon: "🥟",
+            Description: "Cake or pastry flour (9–11% protein). Low gluten gives the soft, pillowy crumb steamed breads need. Not suitable for a crust-forming bake.",
+            IsGlutenFree: false,
+            IsEnriched: false,
+            IsLowGlutenAncient: false,
+            MaxRestMinutes: 0,
+            SoakerMinutes: 0,
+            HydrationNote: "Hydration 55–60% — steamed buns need a stiffer dough than sourdough loaves.",
+            MixingNote: "Mix until smooth; short knead (5–8 min). Over-working makes the crumb dense.",
+            IsSteamed: true
+        ),
     };
 }

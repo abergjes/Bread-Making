@@ -98,11 +98,27 @@ public static class SeedData
             NutritionHighlights = "Gluten-free; good iron and B vitamins; alkaline-forming grain",
             UsageNotes = "10–20% in GF blends for lightness; contributes golden colour to crumb",
             HistoricalOrigin = "Panicum miliaceum; one of the first domesticated grains; Asia and Africa ~10 000 BC" },
+
+        // Steamed bread grain (M22)
+        new() { Id = 18, Name = "Low-protein wheat", Ploidy = "Hexaploid", GlutenStrength = "Weak (cake/pastry)", HydrationAdjustPct = -15, MaxAutolyseMinutes = 0, NeedsBinder = false,
+            FlavorNotes = "Neutral, soft and pillowy; designed to carry fillings and steam-imparted sweetness",
+            NutritionHighlights = "9–11% protein; low gluten gives tender, fine crumb; lower in fibre than whole grain",
+            UsageNotes = "Use cake or pastry flour for Mantou / Baozi; not suitable for crust-forming bakes",
+            HistoricalOrigin = "Low-protein milling fractions; used throughout East Asia for millennia in steamed breads" },
+
+        // Enriched/milk-bread grain (M23)
+        new() { Id = 19, Name = "Enriched", Ploidy = "Hexaploid", GlutenStrength = "Strong", HydrationAdjustPct = 0, MaxAutolyseMinutes = 0, NeedsBinder = false,
+            FlavorNotes = "Rich, buttery, subtly sweet; crumb is cloud-soft with a gentle pull",
+            NutritionHighlights = "Higher in fat and sugar than lean bread; roux pre-gelatinises starch for moisture retention",
+            UsageNotes = "Use high-protein bread flour (12–14%) for structure to hold the enrichment; develop gluten before adding fat",
+            HistoricalOrigin = "Shokupan (食パン) perfected in Japan in the early 20th century; Tangzhong method popularised by Yvonne Chen (2007)" },
     ];
 
     // Recipes: grainProfileId × method.  Rye/WholeGrain fall back to Modern wheat via BakeSessionService.
     public static readonly Recipe[] Recipes =
     [
+        new() { Id = 13, GrainProfileId = 18, Name = "Low-protein wheat — Steamed", Method = BakeMethod.Steamed,   TargetHydrationPct = 57, TargetDoughTempC = 26, FrictionFactorC = 0 },
+        new() { Id = 14, GrainProfileId = 19, Name = "Enriched — Shokupan (Tangzhong)", Method = BakeMethod.Enriched, TargetHydrationPct = 65, TargetDoughTempC = 26, FrictionFactorC = 4 },
         new() { Id =  1, GrainProfileId = 1, Name = "Modern wheat — Autolyse",      Method = BakeMethod.Autolyse,     TargetHydrationPct = 72, TargetDoughTempC = 25, FrictionFactorC = 4 },
         new() { Id =  2, GrainProfileId = 1, Name = "Modern wheat — Fermentolyse",  Method = BakeMethod.Fermentolyse, TargetHydrationPct = 72, TargetDoughTempC = 25, FrictionFactorC = 4 },
         new() { Id =  3, GrainProfileId = 4, Name = "Spelt — Autolyse",             Method = BakeMethod.Autolyse,     TargetHydrationPct = 68, TargetDoughTempC = 24, FrictionFactorC = 4 },
@@ -157,6 +173,12 @@ public static class SeedData
         // Gluten-free batter process
         AddSoakerSteps(steps, recipeId: 11, soakerDefault: 40, soakerMin: 30, soakerMax: 60);
         AddSoakerSteps(steps, recipeId: 12, soakerDefault: 45, soakerMin: 30, soakerMax: 60);
+
+        // Steamed bread (Mantou / Baozi)
+        AddSteamedSteps(steps, recipeId: 13);
+
+        // Enriched milk bread (Shokupan / Tangzhong)
+        AddEnrichedSteps(steps, recipeId: 14);
 
         return steps.ToArray();
     }
@@ -284,6 +306,79 @@ public static class SeedData
             S(++id, recipeId, 7, "Cool",  "Cool on rack",
                 90, 60, 120, 15, null,
                 "Gluten-free crumb continues setting during cooling — do not cut early."),
+        ]);
+    }
+
+    private static void AddSteamedSteps(List<RecipeStep> steps, int recipeId)
+    {
+        int id = recipeId * 100;
+        steps.AddRange(
+        [
+            S(++id, recipeId, 1, "Mix",   "Mix flour + water",
+                10,  5,  20, 5, null,
+                "Combine cake/pastry flour with warm water (38–40 °C). Add yeast and sugar. Mix until smooth."),
+            S(++id, recipeId, 2, "Bulk",  "Bulk fermentation — rise until doubled",
+                60, 45,  90, 15, 28.0,
+                "Cover and keep warm. Rise until doubled. Keep dough temperature 26–28 °C for even, predictable rise."),
+            S(++id, recipeId, 3, "Shape", "Knock back + portion",
+                10,  5,  15, 5, null,
+                "Punch down to degas. Divide into equal portions (50–80 g for buns). Cover resting pieces."),
+            S(++id, recipeId, 4, "Shape", "Final shape",
+                15, 10,  20, 5, null,
+                "Roll each piece smooth or flatten and add filling. Place on parchment squares in the steamer."),
+            S(++id, recipeId, 5, "Proof", "Final proof",
+                20, 15,  30, 5, 28.0,
+                "Proof in steamer with lid on but heat OFF. Buns should puff slightly and feel soft. Do not over-proof."),
+            S(++id, recipeId, 6, "Bake",  "Steam",
+                15, 12,  18, 2, 100.0,
+                "Bring water to a vigorous simmer, then steam. Line lid with a cloth to prevent drip marks."),
+            S(++id, recipeId, 7, "Bake",  "Rest with lid ajar",
+                3,   2,   5, 1, null,
+                "Tilt lid slightly for 2–3 min before removing entirely — prevents skin collapse from cold air shock."),
+            S(++id, recipeId, 8, "Cool",  "Cool on rack",
+                15, 10,  20, 5, null,
+                "Remove from steamer and cool briefly on a rack. Best eaten warm within the hour."),
+        ]);
+    }
+
+    private static void AddEnrichedSteps(List<RecipeStep> steps, int recipeId)
+    {
+        int id = recipeId * 100;
+        steps.AddRange(
+        [
+            S(++id, recipeId,  1, "Mix",   "Prepare Tangzhong",
+                10,  8,  15, 2, 65.0,
+                "Cook flour (6% of total) + liquid (5× flour weight) to ~65 °C, stirring constantly until a thick, glossy paste. Starch gelatinises — this is the key to the pillowy crumb."),
+            S(++id, recipeId,  2, "Rest",  "Cool Tangzhong",
+                30, 20,  60, 10, null,
+                "Spread on a plate or press cling film to the surface to prevent a skin. Must reach 25 °C before mixing — adding it hot will kill the yeast."),
+            S(++id, recipeId,  3, "Mix",   "Mix dough (pre-butter)",
+                15, 10,  20, 5, null,
+                "Combine flour, milk, egg, sugar, salt, yeast, and cooled Tangzhong. Mix until shaggy, then knead to a smooth, non-sticky dough. No butter yet — gluten must develop first."),
+            S(++id, recipeId,  4, "Mix",   "Add butter (window-pane)",
+                15, 10,  25, 5, null,
+                "Add cold butter in small cubes while the dough is mixing. Dough will look broken — keep going. Stop when it passes the window-pane test: silky, elastic, and no longer sticky."),
+            S(++id, recipeId,  5, "Bulk",  "Bulk fermentation (until doubled)",
+                60, 45,  90, 15, 27.0,
+                "Cover and keep warm at 26–28 °C. Enriched doughs rise faster than sourdough — watch for doubling in size, not just time elapsed."),
+            S(++id, recipeId,  6, "Shape", "Divide + pre-shape",
+                10,  5,  15, 5, null,
+                "Scale portions equally. Gently degas and pre-shape into rounds. Cover and rest 5 min."),
+            S(++id, recipeId,  7, "Shape", "Bench rest",
+                15, 10,  20, 5, null,
+                "Rest covered — gluten tightens after pre-shape. This relaxation makes the final roll-and-fold possible without tearing."),
+            S(++id, recipeId,  8, "Shape", "Final shape + tin",
+                15, 10,  20, 5, null,
+                "Roll each piece flat, fold the sides in, roll up tightly, and place seam-down in the greased tin. For Pullman, fill the tin 70% and add the lid."),
+            S(++id, recipeId,  9, "Proof", "Final proof (80–90% tin height)",
+                60, 45,  90, 15, 29.0,
+                "Proof at 28–30 °C until dough is 80–90% of tin height (open tin: dome 2–3 cm above rim). Over-proofing collapses the crumb after baking."),
+            S(++id, recipeId, 10, "Bake",  "Bake (Pullman lidded / open tin)",
+                30, 25,  35, 5, 190.0,
+                "Pullman: bake with lid closed for 25 min, then remove lid for 5 min for colour. Open tin: bake uncovered 30 min. Internal temp target ~88 °C."),
+            S(++id, recipeId, 11, "Cool",  "Cool on rack",
+                60, 30, 120, 15, null,
+                "Cool in tin 5 min, then unmould onto a rack. Slice only when fully cool — the crumb is still setting as it cools and cuts gummy if sliced hot."),
         ]);
     }
 

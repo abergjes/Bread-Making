@@ -10,5 +10,6 @@ public record GrainProfile(
     int MaxRestMinutes,
     int SoakerMinutes,
     string HydrationNote,
-    string MixingNote
+    string MixingNote,
+    bool IsSteamed = false
 );

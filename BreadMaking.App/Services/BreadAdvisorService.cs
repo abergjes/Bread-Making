@@ -127,11 +127,14 @@ public class BreadAdvisorService
     {
         var band = GetTempBand(inputs.KitchenTemperatureC);
 
+        if (grain.IsSteamed)
+            return BuildSteamed(inputs, grain);
+
         if (grain.IsGlutenFree)
             return BuildSoaker(inputs, grain);
 
         if (grain.IsEnriched)
-            return BuildSkip(inputs, "Enriched doughs (brioche, milk bread) contain fat and eggs that interfere with gluten hydration. Neither method adds benefit here — proceed directly to mixing.");
+            return BuildEnriched(inputs, grain);
 
         if (grain.IsLowGlutenAncient)
         {
@@ -295,6 +298,87 @@ public class BreadAdvisorService
             Timeline = BuildTimeline(inputs, RestMethod.Soaker, grain.SoakerMinutes)
         };
     }
+
+    private BreadRecommendation BuildEnriched(BreadInputs inputs, GrainProfile grain)
+    {
+        return new BreadRecommendation
+        {
+            Method = RestMethod.Enriched,
+            RestDurationMin = 0,
+            RestDurationSweetSpot = 0,
+            RestDurationMax = 0,
+            Headline = "Enriched dough — Shokupan / Milk Bread",
+            Reason = "Fat and eggs coat the gluten strands, so neither autolyse nor fermentolyse improve hydration here. Instead the dough relies on full kneading to develop the gluten before butter is added — a Japanese shokupan approach using Tangzhong (water-roux) for an extra-soft crumb.",
+            RiskLevel = "Low",
+            Tips = EnrichedTips(inputs),
+            Timeline = BuildEnrichedTimeline()
+        };
+    }
+
+    private static List<string> EnrichedTips(BreadInputs inputs) =>
+    [
+        "Prepare the Tangzhong first and let it cool fully before mixing — aim for 25 °C when it enters the dough.",
+        "Develop gluten to near-windowpane stage BEFORE adding butter; fat added too early prevents gluten formation.",
+        "Add cold butter in small pieces at medium mixer speed — the dough will look broken, then come back together.",
+        "Final proof to 80–90% of pullman tin height (or until visibly domed in an open tin).",
+        "Bake at 190 °C — lower than sourdough to prevent overbrowning from the sugar and milk.",
+        "Internal temp target ~88 °C — lower than lean bread because enrichment raises the starch gelatinisation temperature.",
+        "Cool fully in the tin for 5 min, then unmould and cool on a rack — cutting too early compresses the crumb.",
+    ];
+
+    private static List<TimelineStep> BuildEnrichedTimeline() =>
+    [
+        new() { Phase = "Prepare Tangzhong",         DurationLabel = "10 min",    TempLabel = "~65 °C",   Notes = "Cook flour (6% of total) + liquid (5× flour weight) to ~65 °C, stirring constantly. Starch gelatinises — this is the key to the soft crumb." },
+        new() { Phase = "Cool Tangzhong",            DurationLabel = "30 min",    TempLabel = "25 °C",    Notes = "Spread on a plate or cover with film touching the surface. Must reach room temp before mixing into dough." },
+        new() { Phase = "Mix dough (autolyse-style)", DurationLabel = "15 min",   TempLabel = "Ambient",  Notes = "Combine flour, milk, egg, sugar, yeast, and cooled Tangzhong. Mix until shaggy, then knead to smooth dough. No butter yet." },
+        new() { Phase = "Add butter (window-pane)",   DurationLabel = "15 min",   TempLabel = "Ambient",  Notes = "Add cold butter in small cubes. Knead until fully absorbed and dough passes the window-pane test — smooth, silky, elastic." },
+        new() { Phase = "Bulk (until doubled)",       DurationLabel = "60 min",   TempLabel = "26–28 °C", Notes = "Cover and proof in a warm spot. Enriched doughs rise faster than sourdough — watch for doubling, not time." },
+        new() { Phase = "Divide + pre-shape",         DurationLabel = "10 min",   TempLabel = "Ambient",  Notes = "Scale portions equally. Light pre-shape into rounds. Rest 5 min covered." },
+        new() { Phase = "Bench rest",                 DurationLabel = "15 min",   TempLabel = "Ambient",  Notes = "Gluten is tight after pre-shape — rest lets it relax before the final roll-and-fold." },
+        new() { Phase = "Final shape + tin",          DurationLabel = "15 min",   TempLabel = "Ambient",  Notes = "Roll each piece flat, fold the sides in, roll up tightly, and place seam-down in the greased tin. For Pullman, fill tin 70%." },
+        new() { Phase = "Final proof (80–90% height)", DurationLabel = "60 min",  TempLabel = "28–30 °C", Notes = "Proof until dough is 80–90% of tin height (open tin: dome 2–3 cm above rim). Over-proofing collapses the crumb after baking." },
+        new() { Phase = "Bake (Pullman lid on / open tin)", DurationLabel = "30 min", TempLabel = "190 °C / 375 °F", Notes = "Pullman: bake with lid closed for 25 min, then remove lid for 5 min. Open tin: bake uncovered 30 min until deep golden." },
+        new() { Phase = "Cool on rack",               DurationLabel = "60 min",   TempLabel = "Room temp",Notes = "Cool in tin 5 min, then unmould. Slice only when fully cool — the crumb sets as it cools." },
+    ];
+
+    private BreadRecommendation BuildSteamed(BreadInputs inputs, GrainProfile grain)
+    {
+        return new BreadRecommendation
+        {
+            Method = RestMethod.Steamed,
+            RestDurationMin = 0,
+            RestDurationSweetSpot = 0,
+            RestDurationMax = 0,
+            Headline = "Steamed bread — Mantou / Baozi",
+            Reason = "Low-protein wheat flour (9–11% protein) cannot form the strong gluten needed for oven-spring. Instead the dough is steamed at 100 °C — moisture keeps the crust soft and the crumb fine and pillowy. Autolyse and fermentolyse do not apply here.",
+            RiskLevel = "Low",
+            Tips = SteamedTips(inputs),
+            Timeline = BuildSteamedTimeline()
+        };
+    }
+
+    private static List<string> SteamedTips(BreadInputs inputs) =>
+    [
+        "Mix until smooth — no windowpane test needed; low protein means short kneading (5–8 min).",
+        "Proof until visibly puffed (about doubled) before steaming — 45–60 min at 25 °C.",
+        "Vigorous simmer throughout: a lazy simmer produces dense, gummy crumb.",
+        "Line the steamer lid with a cloth to catch condensation drops — lid drips cause wrinkles.",
+        "Do not open the lid during the first 10 min — temperature shock collapses the crumb.",
+        "Rest 2–3 min with the lid slightly ajar before removing; abrupt cooling causes skin wrinkling.",
+        "Buns freeze well — steam from frozen for 8–10 min to refresh."
+    ];
+
+    private static List<TimelineStep> BuildSteamedTimeline() =>
+    [
+        new() { Phase = "Mix flour + water",         DurationLabel = "10 min",   TempLabel = "Ambient",  Notes = "Mix flour, water, yeast/starter, sugar, and oil until a smooth, non-sticky dough forms." },
+        new() { Phase = "Bulk (until doubled)",      DurationLabel = "60 min",   TempLabel = "25–28 °C", Notes = "Cover. Wait for the dough to roughly double. Warm kitchen shortens this to 30–40 min." },
+        new() { Phase = "Knock back + portion",      DurationLabel = "10 min",   TempLabel = "Ambient",  Notes = "Punch down. Divide into even pieces. Each piece should feel smooth and tight." },
+        new() { Phase = "Final shape",               DurationLabel = "15 min",   TempLabel = "Ambient",  Notes = "Roll each piece into a smooth ball (Mantou) or fill and pleat (Baozi). Place on parchment squares." },
+        new() { Phase = "Final proof",               DurationLabel = "20 min",   TempLabel = "25–28 °C", Notes = "Rest until noticeably puffed and soft to the touch — do not over-proof or the crumb collapses." },
+        new() { Phase = "Steam",                     DurationLabel = "15 min",   TempLabel = "100 °C",   Notes = "Vigorous simmer. Cloth-lined lid. Do not open for first 10 min." },
+        new() { Phase = "Rest in steamer (lid off)", DurationLabel = "3 min",    TempLabel = "Ambient",  Notes = "Lid ajar 2–3 min before full removal — prevents skin from wrinkling due to sudden cold air." },
+        new() { Phase = "Cool on rack",              DurationLabel = "15 min",   TempLabel = "Room temp",Notes = "Enjoy warm. Cool fully before storing or freezing." },
+    ];
 
     // ── Pros / Cons ───────────────────────────────────────────────────────────
 

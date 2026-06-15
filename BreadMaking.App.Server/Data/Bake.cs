@@ -23,6 +23,14 @@ public class Bake
     public double? SaltPct         { get; set; }
     public double? InoculationPct  { get; set; }
 
+    // Enriched formula fields (M23)
+    public double? ButterPct     { get; set; }
+    public double? EggPct        { get; set; }
+    public double? SugarPct      { get; set; }
+    public double? MilkPct       { get; set; }
+    public double? MilkPowderPct { get; set; }
+    public bool    IsPullmanTin  { get; set; }
+
     public ICollection<BakeStepLog> StepLogs { get; set; } = new List<BakeStepLog>();
     public BakeOutcome? Outcome { get; set; }
 }

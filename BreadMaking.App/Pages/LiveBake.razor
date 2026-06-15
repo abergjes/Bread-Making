@@ -88,6 +88,26 @@ else
                             <span class="meta-sep">·</span>
                             <span>@_bake.InoculationPct.Value.ToString("F0")% inoculation</span>
                         }
+                        @if (_bake.ButterPct.HasValue)
+                        {
+                            <span class="meta-sep">·</span>
+                            <span>@_bake.ButterPct.Value.ToString("F0")% butter</span>
+                        }
+                        @if (_bake.EggPct.HasValue)
+                        {
+                            <span class="meta-sep">·</span>
+                            <span>@_bake.EggPct.Value.ToString("F0")% egg</span>
+                        }
+                        @if (_bake.SugarPct.HasValue)
+                        {
+                            <span class="meta-sep">·</span>
+                            <span>@_bake.SugarPct.Value.ToString("F0")% sugar</span>
+                        }
+                        @if (_bake.IsPullmanTin)
+                        {
+                            <span class="meta-sep">·</span>
+                            <span class="pullman-badge">Pullman tin</span>
+                        }
                     </p>
                 }
                 <p class="live-bake-duration">
@@ -132,6 +152,7 @@ else
             @foreach (var step in _bake.StepLogs)
             {
                 <StepCard Step="step"
+                          BakeMethod="_bake.Method"
                           MeasurementTypes="_bake.MeasurementTypes"
                           OnStart="HandleStart"
                           OnPause="HandlePause"
@@ -236,6 +257,7 @@ else
         <OutcomeSheet BakeId="Id"
                       ExistingOutcome="_bake.Outcome"
                       IsVisible="_showOutcomeSheet"
+                      BakeMethod="_bake.Method"
                       OnSaved="HandleOutcomeSaved"
                       OnCancelled="() => _showOutcomeSheet = false" />
 

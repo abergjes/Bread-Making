@@ -5,5 +5,7 @@ public enum RestMethod
     Autolyse,
     Fermentolyse,
     Skip,
-    Soaker
+    Soaker,
+    Steamed,
+    Enriched
 }

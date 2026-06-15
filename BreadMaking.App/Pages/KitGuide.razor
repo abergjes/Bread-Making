@@ -1,0 +1,296 @@
+@page "/kit"
+@inject NavigationManager Nav
+@inject IJSRuntime JS
+
+<div class="kit-page">
+
+    <div class="kit-header">
+        <button class="back-btn" @onclick='() => Nav.NavigateTo("/history")'>← History</button>
+        <div class="kit-title-group">
+            <h2 class="kit-title">Equipment &amp; kit guide</h2>
+            <p class="kit-subtitle">Baker's guide §50 · §51</p>
+        </div>
+    </div>
+
+    <!-- ── Section 1: Preheat calculator ─────────────────────────────────── -->
+    <div class="kit-accordion @(_open[0] ? "kit-accordion--open" : "")">
+        <button class="kit-accordion-header" @onclick='() => Toggle(0)'>
+            <span>Oven preheat calculator</span>
+            <span class="kit-accordion-chevron">@(_open[0] ? "▼" : "▶")</span>
+        </button>
+        @if (_open[0])
+        {
+            <div class="kit-accordion-body">
+                <p class="kit-hint">A cold oven surface never browns the base properly. Give the steel or stone time to reach full thermal mass before loading the dough.</p>
+
+                <div class="kit-field">
+                    <label class="kit-label">Oven type</label>
+                    <div class="kit-radio-group">
+                        @foreach (var ot in _ovenTypes)
+                        {
+                            <button class="kit-radio-pill @(_ovenType == ot.Value ? "kit-radio-pill--active" : "")"
+                                    @onclick="() => _ovenType = ot.Value">
+                                @ot.Label
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                <div class="kit-field">
+                    <label class="kit-label">Baking surface</label>
+                    <div class="kit-radio-group">
+                        @foreach (var s in _surfaces)
+                        {
+                            <button class="kit-radio-pill @(_surface == s.Value ? "kit-radio-pill--active" : "")"
+                                    @onclick="() => _surface = s.Value">
+                                @s.Label
+                            </button>
+                        }
+                    </div>
+                </div>
+
+                <div class="kit-preheat-result">
+                    <span class="kit-preheat-minutes">@PreheatMinutes() min</span>
+                    <span class="kit-preheat-label">Preheat for</span>
+                    @if (_surface == "bare")
+                    {
+                        <p class="kit-hint kit-hint--warn">A bare tray has little thermal mass — results are less predictable. Upgrade to steel or stone when possible.</p>
+                    }
+                    else
+                    {
+                        <p class="kit-hint">Heat the @(_surface == "steel" ? "steel" : "stone") to full thermal mass before loading the dough.</p>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- ── Section 2: Steam methods ──────────────────────────────────────── -->
+    <div class="kit-accordion @(_open[1] ? "kit-accordion--open" : "")">
+        <button class="kit-accordion-header" @onclick='() => Toggle(1)'>
+            <span>Steam methods</span>
+            <span class="kit-accordion-chevron">@(_open[1] ? "▼" : "▶")</span>
+        </button>
+        @if (_open[1])
+        {
+            <div class="kit-accordion-body">
+                <p class="kit-hint">Steam keeps the crust extensible for the first 15–20 minutes so the loaf springs fully before the crust sets. Effectiveness varies significantly by method.</p>
+                <div class="kit-steam-list">
+                    @foreach (var m in _steamMethods)
+                    {
+                        <div class="kit-steam-row @(m.Stars == 5 ? "kit-steam-row--top" : "")">
+                            <div class="kit-steam-rating">
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <span class="kit-star @(i <= m.Stars ? "kit-star--filled" : "")">★</span>
+                                }
+                            </div>
+                            <div class="kit-steam-info">
+                                <span class="kit-steam-name">@m.Name</span>
+                                <span class="kit-steam-protocol">@m.Protocol</span>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <div class="kit-steam-note">
+                    <strong>Dutch oven protocol:</strong> preheat Dutch oven with the oven; load dough quickly; bake covered 20 min at 245 °C → uncover for 15–25 min to form the crust.
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- ── Section 3: Tiered buying guide ────────────────────────────────── -->
+    <div class="kit-accordion @(_open[2] ? "kit-accordion--open" : "")">
+        <button class="kit-accordion-header" @onclick='() => Toggle(2)'>
+            <span>Buying guide</span>
+            <span class="kit-accordion-chevron">@(_open[2] ? "▼" : "▶")</span>
+        </button>
+        @if (_open[2])
+        {
+            <div class="kit-accordion-body">
+                <p class="kit-hint">Tick items you already own. Your checklist is saved in this browser.</p>
+                @foreach (var tier in _kitTiers)
+                {
+                    <div class="kit-tier">
+                        <h4 class="kit-tier-label">@tier.Name</h4>
+                        <p class="kit-tier-desc">@tier.Description</p>
+                        <ul class="kit-tier-list">
+                            @foreach (var item in tier.Items)
+                            {
+                                var slug = item.Slug;
+                                var owned = _ownedItems.GetValueOrDefault(slug);
+                                <li class="kit-item @(owned ? "kit-item--owned" : "")"
+                                    @onclick="() => ToggleItem(slug)">
+                                    <span class="kit-item-check">@(owned ? "✓" : "□")</span>
+                                    <div class="kit-item-text">
+                                        <span class="kit-item-name">@item.Name</span>
+                                        @if (!string.IsNullOrEmpty(item.Why))
+                                        {
+                                            <span class="kit-item-why">@item.Why</span>
+                                        }
+                                    </div>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <!-- ── Section 4: Scoring guide ──────────────────────────────────────── -->
+    <div class="kit-accordion @(_open[3] ? "kit-accordion--open" : "")">
+        <button class="kit-accordion-header" @onclick='() => Toggle(3)'>
+            <span>Scoring &amp; shaping tools</span>
+            <span class="kit-accordion-chevron">@(_open[3] ? "▼" : "▶")</span>
+        </button>
+        @if (_open[3])
+        {
+            <div class="kit-accordion-body">
+                <div class="kit-scoring-grid">
+                    <div class="kit-scoring-card">
+                        <div class="kit-scoring-icon">↗</div>
+                        <h4 class="kit-scoring-title">30–45° — Ear cut</h4>
+                        <p class="kit-scoring-desc">Hold the lame at a shallow angle and cut at a shallow 30–45° tilt. The flap peels back during oven spring to create a dramatic "ear". Best for oval batards and rounds.</p>
+                    </div>
+                    <div class="kit-scoring-card">
+                        <div class="kit-scoring-icon">↑</div>
+                        <h4 class="kit-scoring-title">90° — Expansion split</h4>
+                        <p class="kit-scoring-desc">Hold the lame perpendicular to the surface. The loaf splits evenly along the score with no ear. Use for decorative patterns or when you want a flat, open crumb face.</p>
+                    </div>
+                </div>
+
+                <div class="kit-scoring-tips">
+                    <h4 class="kit-scoring-tips-title">Scoring tips</h4>
+                    <ul class="kit-scoring-tip-list">
+                        <li>Score in one decisive stroke — hesitation tears rather than cuts.</li>
+                        <li>Depth: 5–8 mm for lean doughs; 3–4 mm for wet doughs that spread.</li>
+                        <li>Dust the surface lightly with rice flour before scoring to prevent sticking.</li>
+                        <li>A lame blade should be replaced every 4–6 bakes; a dull blade drags and deflates.</li>
+                        <li>For enriched doughs (brioche, shokupan), scissors give a cleaner snip than a lame.</li>
+                    </ul>
+                </div>
+
+                <div class="kit-measuring-rank">
+                    <h4 class="kit-scoring-tips-title">Measuring tool priority (§51.1)</h4>
+                    <ol class="kit-rank-list">
+                        <li><strong>Digital scale (0.1 g)</strong> — more important than any other tool; every serious recipe is in grams</li>
+                        <li><strong>Probe thermometer</strong> — instant-read; checks dough temp, water temp, and internal loaf temp at 96 °C</li>
+                        <li><strong>IR gun / surface thermometer</strong> — read cast-iron and oven stone before loading; aim for 230–250 °C</li>
+                        <li><strong>pH meter</strong> — starter health and dough acidity; useful after 50+ bakes when dialing in flavour precisely</li>
+                    </ol>
+                </div>
+            </div>
+        }
+    </div>
+
+</div>
+
+@code {
+    private bool[] _open = [true, false, false, false];
+
+    // ── Preheat calculator ────────────────────────────────────────────────
+    private record RadioOption(string Label, string Value);
+
+    private readonly RadioOption[] _ovenTypes =
+    [
+        new("Conventional", "conventional"),
+        new("Convection",   "convection"),
+        new("Gas",          "gas"),
+    ];
+
+    private readonly RadioOption[] _surfaces =
+    [
+        new("Baking steel", "steel"),
+        new("Baking stone", "stone"),
+        new("Bare tray",    "bare"),
+    ];
+
+    private string _ovenType = "conventional";
+    private string _surface  = "steel";
+
+    private int PreheatMinutes() => (_ovenType, _surface) switch
+    {
+        ("convection",   "steel") => 45,
+        ("convection",   "stone") => 40,
+        ("conventional", "steel") => 60,
+        ("conventional", "stone") => 55,
+        ("gas",          "steel") => 55,
+        ("gas",          "stone") => 50,
+        _                         => 45,   // bare tray fallback
+    };
+
+    private void Toggle(int i) => _open[i] = !_open[i];
+
+    // ── Steam methods ─────────────────────────────────────────────────────
+    private record SteamMethod(int Stars, string Name, string Protocol);
+
+    private readonly SteamMethod[] _steamMethods =
+    [
+        new(5, "Dutch oven / combo cooker",   "Lid on 20 min → lid off 15–25 min"),
+        new(4, "Cast-iron + lava rocks",      "Rocks in lower tray; pour boiling water at load; remove tray after 15 min"),
+        new(3, "Steam pan (towel or pan)",    "Pan of boiling water on lower rack; remove after 15 min"),
+        new(2, "Ice cubes",                   "Throw cubes onto oven floor at load; uneven and drops oven temp"),
+        new(1, "Spray bottle",               "Mist walls and door; minimal effect and can crack glass"),
+    ];
+
+    // ── Buying guide ──────────────────────────────────────────────────────
+    private record KitItem(string Slug, string Name, string Why);
+    private record KitTier(string Name, string Description, KitItem[] Items);
+
+    private readonly KitTier[] _kitTiers =
+    [
+        new("Starter", "Everything you need to bake a decent sourdough loaf from day one.",
+        [
+            new("scale",      "Digital scale (0.1 g)",   "Bread recipes are in grams; volume measuring is too imprecise"),
+            new("dutch-oven", "Dutch oven or combo cooker", "Creates steam automatically; the single biggest quality upgrade"),
+            new("bench-knife","Bench knife",              "Dividing, pre-shaping, and scraping dough off the counter"),
+            new("banneton",   "Banneton / proofing basket", "Holds shape during cold proof; creates the classic ring pattern"),
+            new("lame",       "Lame or razor blade",     "Clean scores let the loaf spring properly; scissors work for enriched doughs"),
+            new("probe",      "Probe thermometer",       "Check water temp for DDT, dough temp mid-bulk, and internal temp at 96 °C"),
+        ]),
+        new("Serious", "Upgrades that noticeably improve consistency and handling.",
+        [
+            new("steel",         "Baking steel",          "Stores more heat than a stone; browns the base faster and more evenly"),
+            new("stand-mixer",   "Stand mixer (hook)",    "Frees hands during mix; vital for stiff doughs like bagels and Shokupan"),
+            new("oven-thermo",   "Oven thermometer",      "Most ovens run 10–20 °C off; know your actual temperature"),
+            new("couche",        "Couche / linen cloth",  "Supports baguettes and batards during final proof without sticking"),
+            new("proofing-box",  "Proofing box or instant-pot", "Consistent temperature through bulk and proof; eliminates guesswork"),
+        ]),
+        new("Semi-pro", "Investment pieces for bakers who bake multiple times per week.",
+        [
+            new("deck-oven",   "Deck oven / steam-injection oven", "Professional results; stone deck + steam injection built in"),
+            new("spiral-mixer","Spiral mixer",             "Develops gluten faster than stand mixers; less heat from friction"),
+            new("ph-meter",    "pH meter",                "Precision starter and dough acidity; useful for dialling in flavour profiles"),
+            new("retarder",    "Dedicated retarder / dough fridge", "Stable 4 °C retard without fighting a full refrigerator"),
+            new("wire-racks",  "Heavy-gauge wire racks",  "Multiple loaves cooling simultaneously without blocking air circulation"),
+        ]),
+    ];
+
+    private Dictionary<string, bool> _ownedItems = new();
+    private bool _localStorageLoaded = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_localStorageLoaded)
+        {
+            _localStorageLoaded = true;
+            foreach (var tier in _kitTiers)
+            {
+                foreach (var item in tier.Items)
+                {
+                    var val = await JS.InvokeAsync<string?>("localStorage.getItem", $"kit-owned-{item.Slug}");
+                    _ownedItems[item.Slug] = val == "true";
+                }
+            }
+            StateHasChanged();
+        }
+    }
+
+    private async Task ToggleItem(string slug)
+    {
+        _ownedItems[slug] = !_ownedItems.GetValueOrDefault(slug);
+        await JS.InvokeVoidAsync("localStorage.setItem",
+            $"kit-owned-{slug}", _ownedItems[slug].ToString().ToLower());
+    }
+}

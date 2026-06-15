@@ -172,6 +172,7 @@ else
         if (Recommendation is null || Inputs is null) return;
         _starting = true;
 
+        bool isEnriched = Recommendation.Method == RestMethod.Enriched;
         var req = new StartBakeRequest
         {
             GrainName        = ToGrainName(Inputs.DominantFlourType),
@@ -183,6 +184,12 @@ else
             SaltPct          = Inputs.SaltPct,
             InoculationPct   = Inputs.InoculationPct,
             StarterFeedLogId = int.TryParse(_linkedFeedId, out var fid) ? fid : null,
+            ButterPct        = isEnriched ? Inputs.ButterPct     : null,
+            EggPct           = isEnriched ? Inputs.EggPct        : null,
+            SugarPct         = isEnriched ? Inputs.SugarPct      : null,
+            MilkPct          = isEnriched ? Inputs.MilkPct       : null,
+            MilkPowderPct    = isEnriched ? Inputs.MilkPowderPct : null,
+            IsPullmanTin     = isEnriched && Inputs.IsPullmanTin,
         };
 
         var response = await Http.PostAsJsonAsync("/api/bakes", req);
@@ -200,41 +207,49 @@ else
 
     private static string ToGrainName(FlourType flour) => flour switch
     {
-        FlourType.White     => "Modern wheat",
-        FlourType.WholeGrain => "Whole grain",
-        FlourType.Rye       => "Rye",
-        FlourType.Spelt     => "Spelt",
-        FlourType.Einkorn   => "Einkorn",
-        FlourType.Emmer     => "Emmer (farro)",
-        FlourType.Kamut     => "Kamut (khorasan)",
-        FlourType.Teff      => "Teff",
-        FlourType.Sorghum   => "Sorghum",
-        _                   => "Modern wheat",
+        FlourType.White            => "Modern wheat",
+        FlourType.WholeGrain       => "Whole grain",
+        FlourType.Rye              => "Rye",
+        FlourType.Spelt            => "Spelt",
+        FlourType.Einkorn          => "Einkorn",
+        FlourType.Emmer            => "Emmer (farro)",
+        FlourType.Kamut            => "Kamut (khorasan)",
+        FlourType.Teff             => "Teff",
+        FlourType.Sorghum          => "Sorghum",
+        FlourType.LowProteinWheat  => "Low-protein wheat",
+        FlourType.Enriched         => "Enriched",
+        _                          => "Modern wheat",
     };
 
     private static string ToMethodName(RestMethod method) => method switch
     {
         RestMethod.Fermentolyse => "Fermentolyse",
         RestMethod.Soaker       => "Other",
+        RestMethod.Steamed      => "Steamed",
+        RestMethod.Enriched     => "Enriched",
         _                       => "Autolyse",
     };
 
     private string MethodClass => Recommendation?.Method switch
     {
-        RestMethod.Autolyse => "method-autolyse",
+        RestMethod.Autolyse     => "method-autolyse",
         RestMethod.Fermentolyse => "method-fermentolyse",
-        RestMethod.Skip => "method-skip",
-        RestMethod.Soaker => "method-soaker",
-        _ => ""
+        RestMethod.Skip         => "method-skip",
+        RestMethod.Soaker       => "method-soaker",
+        RestMethod.Steamed      => "method-steamed",
+        RestMethod.Enriched     => "method-enriched",
+        _                       => ""
     };
 
     private string MethodIcon => Recommendation?.Method switch
     {
-        RestMethod.Autolyse => "💧",
+        RestMethod.Autolyse     => "💧",
         RestMethod.Fermentolyse => "🌡️",
-        RestMethod.Skip => "⏩",
-        RestMethod.Soaker => "🫙",
-        _ => "🍞"
+        RestMethod.Skip         => "⏩",
+        RestMethod.Soaker       => "🫙",
+        RestMethod.Steamed      => "♨️",
+        RestMethod.Enriched     => "🧈",
+        _                       => "🍞"
     };
 
     private string RiskClass => Recommendation?.RiskLevel?.ToLower().Replace(" ", "-") ?? "";

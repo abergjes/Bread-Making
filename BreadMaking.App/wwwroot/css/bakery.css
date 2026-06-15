@@ -3644,6 +3644,615 @@ body {
     font-weight: 600;
 }
 
+/* ── M23 Enriched / milk breads ────────────────────────────────────────── */
+
+.method-enriched {
+    border-top: 3px solid #f59e0b;
+}
+
+.method-enriched .rec-badge {
+    background: color-mix(in srgb, #f59e0b 12%, var(--panel));
+}
+
+/* Enrichment panel in ExperiencedForm */
+.enrichment-panel {
+    background: color-mix(in srgb, #f59e0b 8%, var(--panel));
+    border: 1px solid color-mix(in srgb, #f59e0b 40%, transparent);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-top: 8px;
+}
+
+.enrichment-panel-title {
+    font-size: .85rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 10px;
+}
+
+.enrichment-fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.enrichment-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.enrichment-label {
+    font-size: .72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--text-muted);
+}
+
+.enrichment-stepper {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.enrichment-value {
+    font-size: .9rem;
+    font-weight: 700;
+    color: var(--text);
+    min-width: 36px;
+    text-align: center;
+}
+
+.enrichment-toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: .82rem;
+    color: var(--text);
+    cursor: pointer;
+    margin-top: 8px;
+}
+
+.enrichment-toggle-row input[type="checkbox"] {
+    accent-color: #f59e0b;
+    width: 16px;
+    height: 16px;
+}
+
+.enrichment-roux-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid color-mix(in srgb, #f59e0b 30%, transparent);
+}
+
+.enrichment-roux-preview {
+    font-size: .8rem;
+    color: var(--text-muted);
+    margin: 0;
+    width: 100%;
+}
+
+/* Pullman tin badge in LiveBake formula line */
+.pullman-badge {
+    display: inline-flex;
+    align-items: center;
+    background: var(--zone-cool, #5b8fa8);
+    color: #fff;
+    font-size: .72rem;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 10px;
+    letter-spacing: .03em;
+}
+
+/* ── M22 Steamed breads ─────────────────────────────────────────────────── */
+
+.method-steamed {
+    border-top: 3px solid #06b6d4;
+}
+
+.method-steamed .rec-badge {
+    background: color-mix(in srgb, #06b6d4 12%, var(--panel));
+}
+
+/* Steam note panel in StepCard during Bake phase */
+.step-steam-note {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    background: color-mix(in srgb, #06b6d4 10%, var(--panel));
+    border: 1px solid color-mix(in srgb, #06b6d4 40%, transparent);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    margin: 10px 0;
+}
+
+.step-steam-note-icon {
+    font-size: 1.4rem;
+    line-height: 1;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.step-steam-note-body strong {
+    display: block;
+    font-size: .85rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 4px;
+}
+
+.step-steam-note-body p {
+    font-size: .8rem;
+    color: var(--text-muted);
+    margin: 0 0 4px;
+    line-height: 1.45;
+}
+
+.step-steam-note-body p:last-child {
+    margin-bottom: 0;
+}
+
+/* OutcomeSheet steamed troubleshooting */
+.os-steam-faults {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.os-steam-fault {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+
+.os-steam-fault-summary {
+    cursor: pointer;
+    padding: 8px 12px;
+    font-size: .82rem;
+    font-weight: 600;
+    color: var(--text);
+    background: var(--panel);
+    list-style: none;
+    user-select: none;
+}
+
+.os-steam-fault-summary::-webkit-details-marker { display: none; }
+
+.os-steam-fault[open] .os-steam-fault-summary {
+    background: color-mix(in srgb, #06b6d4 10%, var(--panel));
+    border-bottom: 1px solid var(--border);
+}
+
+.os-steam-fault-detail {
+    display: grid;
+    grid-template-columns: 60px 1fr;
+    gap: 4px 8px;
+    padding: 10px 12px;
+    margin: 0;
+    font-size: .8rem;
+}
+
+.os-steam-fault-detail dt {
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    font-size: .7rem;
+    letter-spacing: .04em;
+    align-self: start;
+    padding-top: 2px;
+}
+
+.os-steam-fault-detail dd {
+    margin: 0;
+    color: var(--text);
+    line-height: 1.45;
+}
+
 .diff-row-changed .diff-field {
     font-weight: 400;
 }
+
+/* ===== M21: Kit Guide (/kit) ===== */
+
+.kit-page {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 24px 16px 48px;
+}
+
+.kit-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+.kit-title-group { flex: 1; }
+
+.kit-title {
+    font-family: var(--font-heading);
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 2px;
+}
+
+.kit-subtitle {
+    font-size: .85rem;
+    color: var(--text-muted);
+}
+
+/* ── Accordion ─────────────────────────────────────────────────────────── */
+
+.kit-accordion {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    margin-bottom: 10px;
+    overflow: hidden;
+}
+
+.kit-accordion-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+    text-align: left;
+    transition: background .15s;
+}
+
+.kit-accordion-header:hover {
+    background: color-mix(in srgb, var(--accent) 6%, var(--panel));
+}
+
+.kit-accordion--open .kit-accordion-header {
+    border-bottom: 1px solid var(--border);
+}
+
+.kit-accordion-chevron {
+    font-size: .8rem;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    margin-left: 8px;
+}
+
+.kit-accordion-body {
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* ── Shared form elements ──────────────────────────────────────────────── */
+
+.kit-label {
+    display: block;
+    font-size: .8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+}
+
+.kit-field { display: flex; flex-direction: column; }
+
+.kit-hint {
+    font-size: .85rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+.kit-hint--warn {
+    color: var(--warn);
+}
+
+.kit-radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.kit-radio-pill {
+    padding: 7px 16px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    font-size: .88rem;
+    color: var(--text);
+    cursor: pointer;
+    transition: all .15s;
+}
+
+.kit-radio-pill:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.kit-radio-pill--active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+    font-weight: 600;
+}
+
+/* ── Preheat result ────────────────────────────────────────────────────── */
+
+.kit-preheat-result {
+    background: color-mix(in srgb, var(--accent) 8%, var(--panel));
+    border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--border));
+    border-left: 4px solid var(--accent);
+    border-radius: var(--radius-sm);
+    padding: 16px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.kit-preheat-label {
+    font-size: .78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--text-muted);
+}
+
+.kit-preheat-minutes {
+    font-family: var(--font-heading);
+    font-size: 2.2rem;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+    order: -1;
+}
+
+/* ── Steam methods ─────────────────────────────────────────────────────── */
+
+.kit-steam-list {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.kit-steam-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    border: 1px solid transparent;
+}
+
+.kit-steam-row--top {
+    background: color-mix(in srgb, var(--success) 8%, var(--panel));
+    border-color: color-mix(in srgb, var(--success) 30%, var(--border));
+}
+
+.kit-steam-rating {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.kit-star { color: var(--border); font-size: 1rem; }
+.kit-star--filled { color: var(--accent); }
+
+.kit-steam-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.kit-steam-name {
+    font-weight: 700;
+    font-size: .9rem;
+    color: var(--text);
+}
+
+.kit-steam-protocol {
+    font-size: .82rem;
+    color: var(--text-muted);
+}
+
+.kit-steam-note {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-size: .85rem;
+    color: var(--text);
+    line-height: 1.5;
+}
+
+/* ── Buying guide tiers ────────────────────────────────────────────────── */
+
+.kit-tier {
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.kit-tier-label {
+    font-family: var(--font-heading);
+    font-size: .9rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: var(--accent);
+    padding: 10px 16px 4px;
+    background: color-mix(in srgb, var(--accent) 5%, var(--panel));
+    border-bottom: 1px solid var(--border);
+}
+
+.kit-tier-desc {
+    font-size: .82rem;
+    color: var(--text-muted);
+    padding: 6px 16px 10px;
+    background: color-mix(in srgb, var(--accent) 5%, var(--panel));
+    border-bottom: 1px solid var(--border);
+}
+
+.kit-tier-list {
+    list-style: none;
+    padding: 6px 0;
+}
+
+.kit-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background .12s;
+    border-bottom: 1px solid var(--border);
+}
+
+.kit-item:last-child { border-bottom: none; }
+
+.kit-item:hover {
+    background: color-mix(in srgb, var(--accent) 5%, var(--panel));
+}
+
+.kit-item--owned {
+    background: color-mix(in srgb, var(--success) 6%, var(--panel));
+}
+
+.kit-item-check {
+    flex-shrink: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    width: 18px;
+    margin-top: 2px;
+}
+
+.kit-item--owned .kit-item-check {
+    color: var(--success);
+}
+
+.kit-item-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.kit-item-name {
+    font-size: .9rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.kit-item--owned .kit-item-name {
+    color: var(--success);
+}
+
+.kit-item-why {
+    font-size: .8rem;
+    color: var(--text-muted);
+}
+
+/* ── Scoring guide ─────────────────────────────────────────────────────── */
+
+.kit-scoring-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+@media (max-width: 500px) {
+    .kit-scoring-grid { grid-template-columns: 1fr; }
+}
+
+.kit-scoring-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.kit-scoring-icon {
+    font-size: 1.5rem;
+    color: var(--accent);
+    font-weight: 700;
+}
+
+.kit-scoring-title {
+    font-family: var(--font-heading);
+    font-size: .95rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.kit-scoring-desc {
+    font-size: .83rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+.kit-scoring-tips {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+}
+
+.kit-scoring-tips-title {
+    font-family: var(--font-heading);
+    font-size: .9rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 10px;
+}
+
+.kit-scoring-tip-list {
+    list-style: disc;
+    padding-left: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: .84rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+.kit-measuring-rank {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 16px;
+}
+
+.kit-rank-list {
+    list-style: decimal;
+    padding-left: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: .84rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+.kit-rank-list strong {
+    color: var(--text);
+}
+

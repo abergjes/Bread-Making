@@ -28,6 +28,12 @@ internal static class DtoMapper
         TotalFlourGrams = bake.TotalFlourGrams,
         SaltPct         = bake.SaltPct,
         InoculationPct  = bake.InoculationPct,
+        ButterPct       = bake.ButterPct,
+        EggPct          = bake.EggPct,
+        SugarPct        = bake.SugarPct,
+        MilkPct         = bake.MilkPct,
+        MilkPowderPct   = bake.MilkPowderPct,
+        IsPullmanTin    = bake.IsPullmanTin,
         StepLogs       = bake.StepLogs
                              .OrderBy(l => l.RecipeStep?.Order ?? 0)
                              .Select(ToDto)

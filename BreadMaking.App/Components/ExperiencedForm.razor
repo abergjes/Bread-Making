@@ -1,5 +1,6 @@
 @using BreadMaking.App.Models
 @using BreadMaking.App.Services
+@using BreadMaking.App.Shared.Dtos
 @inject HttpClient Http
 
 <div class="two-panel-layout">
@@ -148,6 +149,82 @@
                 </div>
             </div>
         </div>
+        <!-- Enrichment panel — appears when FlourType.Enriched is selected (M23) -->
+        @if (_recommendation?.Method == RestMethod.Enriched)
+        {
+            <div class="enrichment-panel">
+                <div class="enrichment-panel-title">🧈 Enrichment</div>
+
+                <div class="enrichment-fields">
+                    <div class="enrichment-field">
+                        <label class="enrichment-label">Butter</label>
+                        <div class="enrichment-stepper">
+                            <button class="stepper-btn" @onclick="@(() => AdjustEnrich(ref _butter, -1))">−</button>
+                            <span class="enrichment-value">@_butter%</span>
+                            <button class="stepper-btn" @onclick="@(() => AdjustEnrich(ref _butter, +1))">+</button>
+                        </div>
+                    </div>
+                    <div class="enrichment-field">
+                        <label class="enrichment-label">Egg</label>
+                        <div class="enrichment-stepper">
+                            <button class="stepper-btn" @onclick="@(() => AdjustEnrich(ref _egg, -1))">−</button>
+                            <span class="enrichment-value">@_egg%</span>
+                            <button class="stepper-btn" @onclick="@(() => AdjustEnrich(ref _egg, +1))">+</button>
+                        </div>
+                    </div>
+                    <div class="enrichment-field">
+                        <label class="enrichment-label">Sugar</label>
+                        <div class="enrichment-stepper">
+                            <button class="stepper-btn" @onclick="@(() => AdjustEnrich(ref _sugar, -1))">−</button>
+                            <span class="enrichment-value">@_sugar%</span>
+                            <button class="stepper-btn" @onclick="@(() => AdjustEnrich(ref _sugar, +1))">+</button>
+                        </div>
+                    </div>
+                    <div class="enrichment-field">
+                        <label class="enrichment-label">Milk</label>
+                        <div class="enrichment-stepper">
+                            <button class="stepper-btn" @onclick="@(() => AdjustEnrich(ref _milk, -5))">−</button>
+                            <span class="enrichment-value">@_milk%</span>
+                            <button class="stepper-btn" @onclick="@(() => AdjustEnrich(ref _milk, +5))">+</button>
+                        </div>
+                    </div>
+                    <div class="enrichment-field">
+                        <label class="enrichment-label">Milk powder</label>
+                        <div class="enrichment-stepper">
+                            <button class="stepper-btn" @onclick="@(() => AdjustEnrich(ref _milkPowder, -1))">−</button>
+                            <span class="enrichment-value">@_milkPowder%</span>
+                            <button class="stepper-btn" @onclick="@(() => AdjustEnrich(ref _milkPowder, +1))">+</button>
+                        </div>
+                    </div>
+                </div>
+
+                <label class="enrichment-toggle-row">
+                    <input type="checkbox" @bind="_useTangzhong" @bind:after="OnTangzhongToggle" />
+                    <span>Use Tangzhong (water-roux pre-gelatinisation)</span>
+                </label>
+
+                @if (_useTangzhong)
+                {
+                    <div class="enrichment-roux-row">
+                        <label class="enrichment-label">Roux flour share</label>
+                        <div class="enrichment-stepper">
+                            <button class="stepper-btn" @onclick="@(async () => { _rouxFlourSharePct = Math.Max(3, _rouxFlourSharePct - 1); await FetchRouxPreviewAsync(); })">−</button>
+                            <span class="enrichment-value">@_rouxFlourSharePct%</span>
+                            <button class="stepper-btn" @onclick="@(async () => { _rouxFlourSharePct = Math.Min(12, _rouxFlourSharePct + 1); await FetchRouxPreviewAsync(); })">+</button>
+                        </div>
+                        @if (_rouxPreview is not null)
+                        {
+                            <p class="enrichment-roux-preview">Tangzhong: @_rouxPreview.RouxFlour g flour + @_rouxPreview.RouxLiquid g milk</p>
+                        }
+                    </div>
+                }
+
+                <label class="enrichment-toggle-row">
+                    <input type="checkbox" @bind="_isPullman" @bind:after="SyncEnrichedInputs" />
+                    <span>Pullman tin (lidded — square sandwich loaf)</span>
+                </label>
+            </div>
+        }
     </div>
 
     <!-- Right panel: recommendation + timeline + blend guide -->
@@ -166,6 +243,17 @@
     private BreadInputs Inputs { get; set; } = new() { Experience = BakerExperience.Experienced };
     private BreadRecommendation? _recommendation;
     private List<UserRecipeDto>  _savedRecipes = [];
+
+    // Enriched panel state (M23)
+    private int              _butter          = 10;
+    private int              _egg             = 10;
+    private int              _sugar           = 10;
+    private int              _milk            = 60;
+    private int              _milkPowder      = 3;
+    private bool             _useTangzhong    = true;
+    private bool             _isPullman       = false;
+    private int              _rouxFlourSharePct = 6;
+    private RouxResult?      _rouxPreview;
 
     protected override async Task OnInitializedAsync()
     {
@@ -207,15 +295,17 @@
 
     private static FlourType GrainNameToFlourType(string name) => name switch
     {
-        "Einkorn"           => FlourType.Einkorn,
-        "Emmer (farro)"     => FlourType.Emmer,
-        "Spelt"             => FlourType.Spelt,
-        "Kamut (khorasan)"  => FlourType.Kamut,
-        "Teff"              => FlourType.Teff,
-        "Sorghum"           => FlourType.Sorghum,
-        "Whole grain"       => FlourType.WholeGrain,
-        "Rye"               => FlourType.Rye,
-        _                   => FlourType.White,
+        "Einkorn"              => FlourType.Einkorn,
+        "Emmer (farro)"        => FlourType.Emmer,
+        "Spelt"                => FlourType.Spelt,
+        "Kamut (khorasan)"     => FlourType.Kamut,
+        "Teff"                 => FlourType.Teff,
+        "Sorghum"              => FlourType.Sorghum,
+        "Whole grain"          => FlourType.WholeGrain,
+        "Rye"                  => FlourType.Rye,
+        "Low-protein wheat"    => FlourType.LowProteinWheat,
+        "Enriched"             => FlourType.Enriched,
+        _                      => FlourType.White,
     };
 
     private void OnTempChange(ChangeEventArgs e)
@@ -283,4 +373,49 @@
         StarterActivity.PastPeak => "Past peak",
         _ => a.ToString()
     };
+
+    // ── Enrichment helpers (M23) ─────────────────────────────────────────────
+
+    private void AdjustEnrich(ref int field, int delta)
+    {
+        field = Math.Max(0, Math.Min(100, field + delta));
+        SyncEnrichedInputs();
+    }
+
+    private void SyncEnrichedInputs()
+    {
+        Inputs.ButterPct     = _butter;
+        Inputs.EggPct        = _egg;
+        Inputs.SugarPct      = _sugar;
+        Inputs.MilkPct       = _milk;
+        Inputs.MilkPowderPct = _milkPowder;
+        Inputs.UseTangzhong  = _useTangzhong;
+        Inputs.IsPullmanTin  = _isPullman;
+    }
+
+    private async Task OnTangzhongToggle()
+    {
+        SyncEnrichedInputs();
+        if (_useTangzhong)
+            await FetchRouxPreviewAsync();
+        else
+            _rouxPreview = null;
+    }
+
+    private async Task FetchRouxPreviewAsync()
+    {
+        if (Inputs.TotalFlourGrams <= 0) return;
+        try
+        {
+            var req = new RouxRequest(
+                TotalFlour:       (decimal)Inputs.TotalFlourGrams,
+                HydrationPct:     (decimal)Inputs.HydrationPercent,
+                RouxFlourSharePct:(decimal)_rouxFlourSharePct,
+                RouxRatio:        5m);
+            _rouxPreview = await Http.PostAsJsonAsync("/api/calculators/roux", req)
+                               .ContinueWith(t => t.Result.Content.ReadFromJsonAsync<RouxResult>())
+                               .Unwrap();
+        }
+        catch { _rouxPreview = null; }
+    }
 }

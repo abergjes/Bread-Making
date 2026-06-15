@@ -2,7 +2,7 @@
 
 ## Current state (v8, June 2026)
 
-Milestones M0–M14 and M19–M20 are complete (M16 deferred). The app is a hosted Blazor WASM solution with a full ASP.NET Core backend, EF Core + SQLite persistence, live bake execution, per-step notes, measurements, visualisations, history with star ratings and tags, SignalR notifications, audible alerts, outcome capture with photo upload, formula fields on every bake, a starter journal, a user recipe library with save-from-advisor flow, a six-tab baker's calculators page, and a food safety reference page with StorageAdvisor chip. Milestones M15–M18 and M21–M23 remain planned (M16 deferred).
+Milestones M0–M15 and M17–M23 are complete (M16 deferred). The app is a hosted Blazor WASM solution with a full ASP.NET Core backend, EF Core + SQLite persistence, live bake execution, per-step notes, measurements, visualisations, history with star ratings and tags, SignalR notifications, audible alerts, outcome capture with photo upload, formula fields on every bake, a starter journal, a user recipe library with save-from-advisor flow, a six-tab baker's calculators page, a food safety reference page with StorageAdvisor chip, an equipment & kit guide with preheat calculator, steam-method ranking, tiered buying guide, and scoring reference, full steamed-bread support (Mantou/Baozi), and enriched dough / Shokupan support with butter/egg/sugar/milk formula fields, Pullman-tin flag, Tangzhong live-preview panel wired to the roux calculator, 11-step seeded timeline, enriched troubleshooting, and storage advice. M16 (PWA/offline) remains planned.
 
 ## Vision
 
@@ -43,9 +43,9 @@ Before any milestone work begins, the solution is converted from a standalone WA
 | M18 | Crumb reading & troubleshooting | CrumbNotes on BakeOutcome; OutcomeSheet textarea; proofing-result enum; history card excerpt | M9, M15 | ✅ Done |
 | M19 | Baker's calculators | `/calculators` page: baker's-% scaling, batch scaling with yield/loss, DDT water-temperature, levain split & true hydration, cost-per-loaf, tangzhong/yudane roux fold — all from baker's guide §48 + §54 | M14 | ✅ Done |
 | M20 | Food safety & shelf life | Temperature ladder reference; rope/mould fault cards; storage recommendations on bake outcome (§49) | — | ✅ Complete |
-| M21 | Equipment & kit guide | `/kit` reference page: tiered buying guide, steam-method comparison, preheat calculator, scoring tips (§50 + §51) | — | 📋 Planned |
-| M22 | Steamed breads | Mantou/baozi support: new `BakeMethod.Steamed`, steaming step defaults, low-protein flour guidance, steam-time advisor (§52) | M1 | 📋 Planned |
-| M23 | Enriched dough & milk breads | Shokupan/hokkaido support: enriched formula fields (butter %, egg %, sugar %), pullman-tin flag, milk-bread timeline, integrates roux from M19 (§53) | M19 | 📋 Planned |
+| M21 | Equipment & kit guide | `/kit` reference page: tiered buying guide, steam-method comparison, preheat calculator, scoring tips (§50 + §51) | — | ✅ Done |
+| M22 | Steamed breads | Mantou/baozi support: new `BakeMethod.Steamed`, steaming step defaults, low-protein flour guidance, steam-time advisor (§52) | M1 | ✅ Done |
+| M23 | Enriched dough & milk breads | Shokupan/hokkaido support: enriched formula fields (butter %, egg %, sugar %), pullman-tin flag, milk-bread timeline, integrates roux from M19 (§53) | M19 | ✅ Done |
 
 ---
 

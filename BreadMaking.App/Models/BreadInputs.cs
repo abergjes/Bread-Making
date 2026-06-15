@@ -32,4 +32,13 @@ public class BreadInputs
     public int    TotalFlourGrams { get; set; } = 900;
     public double SaltPct         { get; set; } = 2.0;
     public double InoculationPct  { get; set; } = 20.0;
+
+    // Enriched dough fields (M23) — only sent when FlourType == Enriched
+    public double ButterPct     { get; set; } = 10;
+    public double EggPct        { get; set; } = 10;
+    public double SugarPct      { get; set; } = 10;
+    public double MilkPct       { get; set; } = 60;
+    public double MilkPowderPct { get; set; } = 3;
+    public bool   UseTangzhong  { get; set; } = true;
+    public bool   IsPullmanTin  { get; set; } = false;
 }

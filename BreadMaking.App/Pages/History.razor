@@ -21,6 +21,9 @@
             <button class="btn-secondary" @onclick='() => Nav.NavigateTo("/safety")'>
                 🧺 Safety
             </button>
+            <button class="btn-secondary" @onclick='() => Nav.NavigateTo("/kit")'>
+                🔧 Kit
+            </button>
             <button class="btn-secondary" @onclick='() => Nav.NavigateTo("/history/analytics")'>
                 📊 Analytics
             </button>
@@ -64,6 +67,8 @@
                 <option value="Autolyse">Autolyse</option>
                 <option value="Fermentolyse">Fermentolyse</option>
                 <option value="Other">Other</option>
+                <option value="Steamed">Steamed</option>
+                <option value="Enriched">Enriched</option>
             </select>
             <button class="filter-toggle @(_bestOnly ? "filter-toggle-active" : "")"
                     @onclick="() => _bestOnly = !_bestOnly">
@@ -224,6 +229,7 @@
         "Emmer (farro)"                 => "🌿",
         "Kamut (khorasan)"              => "🌰",
         "Teff" or "Sorghum"             => "🫘",
+        "Low-protein wheat"             => "🥟",
         _                               => "🌾",
     };
 }

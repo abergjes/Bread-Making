@@ -93,6 +93,19 @@
             <RiseCurveChart Step="Step" />
         }
 
+        @if (Step.Phase == "Bake" && BakeMethod == BakeMethod.Steamed)
+        {
+            <div class="step-steam-note">
+                <span class="step-steam-note-icon">♨️</span>
+                <div class="step-steam-note-body">
+                    <strong>Steam protocol</strong>
+                    <p>Vigorous simmer throughout. Line the lid with a cloth to catch condensation drops — drips cause wrinkles on the skin.</p>
+                    <p>Do not open the lid during the first 10 min — temperature shock collapses the crumb.</p>
+                    <p>Rest 2–3 min with lid slightly ajar before removing entirely.</p>
+                </div>
+            </div>
+        }
+
         <div class="step-controls">
             <div class="step-duration-stepper">
                 <button class="stepper-btn" @onclick="() => OnDecrease.InvokeAsync(Step.Id)">−</button>
@@ -158,7 +171,8 @@
 </div>
 
 @code {
-    [Parameter, EditorRequired] public BakeStepLogDto Step { get; set; } = null!;
+    [Parameter, EditorRequired] public BakeStepLogDto Step       { get; set; } = null!;
+    [Parameter]                 public BakeMethod     BakeMethod { get; set; }
 
     private string CardClass => Step.Status switch
     {

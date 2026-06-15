@@ -3,6 +3,7 @@ using System;
 using BreadMaking.App.Server.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BreadMaking.App.Server.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260615095042_AddSteamedBreadSeeds")]
+    partial class AddSteamedBreadSeeds
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.5");
@@ -29,12 +32,6 @@ namespace BreadMaking.App.Server.Migrations
                     b.Property<double?>("AmbientTempC")
                         .HasColumnType("REAL");
 
-                    b.Property<double?>("ButterPct")
-                        .HasColumnType("REAL");
-
-                    b.Property<double?>("EggPct")
-                        .HasColumnType("REAL");
-
                     b.Property<DateTimeOffset?>("EndedAt")
                         .HasColumnType("TEXT");
 
@@ -45,15 +42,6 @@ namespace BreadMaking.App.Server.Migrations
                         .HasColumnType("REAL");
 
                     b.Property<double?>("InoculationPct")
-                        .HasColumnType("REAL");
-
-                    b.Property<bool>("IsPullmanTin")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<double?>("MilkPct")
-                        .HasColumnType("REAL");
-
-                    b.Property<double?>("MilkPowderPct")
                         .HasColumnType("REAL");
 
                     b.Property<string>("Notes")
@@ -73,9 +61,6 @@ namespace BreadMaking.App.Server.Migrations
 
                     b.Property<int?>("StarterFeedLogId")
                         .HasColumnType("INTEGER");
-
-                    b.Property<double?>("SugarPct")
-                        .HasColumnType("REAL");
 
                     b.Property<double?>("TotalFlourGrams")
                         .HasColumnType("REAL");
@@ -468,20 +453,6 @@ namespace BreadMaking.App.Server.Migrations
                             NutritionHighlights = "9–11% protein; low gluten gives tender, fine crumb; lower in fibre than whole grain",
                             Ploidy = "Hexaploid",
                             UsageNotes = "Use cake or pastry flour for Mantou / Baozi; not suitable for crust-forming bakes"
-                        },
-                        new
-                        {
-                            Id = 19,
-                            FlavorNotes = "Rich, buttery, subtly sweet; crumb is cloud-soft with a gentle pull",
-                            GlutenStrength = "Strong",
-                            HistoricalOrigin = "Shokupan (食パン) perfected in Japan in the early 20th century; Tangzhong method popularised by Yvonne Chen (2007)",
-                            HydrationAdjustPct = 0.0,
-                            MaxAutolyseMinutes = 0,
-                            Name = "Enriched",
-                            NeedsBinder = false,
-                            NutritionHighlights = "Higher in fat and sugar than lean bread; roux pre-gelatinises starch for moisture retention",
-                            Ploidy = "Hexaploid",
-                            UsageNotes = "Use high-protein bread flour (12–14%) for structure to hold the enrichment; develop gluten before adding fat"
                         });
                 });
 
@@ -648,17 +619,6 @@ namespace BreadMaking.App.Server.Migrations
                             Name = "Low-protein wheat — Steamed",
                             TargetDoughTempC = 26.0,
                             TargetHydrationPct = 57.0
-                        },
-                        new
-                        {
-                            Id = 14,
-                            FrictionFactorC = 4.0,
-                            GrainProfileId = 19,
-                            IsUserDefined = false,
-                            Method = 4,
-                            Name = "Enriched — Shokupan (Tangzhong)",
-                            TargetDoughTempC = 26.0,
-                            TargetHydrationPct = 65.0
                         },
                         new
                         {
@@ -2774,153 +2734,6 @@ namespace BreadMaking.App.Server.Migrations
                             Phase = "Cool",
                             RecipeId = 13,
                             StepMin = 5
-                        },
-                        new
-                        {
-                            Id = 1401,
-                            DefaultDurationMin = 10,
-                            Description = "Cook flour (6% of total) + liquid (5× flour weight) to ~65 °C, stirring constantly until a thick, glossy paste. Starch gelatinises — this is the key to the pillowy crumb.",
-                            MaxDurationMin = 15,
-                            MinDurationMin = 8,
-                            Name = "Prepare Tangzhong",
-                            Order = 1,
-                            Phase = "Mix",
-                            RecipeId = 14,
-                            StepMin = 2,
-                            TargetTempC = 65.0
-                        },
-                        new
-                        {
-                            Id = 1402,
-                            DefaultDurationMin = 30,
-                            Description = "Spread on a plate or press cling film to the surface to prevent a skin. Must reach 25 °C before mixing — adding it hot will kill the yeast.",
-                            MaxDurationMin = 60,
-                            MinDurationMin = 20,
-                            Name = "Cool Tangzhong",
-                            Order = 2,
-                            Phase = "Rest",
-                            RecipeId = 14,
-                            StepMin = 10
-                        },
-                        new
-                        {
-                            Id = 1403,
-                            DefaultDurationMin = 15,
-                            Description = "Combine flour, milk, egg, sugar, salt, yeast, and cooled Tangzhong. Mix until shaggy, then knead to a smooth, non-sticky dough. No butter yet — gluten must develop first.",
-                            MaxDurationMin = 20,
-                            MinDurationMin = 10,
-                            Name = "Mix dough (pre-butter)",
-                            Order = 3,
-                            Phase = "Mix",
-                            RecipeId = 14,
-                            StepMin = 5
-                        },
-                        new
-                        {
-                            Id = 1404,
-                            DefaultDurationMin = 15,
-                            Description = "Add cold butter in small cubes while the dough is mixing. Dough will look broken — keep going. Stop when it passes the window-pane test: silky, elastic, and no longer sticky.",
-                            MaxDurationMin = 25,
-                            MinDurationMin = 10,
-                            Name = "Add butter (window-pane)",
-                            Order = 4,
-                            Phase = "Mix",
-                            RecipeId = 14,
-                            StepMin = 5
-                        },
-                        new
-                        {
-                            Id = 1405,
-                            DefaultDurationMin = 60,
-                            Description = "Cover and keep warm at 26–28 °C. Enriched doughs rise faster than sourdough — watch for doubling in size, not just time elapsed.",
-                            MaxDurationMin = 90,
-                            MinDurationMin = 45,
-                            Name = "Bulk fermentation (until doubled)",
-                            Order = 5,
-                            Phase = "Bulk",
-                            RecipeId = 14,
-                            StepMin = 15,
-                            TargetTempC = 27.0
-                        },
-                        new
-                        {
-                            Id = 1406,
-                            DefaultDurationMin = 10,
-                            Description = "Scale portions equally. Gently degas and pre-shape into rounds. Cover and rest 5 min.",
-                            MaxDurationMin = 15,
-                            MinDurationMin = 5,
-                            Name = "Divide + pre-shape",
-                            Order = 6,
-                            Phase = "Shape",
-                            RecipeId = 14,
-                            StepMin = 5
-                        },
-                        new
-                        {
-                            Id = 1407,
-                            DefaultDurationMin = 15,
-                            Description = "Rest covered — gluten tightens after pre-shape. This relaxation makes the final roll-and-fold possible without tearing.",
-                            MaxDurationMin = 20,
-                            MinDurationMin = 10,
-                            Name = "Bench rest",
-                            Order = 7,
-                            Phase = "Shape",
-                            RecipeId = 14,
-                            StepMin = 5
-                        },
-                        new
-                        {
-                            Id = 1408,
-                            DefaultDurationMin = 15,
-                            Description = "Roll each piece flat, fold the sides in, roll up tightly, and place seam-down in the greased tin. For Pullman, fill the tin 70% and add the lid.",
-                            MaxDurationMin = 20,
-                            MinDurationMin = 10,
-                            Name = "Final shape + tin",
-                            Order = 8,
-                            Phase = "Shape",
-                            RecipeId = 14,
-                            StepMin = 5
-                        },
-                        new
-                        {
-                            Id = 1409,
-                            DefaultDurationMin = 60,
-                            Description = "Proof at 28–30 °C until dough is 80–90% of tin height (open tin: dome 2–3 cm above rim). Over-proofing collapses the crumb after baking.",
-                            MaxDurationMin = 90,
-                            MinDurationMin = 45,
-                            Name = "Final proof (80–90% tin height)",
-                            Order = 9,
-                            Phase = "Proof",
-                            RecipeId = 14,
-                            StepMin = 15,
-                            TargetTempC = 29.0
-                        },
-                        new
-                        {
-                            Id = 1410,
-                            DefaultDurationMin = 30,
-                            Description = "Pullman: bake with lid closed for 25 min, then remove lid for 5 min for colour. Open tin: bake uncovered 30 min. Internal temp target ~88 °C.",
-                            MaxDurationMin = 35,
-                            MinDurationMin = 25,
-                            Name = "Bake (Pullman lidded / open tin)",
-                            Order = 10,
-                            Phase = "Bake",
-                            RecipeId = 14,
-                            StepMin = 5,
-                            TargetTempC = 190.0
-                        },
-                        new
-                        {
-                            Id = 1411,
-                            DefaultDurationMin = 60,
-                            Description = "Cool in tin 5 min, then unmould onto a rack. Slice only when fully cool — the crumb is still setting as it cools and cuts gummy if sliced hot.",
-                            MaxDurationMin = 120,
-                            MinDurationMin = 30,
-                            Name = "Cool on rack",
-                            Order = 11,
-                            Phase = "Cool",
-                            RecipeId = 14,
-                            StepMin = 15
                         });
                 });
 
