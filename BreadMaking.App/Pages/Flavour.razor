@@ -1,0 +1,256 @@
+@page "/flavour"
+@inject NavigationManager Nav
+
+<div class="flavour-page">
+
+    <div class="flavour-header">
+        <button class="back-btn" @onclick='() => Nav.NavigateTo("/history")'>← History</button>
+        <div class="flavour-title-group">
+            <h2 class="flavour-title">Flavour & Aroma Chemistry</h2>
+            <p class="flavour-subtitle">Baker's guide §30 · What makes bread taste the way it does</p>
+        </div>
+    </div>
+
+    <!-- Two-source intro -->
+    <div class="flavour-two-sources">
+        <div class="flavour-source flavour-source--crumb">
+            <span class="flavour-source-icon">🌡️</span>
+            <div>
+                <div class="flavour-source-title">Crumb: fermentation</div>
+                <div class="flavour-source-sub">Biological chemistry · below 100 °C · hours</div>
+            </div>
+        </div>
+        <div class="flavour-source-divider">+</div>
+        <div class="flavour-source flavour-source--crust">
+            <span class="flavour-source-icon">🔥</span>
+            <div>
+                <div class="flavour-source-title">Crust: Maillard reaction</div>
+                <div class="flavour-source-sub">Thermal chemistry · 140–180 °C · minutes</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="flavour-tabs" role="tablist">
+        @foreach (var tab in _tabs)
+        {
+            <button class="flavour-tab @(_activeTab == tab.Id ? "flavour-tab-active" : "")"
+                    role="tab"
+                    @onclick="() => _activeTab = tab.Id">
+                @tab.Icon @tab.Label
+            </button>
+        }
+    </div>
+
+    @if (_activeTab == "crumb")
+    {
+        <div class="flavour-section">
+            <p class="flavour-intro">The crumb's flavour is built during fermentation — yeasts and bacteria converting sugars and amino acids into aromatic molecules over hours. This is why a long, cool fermentation builds more crumb flavour than a fast warm rise: it gives microbes time to accumulate a deeper stock of aromatic precursors and acids.</p>
+
+            <div class="compound-grid">
+                @foreach (var c in _crumbCompounds)
+                {
+                    <div class="compound-card">
+                        <div class="compound-header">
+                            <span class="compound-icon">@c.Icon</span>
+                            <div>
+                                <div class="compound-family">@c.Family</div>
+                                <div class="compound-example">@c.Example</div>
+                            </div>
+                        </div>
+                        <p class="compound-desc">@c.Description</p>
+                        <div class="compound-tags">
+                            @foreach (var tag in c.Tags)
+                            {
+                                <span class="compound-tag">@tag</span>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="flavour-acid-section">
+                <h3 class="flavour-h3">Lactic vs. Acetic Acid Balance</h3>
+                <p class="flavour-intro" style="margin-bottom:12px">Both acids are produced by lactic acid bacteria (LAB), but the ratio between them determines whether your sourdough tastes mild and yogurt-like or sharp and vinegary.</p>
+                <div class="acid-cards">
+                    <div class="acid-card acid-lactic">
+                        <div class="acid-name">Lactic acid</div>
+                        <div class="acid-taste">Mild · yogurt-like · soft tang</div>
+                        <ul class="acid-conditions">
+                            <li>Higher temperature (25–30 °C)</li>
+                            <li>Higher hydration (≥75%)</li>
+                            <li>Shorter fermentation</li>
+                            <li>Homofermentative LAB dominate</li>
+                        </ul>
+                    </div>
+                    <div class="acid-card acid-acetic">
+                        <div class="acid-name">Acetic acid</div>
+                        <div class="acid-taste">Sharp · vinegary · complex bite</div>
+                        <ul class="acid-conditions">
+                            <li>Lower temperature (15–20 °C)</li>
+                            <li>Lower hydration (&lt;70%) or stiff levain</li>
+                            <li>Longer fermentation / cold retard</li>
+                            <li>Heterofermentative LAB dominate</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else if (_activeTab == "crust")
+    {
+        <div class="flavour-section">
+            <p class="flavour-intro">The crust's flavour is built by heat — almost none of the crust's aromatic compounds existed before the loaf entered the oven. The Maillard reaction between amino acids and reducing sugars produces, alongside brown pigments (melanoidins), hundreds of aroma compounds. The darker you bake, the more crust flavour you earn.</p>
+
+            <div class="compound-grid">
+                @foreach (var c in _crustCompounds)
+                {
+                    <div class="compound-card">
+                        <div class="compound-header">
+                            <span class="compound-icon">@c.Icon</span>
+                            <div>
+                                <div class="compound-family">@c.Family</div>
+                                <div class="compound-example">@c.Example</div>
+                            </div>
+                        </div>
+                        <p class="compound-desc">@c.Description</p>
+                        <div class="compound-tags">
+                            @foreach (var tag in c.Tags)
+                            {
+                                <span class="compound-tag">@tag</span>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="flavour-callout">
+                <strong>Deep mahogany = more flavour.</strong> Every one of these compounds depends on heat and a dry crust surface. Steam in the first 20 minutes keeps the surface soft so scores bloom and the crust builds gradually — then removing the lid lets it reach 140 °C+ and run the Maillard reaction fully.
+            </div>
+        </div>
+    }
+    else if (_activeTab == "steering")
+    {
+        <div class="flavour-section">
+            <p class="flavour-intro">Because crumb flavour and crust flavour respond to different controls, you can dial each independently. A long, cool ferment builds crumb complexity; baking darker builds crust depth. The best loaves earn both.</p>
+
+            <div class="knob-grid">
+                @foreach (var k in _knobs)
+                {
+                    <div class="knob-card">
+                        <div class="knob-header">
+                            <span class="knob-icon">@k.Icon</span>
+                            <div class="knob-title">@k.Title</div>
+                        </div>
+                        <div class="knob-arrows">
+                            <div class="knob-direction knob-up">
+                                <span class="knob-dir-label">↑ More</span>
+                                <span class="knob-dir-action">@k.Up</span>
+                            </div>
+                            <div class="knob-direction knob-down">
+                                <span class="knob-dir-label">↓ Less</span>
+                                <span class="knob-dir-action">@k.Down</span>
+                            </div>
+                        </div>
+                        <p class="knob-note">@k.Note</p>
+                    </div>
+                }
+            </div>
+
+            <div class="flavour-callout">
+                <strong>A useful tasting sequence:</strong> Look first (crust colour, crumb structure), then smell (roasty crust against tangy crumb), then taste (sweetness → sourness → salt → bitterness), then assess the finish. Naming each dimension turns vague impressions into feedback you can act on.
+            </div>
+        </div>
+    }
+
+</div>
+
+@code {
+    private string _activeTab = "crumb";
+
+    private record TabDef(string Id, string Icon, string Label);
+    private readonly TabDef[] _tabs =
+    [
+        new("crumb",    "🌡️", "Crumb — Fermentation"),
+        new("crust",    "🔥", "Crust — Maillard"),
+        new("steering", "🎛️", "Steering Flavour"),
+    ];
+
+    private record Compound(string Icon, string Family, string Example, string Description, string[] Tags);
+
+    private readonly Compound[] _crumbCompounds =
+    [
+        new("🍷", "Higher alcohols",
+            "3-methyl-1-butanol (isoamyl alcohol)",
+            "Yeasts convert amino acids into higher alcohols via the Ehrlich pathway — turning proteins broken down during fermentation into fragrant molecules. Ethanol is by far the most abundant; higher alcohols add warming, slightly fruity, solvent-like notes.",
+            ["Fermentation", "Yeast", "Ehrlich pathway"]),
+        new("🍑", "Esters",
+            "Ethyl acetate, isoamyl acetate",
+            "Formed when alcohols react with organic acids. Fruity and floral notes — the aroma that makes a well-fermented dough smell appetising even before baking. More pronounced with longer fermentation.",
+            ["Fermentation", "Fruity", "Floral"]),
+        new("🌿", "Aldehydes",
+            "Hexanal, nonanal",
+            "Contribute green, malty and grassy tones. Present in both crumb and crust, though in the crumb they come from lipid oxidation and amino acid conversion rather than Maillard chemistry.",
+            ["Fermentation", "Green", "Malty"]),
+        new("🧈", "Diacetyl",
+            "Diacetyl (2,3-butanedione)",
+            "The buttery, slightly creamy note that some bakers prize and others notice as off-flavour if over-present. Produced by LAB; levels increase with long fermentation and are most noticeable in fresh loaves.",
+            ["LAB", "Buttery"]),
+        new("🍋", "Organic acids",
+            "Lactic acid · Acetic acid",
+            "The defining flavour of sourdough. Lactic acid (mild, yogurt-like) dominates at warmer temperatures and higher hydrations; acetic acid (sharp, vinegary) builds at cooler temperatures, lower hydrations, and with longer cold retards. The ratio is the primary 'sourness knob.'",
+            ["LAB", "Sourdough tang", "pH"]),
+    ];
+
+    private readonly Compound[] _crustCompounds =
+    [
+        new("🍿", "2-acetyl-1-pyrroline",
+            "2-AP — the signature crust aroma",
+            "The single most important crust aroma compound. The roasty, cracker-like, popcorn note that hits you the moment you open the oven door. Formed at around 140–160 °C via a specific Maillard pathway. Notably, 2-AP also gives jasmine rice and popcorn their characteristic scent.",
+            ["Maillard", "Roasty", "Signature"]),
+        new("🥜", "Pyrazines",
+            "2-methylpyrazine, dimethylpyrazines",
+            "Nutty, roasted, slightly bitter notes. Form at higher crust temperatures (160–180 °C) via the Maillard reaction between amino acids and reducing sugars. Abundance correlates directly with bake darkness.",
+            ["Maillard", "Nutty", "Toasted"]),
+        new("🌾", "Strecker aldehydes",
+            "Methylbutanal, phenylacetaldehyde",
+            "Malty, chocolate-like aromatic aldehydes formed when the Maillard reaction degrades amino acids (Strecker degradation). Methylbutanal from leucine; phenylacetaldehyde from phenylalanine. Part of the complex bouquet of a dark crust.",
+            ["Maillard", "Malty", "Strecker"]),
+        new("🍬", "Furans & caramel compounds",
+            "2-acetylfuran, furfural, HMF",
+            "Caramel, sweet and slightly bitter tones from caramelisation of sugars alongside the Maillard reaction. Furfural has a distinct almond-caramel note. These are why a dark crust tastes complex and slightly sweet, not just bitter.",
+            ["Caramelisation", "Sweet", "Caramel"]),
+        new("🟫", "Melanoidins (pigments)",
+            "Polymeric Maillard products",
+            "Not volatile aromatic compounds but the brown pigments behind crust colour. Melanoidins are large polymers produced at the end of the Maillard reaction. They also carry antioxidant activity and contribute to the slight bitterness of a very dark crust.",
+            ["Maillard", "Colour", "Antioxidant"]),
+    ];
+
+    private record FlourKnob(string Icon, string Title, string Up, string Down, string Note);
+    private readonly FlourKnob[] _knobs =
+    [
+        new("🌡️", "Crumb tang (acidity)",
+            "Cool the ferment (15–20 °C), use stiff levain, extend cold retard",
+            "Warm the ferment (25–30 °C), shorten cold retard, raise hydration",
+            "Temperature is the primary lever. Acetic acid dominates cool and slow; lactic dominates warm and fast."),
+        new("⏱️", "Crumb complexity (depth)",
+            "Lengthen bulk and proof, use pre-ferment (poolish, biga, levain), add whole/ancient grain",
+            "Shorten fermentation, use commercial yeast at higher dose",
+            "Longer fermentation gives the microbes more time to produce aromatic precursors. A 10-hour cold retard does more than a 10°C temperature drop."),
+        new("🌾", "Grain complexity",
+            "Add 10–30% whole grain or rye; use ancient grains (einkorn, emmer, kamut)",
+            "Use 100% refined white flour",
+            "Whole and ancient grains bring their own phenolic compounds and more enzyme substrate for the microbes to work with."),
+        new("🔥", "Crust flavour (Maillard)",
+            "Bake darker (deeper mahogany), remove Dutch oven lid earlier, use steam for even browning",
+            "Bake pale, use lower temperature",
+            "Residual sugar feeds the Maillard reaction. Adequate salt preserves those sugars; diastatic malt adds enzyme-available sugars without sweetening the dough."),
+        new("🍬", "Crust sweetness vs. bitterness",
+            "Bake dark; use a touch of diastatic malt or honey wash",
+            "Shorten bake time; avoid very dark crust (where acrylamide and bitterness increase)",
+            "Caramelisation adds sweet furans; very dark baking adds bitter pyrazines and melanoidins. The ideal is a deep mahogany, not charcoal."),
+        new("💧", "Starter hydration effect",
+            "Use stiff levain (50–65% hydration) to encourage acetic acid",
+            "Use liquid levain (100–125%) to favour lactic acid and a milder flavour",
+            "Stiff levains have less free water, which slows heterofermentative LAB activity less than yeast activity — net result is relatively more acetic acid."),
+    ];
+}

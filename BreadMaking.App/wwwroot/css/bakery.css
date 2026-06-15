@@ -4838,3 +4838,221 @@ body {
     .blade-cards { flex-direction: column; }
     .wash-grid, .score-grid, .topping-grid, .steam-grid { grid-template-columns: 1fr; }
 }
+
+/* ── M29 Flavour & Aroma Chemistry ───────────────────────────────────────── */
+
+.flavour-page { max-width: 900px; margin: 0 auto; padding: 20px 16px 60px; }
+
+.flavour-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.flavour-title-group { flex: 1; }
+.flavour-title    { margin: 0 0 2px; font-size: 1.6rem; color: var(--text); }
+.flavour-subtitle { margin: 0; color: var(--text-muted); font-size: .9rem; }
+
+.flavour-two-sources {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.flavour-source {
+    flex: 1;
+    min-width: 200px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: var(--radius);
+    border: 1.5px solid;
+}
+
+.flavour-source--crumb {
+    background: color-mix(in srgb, #3b82f6 8%, var(--panel));
+    border-color: color-mix(in srgb, #3b82f6 30%, transparent);
+}
+
+.flavour-source--crust {
+    background: color-mix(in srgb, var(--accent) 8%, var(--panel));
+    border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+}
+
+.flavour-source-icon  { font-size: 2rem; flex-shrink: 0; }
+.flavour-source-title { font-weight: 700; font-size: .95rem; color: var(--text); margin-bottom: 2px; }
+.flavour-source-sub   { font-size: .76rem; color: var(--text-muted); }
+.flavour-source-divider { font-size: 1.4rem; font-weight: 700; color: var(--text-muted); flex-shrink: 0; }
+
+/* Tabs */
+.flavour-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 0;
+}
+
+.flavour-tab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    cursor: pointer;
+    font-size: .88rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    transition: color .15s, border-color .15s;
+}
+
+.flavour-tab:hover { color: var(--text); }
+.flavour-tab-active { color: var(--accent); border-bottom-color: var(--accent); }
+
+.flavour-section { }
+
+.flavour-intro {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    color: var(--text-muted);
+    font-size: .88rem;
+    line-height: 1.65;
+    margin-bottom: 20px;
+}
+
+.flavour-h3 { font-size: 1rem; font-weight: 700; color: var(--text); margin: 20px 0 12px; }
+
+.flavour-callout {
+    background: color-mix(in srgb, var(--accent) 8%, var(--panel));
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    font-size: .84rem;
+    color: var(--text-muted);
+    margin-top: 20px;
+    line-height: 1.55;
+}
+
+/* Compound cards */
+.compound-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+}
+
+.compound-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.compound-header { display: flex; align-items: flex-start; gap: 10px; }
+.compound-icon   { font-size: 1.6rem; line-height: 1; flex-shrink: 0; }
+.compound-family { font-weight: 700; font-size: .9rem; color: var(--text); margin-bottom: 2px; }
+.compound-example { font-size: .74rem; color: var(--accent); font-style: italic; }
+.compound-desc   { margin: 0; font-size: .8rem; color: var(--text-muted); line-height: 1.55; }
+
+.compound-tags   { display: flex; flex-wrap: wrap; gap: 4px; }
+.compound-tag {
+    font-size: .7rem;
+    padding: 2px 6px;
+    background: var(--panel-dark);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text-muted);
+}
+
+/* Acid balance cards */
+.flavour-acid-section { margin-top: 4px; }
+
+.acid-cards { display: flex; gap: 14px; flex-wrap: wrap; }
+
+.acid-card {
+    flex: 1;
+    min-width: 220px;
+    background: var(--panel);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+}
+
+.acid-lactic  { border-top: 3px solid #22c55e; }
+.acid-acetic  { border-top: 3px solid #f59e0b; }
+
+.acid-name    { font-weight: 700; font-size: .95rem; color: var(--text); margin-bottom: 4px; }
+.acid-taste   { font-size: .8rem; color: var(--text-muted); margin-bottom: 10px; }
+
+.acid-conditions {
+    margin: 0;
+    padding-left: 16px;
+    font-size: .8rem;
+    color: var(--text-muted);
+    line-height: 1.7;
+}
+
+/* Flavour steering knobs */
+.knob-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+}
+
+.knob-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.knob-header { display: flex; align-items: center; gap: 10px; }
+.knob-icon   { font-size: 1.4rem; flex-shrink: 0; }
+.knob-title  { font-weight: 700; font-size: .9rem; color: var(--text); }
+
+.knob-arrows { display: flex; flex-direction: column; gap: 6px; }
+
+.knob-direction {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: .78rem;
+    padding: 6px 8px;
+    border-radius: 6px;
+}
+
+.knob-up   { background: color-mix(in srgb, #22c55e 10%, var(--panel)); }
+.knob-down { background: color-mix(in srgb, #f59e0b 10%, var(--panel)); }
+
+.knob-dir-label {
+    font-weight: 700;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    width: 46px;
+}
+
+.knob-dir-action { color: var(--text); line-height: 1.4; }
+.knob-note       { margin: 0; font-size: .76rem; color: var(--text-muted); line-height: 1.5; }
+
+@media (max-width: 600px) {
+    .flavour-two-sources { flex-direction: column; }
+    .flavour-source-divider { transform: rotate(90deg); }
+    .compound-grid, .knob-grid { grid-template-columns: 1fr; }
+    .acid-cards { flex-direction: column; }
+}
