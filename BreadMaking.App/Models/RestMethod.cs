@@ -7,5 +7,6 @@ public enum RestMethod
     Skip,
     Soaker,
     Steamed,
-    Enriched
+    Enriched,
+    Commercial
 }

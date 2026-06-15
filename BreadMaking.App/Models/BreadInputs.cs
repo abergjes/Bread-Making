@@ -33,6 +33,9 @@ public class BreadInputs
     public double SaltPct         { get; set; } = 2.0;
     public double InoculationPct  { get; set; } = 20.0;
 
+    // Yeast type (M25)
+    public YeastType YeastType { get; set; } = YeastType.Sourdough;
+
     // Enriched dough fields (M23) — only sent when FlourType == Enriched
     public double ButterPct     { get; set; } = 10;
     public double EggPct        { get; set; } = 10;

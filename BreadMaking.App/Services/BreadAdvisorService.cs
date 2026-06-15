@@ -136,6 +136,9 @@ public class BreadAdvisorService
         if (grain.IsEnriched)
             return BuildEnriched(inputs, grain);
 
+        if (inputs.YeastType == YeastType.Commercial)
+            return BuildCommercial(inputs, grain);
+
         if (grain.IsLowGlutenAncient)
         {
             if (grain.MaxRestMinutes == 0)
@@ -339,6 +342,48 @@ public class BreadAdvisorService
         new() { Phase = "Final proof (80–90% height)", DurationLabel = "60 min",  TempLabel = "28–30 °C", Notes = "Proof until dough is 80–90% of tin height (open tin: dome 2–3 cm above rim). Over-proofing collapses the crumb after baking." },
         new() { Phase = "Bake (Pullman lid on / open tin)", DurationLabel = "30 min", TempLabel = "190 °C / 375 °F", Notes = "Pullman: bake with lid closed for 25 min, then remove lid for 5 min. Open tin: bake uncovered 30 min until deep golden." },
         new() { Phase = "Cool on rack",               DurationLabel = "60 min",   TempLabel = "Room temp",Notes = "Cool in tin 5 min, then unmould. Slice only when fully cool — the crumb sets as it cools." },
+    ];
+
+    private BreadRecommendation BuildCommercial(BreadInputs inputs, GrainProfile grain)
+    {
+        return new BreadRecommendation
+        {
+            Method = RestMethod.Commercial,
+            RestDurationMin = 15,
+            RestDurationSweetSpot = 20,
+            RestDurationMax = 30,
+            Headline = "Commercial yeast — same-day bake",
+            Reason = "Commercial yeast (instant, active dry, or fresh) ferments predictably at 0.5–2% dosage, giving a reliable rise without a sourdough starter. A short 20-minute autolyse hydrates the flour before yeast and salt go in, keeping the full process under 6 hours.",
+            RiskLevel = "Low",
+            Tips = CommercialTips(inputs),
+            Timeline = BuildCommercialTimeline()
+        };
+    }
+
+    private static List<string> CommercialTips(BreadInputs inputs) =>
+    [
+        "Use instant yeast at 0.5–1% flour weight for a slow, flavourful rise; 1–2% for speed.",
+        "Osmotolerant yeast (e.g. SAF Gold) is essential for enriched doughs with >5% sugar.",
+        "Water temperature matters: 24–27 °C for bulk fermentation. Above 38 °C kills yeast.",
+        "Commercial yeast doughs proof much faster than sourdough — watch the dough, not the clock.",
+        "The 20-minute autolyse gives gluten a head start without over-fermentation risk.",
+        "No cold proof needed: commercial yeast rises reliably at room temperature.",
+    ];
+
+    private static List<TimelineStep> BuildCommercialTimeline() =>
+    [
+        new() { Phase = "Mix flour + water",          DurationLabel = "5 min",    TempLabel = "Ambient",          Notes = "Rough mix of flour and water only — no yeast, no salt yet." },
+        new() { Phase = "Autolyse rest",              DurationLabel = "20 min",   TempLabel = "Ambient",          Notes = "Cover and rest. Enzymes hydrate the flour and begin softening gluten.", IsRestPhase = true, RestMethod = RestMethod.Autolyse },
+        new() { Phase = "Add yeast + salt",           DurationLabel = "5 min",    TempLabel = "Ambient",          Notes = "Add instant yeast (0.5–2% of flour weight) and salt. Fold to incorporate." },
+        new() { Phase = "Bulk fermentation",          DurationLabel = "90 min",   TempLabel = "24–27 °C",         Notes = "3–4 sets of stretch & folds every 20 min. Dough should roughly double in volume." },
+        new() { Phase = "Pre-shape",                  DurationLabel = "10 min",   TempLabel = "Ambient",          Notes = "Gentle pre-shape on a lightly floured bench." },
+        new() { Phase = "Bench rest",                 DurationLabel = "20 min",   TempLabel = "Ambient",          Notes = "Leave uncovered. Gluten relaxes before final shaping." },
+        new() { Phase = "Final shape",                DurationLabel = "10 min",   TempLabel = "Ambient",          Notes = "Build surface tension. Place in banneton or tin." },
+        new() { Phase = "Room-temperature proof",     DurationLabel = "60 min",   TempLabel = "24–26 °C",         Notes = "Proof until visibly puffed and the dough springs back slowly when poked." },
+        new() { Phase = "Preheat + Dutch oven",       DurationLabel = "45 min",   TempLabel = "250 °C / 480 °F", Notes = "Cast iron must be screaming hot before the loaf goes in." },
+        new() { Phase = "Bake covered",               DurationLabel = "20 min",   TempLabel = "250 °C / 480 °F", Notes = "Steam trapped in the Dutch oven drives oven spring and crust formation." },
+        new() { Phase = "Bake uncovered",             DurationLabel = "20 min",   TempLabel = "220 °C / 425 °F", Notes = "Achieve deep golden crust. Internal temperature should reach 96–98 °C." },
+        new() { Phase = "Cool on rack",               DurationLabel = "60 min",   TempLabel = "Room temp",        Notes = "Crumb sets during cooling — do not cut before 60 min." },
     ];
 
     private BreadRecommendation BuildSteamed(BreadInputs inputs, GrainProfile grain)

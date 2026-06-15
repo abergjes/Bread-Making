@@ -117,8 +117,9 @@ public static class SeedData
     // Recipes: grainProfileId × method.  Rye/WholeGrain fall back to Modern wheat via BakeSessionService.
     public static readonly Recipe[] Recipes =
     [
-        new() { Id = 13, GrainProfileId = 18, Name = "Low-protein wheat — Steamed", Method = BakeMethod.Steamed,   TargetHydrationPct = 57, TargetDoughTempC = 26, FrictionFactorC = 0 },
-        new() { Id = 14, GrainProfileId = 19, Name = "Enriched — Shokupan (Tangzhong)", Method = BakeMethod.Enriched, TargetHydrationPct = 65, TargetDoughTempC = 26, FrictionFactorC = 4 },
+        new() { Id = 13, GrainProfileId = 18, Name = "Low-protein wheat — Steamed",       Method = BakeMethod.Steamed,     TargetHydrationPct = 57, TargetDoughTempC = 26, FrictionFactorC = 0 },
+        new() { Id = 14, GrainProfileId = 19, Name = "Enriched — Shokupan (Tangzhong)",   Method = BakeMethod.Enriched,    TargetHydrationPct = 65, TargetDoughTempC = 26, FrictionFactorC = 4 },
+        new() { Id = 15, GrainProfileId =  1, Name = "Modern wheat — Commercial yeast",   Method = BakeMethod.Commercial,  TargetHydrationPct = 72, TargetDoughTempC = 25, FrictionFactorC = 4 },
         new() { Id =  1, GrainProfileId = 1, Name = "Modern wheat — Autolyse",      Method = BakeMethod.Autolyse,     TargetHydrationPct = 72, TargetDoughTempC = 25, FrictionFactorC = 4 },
         new() { Id =  2, GrainProfileId = 1, Name = "Modern wheat — Fermentolyse",  Method = BakeMethod.Fermentolyse, TargetHydrationPct = 72, TargetDoughTempC = 25, FrictionFactorC = 4 },
         new() { Id =  3, GrainProfileId = 4, Name = "Spelt — Autolyse",             Method = BakeMethod.Autolyse,     TargetHydrationPct = 68, TargetDoughTempC = 24, FrictionFactorC = 4 },
@@ -179,6 +180,9 @@ public static class SeedData
 
         // Enriched milk bread (Shokupan / Tangzhong)
         AddEnrichedSteps(steps, recipeId: 14);
+
+        // Commercial yeast — same-day bake
+        AddCommercialSteps(steps, recipeId: 15);
 
         return steps.ToArray();
     }
@@ -379,6 +383,50 @@ public static class SeedData
             S(++id, recipeId, 11, "Cool",  "Cool on rack",
                 60, 30, 120, 15, null,
                 "Cool in tin 5 min, then unmould onto a rack. Slice only when fully cool — the crumb is still setting as it cools and cuts gummy if sliced hot."),
+        ]);
+    }
+
+    private static void AddCommercialSteps(List<RecipeStep> steps, int recipeId)
+    {
+        int id = recipeId * 100;
+        steps.AddRange(
+        [
+            S(++id, recipeId,  1, "Mix",   "Mix flour + water",
+                5,   3,  15,  5, null,
+                "Rough mix of flour and water only — no yeast, no salt yet."),
+            S(++id, recipeId,  2, "Rest",  "Autolyse rest",
+                20,  15,  30,  5, null,
+                "Cover and rest. Enzymes hydrate the flour and begin softening gluten."),
+            S(++id, recipeId,  3, "Mix",   "Add yeast + salt",
+                5,   3,  10,  5, null,
+                "Add instant yeast (0.5–2% of flour weight) and salt. Fold to incorporate."),
+            S(++id, recipeId,  4, "Bulk",  "Bulk fermentation",
+                90,  60, 120, 15, 25.0,
+                "3–4 sets of stretch & folds every 20 min. Dough should roughly double in volume."),
+            S(++id, recipeId,  5, "Shape", "Pre-shape",
+                10,   5,  20,  5, null,
+                "Gentle pre-shape on a lightly floured bench."),
+            S(++id, recipeId,  6, "Shape", "Bench rest",
+                20,  15,  30,  5, null,
+                "Leave uncovered. Gluten relaxes before final shaping."),
+            S(++id, recipeId,  7, "Shape", "Final shape",
+                10,   5,  20,  5, null,
+                "Build surface tension. Place in floured banneton or greased tin."),
+            S(++id, recipeId,  8, "Proof", "Room-temperature proof",
+                60,  45,  90, 15, 25.0,
+                "Proof until visibly puffed and the dough springs back slowly when poked."),
+            S(++id, recipeId,  9, "Bake",  "Preheat + Dutch oven",
+                45,  30,  60, 15, 250.0,
+                "Cast iron must be screaming hot before the loaf goes in."),
+            S(++id, recipeId, 10, "Bake",  "Bake covered",
+                20,  15,  25,  5, 250.0,
+                "Steam trapped in the Dutch oven drives oven spring and crust formation."),
+            S(++id, recipeId, 11, "Bake",  "Bake uncovered",
+                20,  15,  25,  5, 220.0,
+                "Achieve deep golden crust. Internal temperature should reach 96–98 °C."),
+            S(++id, recipeId, 12, "Cool",  "Cool on rack",
+                60,  45,  90, 15, null,
+                "Do not cut early — the crumb is still setting during cooling."),
         ]);
     }
 

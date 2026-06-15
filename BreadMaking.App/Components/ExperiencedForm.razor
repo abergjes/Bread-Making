@@ -27,6 +27,32 @@
             </div>
         }
 
+        <!-- Yeast type (M25) — hidden for steamed/enriched/GF grains that have their own path -->
+        @if (_recommendation?.Method is not (RestMethod.Steamed or RestMethod.Enriched or RestMethod.Soaker))
+        {
+            <div class="input-group yeast-toggle-group">
+                <label class="input-label">Yeast type</label>
+                <div class="yeast-type-options">
+                    <button class="yeast-card @(Inputs.YeastType == YeastType.Sourdough ? "selected" : "")"
+                            @onclick="@(() => { Inputs.YeastType = YeastType.Sourdough; UpdateRecommendation(); })">
+                        <span>🧫</span>
+                        <div>
+                            <strong>Sourdough starter</strong>
+                            <small>Wild yeast &amp; lactic bacteria</small>
+                        </div>
+                    </button>
+                    <button class="yeast-card @(Inputs.YeastType == YeastType.Commercial ? "selected" : "")"
+                            @onclick="@(() => { Inputs.YeastType = YeastType.Commercial; UpdateRecommendation(); })">
+                        <span>🌿</span>
+                        <div>
+                            <strong>Commercial yeast</strong>
+                            <small>Instant, active dry, or fresh</small>
+                        </div>
+                    </button>
+                </div>
+            </div>
+        }
+
         <!-- Temperature -->
         <div class="input-group">
             <label class="input-label">
@@ -77,7 +103,9 @@
             </div>
         </div>
 
-        <!-- Starter -->
+        <!-- Starter — hidden when using commercial yeast -->
+        @if (Inputs.YeastType == YeastType.Sourdough)
+        {
         <div class="input-group">
             <label class="input-label">Sourdough Starter</label>
             <div class="starter-options">
@@ -91,6 +119,7 @@
                 }
             </div>
         </div>
+        }
 
         <!-- Flavour goal -->
         <div class="input-group">

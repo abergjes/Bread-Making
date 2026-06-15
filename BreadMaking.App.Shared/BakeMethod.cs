@@ -1,3 +1,3 @@
 namespace BreadMaking.App.Shared;
 
-public enum BakeMethod { Autolyse, Fermentolyse, Other, Steamed, Enriched }
+public enum BakeMethod { Autolyse, Fermentolyse, Other, Steamed, Enriched, Commercial }

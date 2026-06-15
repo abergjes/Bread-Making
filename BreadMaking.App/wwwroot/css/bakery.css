@@ -4395,3 +4395,54 @@ body {
 }
 .theme-toggle:hover { background: var(--panel-dark); }
 
+
+/* ── M25 Commercial yeast ─────────────────────────────────────────────────── */
+
+.method-commercial {
+    border-top: 3px solid #22c55e;
+}
+
+.method-commercial .rec-badge {
+    background: color-mix(in srgb, #22c55e 12%, var(--panel));
+}
+
+/* Yeast type selector */
+.yeast-toggle-group { margin-bottom: 12px; }
+
+.yeast-type-options {
+    display: flex;
+    gap: 10px;
+}
+
+.yeast-card {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--panel);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    text-align: left;
+    transition: border-color .15s, background .15s;
+}
+
+.yeast-card span { font-size: 1.4rem; line-height: 1; flex-shrink: 0; }
+.yeast-card strong { display: block; font-size: .85rem; color: var(--text); }
+.yeast-card small  { font-size: .75rem; color: var(--text-muted); }
+
+.yeast-card.selected {
+    border-color: #22c55e;
+    background: color-mix(in srgb, #22c55e 10%, var(--panel));
+}
+
+.yeast-card:hover:not(.selected) { border-color: var(--accent); }
+
+[data-theme="dark"] .method-commercial .rec-badge {
+    background: color-mix(in srgb, #22c55e 10%, var(--panel));
+}
+
+[data-theme="dark"] .yeast-card.selected {
+    background: color-mix(in srgb, #22c55e 8%, var(--panel));
+}
