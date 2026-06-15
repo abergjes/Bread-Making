@@ -1,0 +1,416 @@
+@page "/starterguide"
+@inject NavigationManager Nav
+
+<div class="sg-page">
+
+    <div class="sg-header">
+        <button class="back-btn" @onclick='() => Nav.NavigateTo("/history")'>← History</button>
+        <div class="sg-title-group">
+            <h2 class="sg-title">Starter Health Guide</h2>
+            <p class="sg-subtitle">Reading your starter, feeding ratios, and diagnosing what went wrong</p>
+        </div>
+        <button class="btn-secondary sg-journal-btn" @onclick='() => Nav.NavigateTo("/starter")'>
+            📓 Open Starter Journal →
+        </button>
+    </div>
+
+    <div class="sg-tabs">
+        @foreach (var t in _tabs)
+        {
+            <button class="sg-tab @(_activeTab == t.Id ? "sg-tab--active" : "")"
+                    @onclick="() => _activeTab = t.Id">@t.Label</button>
+        }
+    </div>
+
+    @if (_activeTab == "reading")
+    {
+        <section class="sg-section">
+            <p class="sg-intro">
+                A healthy starter does the same thing every time you feed it: rises predictably, peaks at a
+                consistent time, and smells pleasant. Deviations from that pattern are the signal — the starter
+                is telling you what it needs.
+            </p>
+
+            <div class="sg-peak-card">
+                <div class="sg-peak-title">The peak cycle</div>
+                <div class="sg-peak-track">
+                    @foreach (var s in _peakStages)
+                    {
+                        <div class="sg-peak-stage sg-peak-stage--@s.Class">
+                            <div class="sg-peak-stage-label">@s.Label</div>
+                            <div class="sg-peak-stage-time">@s.Time</div>
+                            <div class="sg-peak-stage-desc">@s.Description</div>
+                        </div>
+                    }
+                </div>
+                <p class="sg-peak-note">
+                    At 24 °C with a 1:2:2 feed, peak typically occurs at 6–8 h. At 22 °C it may be 8–10 h;
+                    at 26 °C it may be 4–5 h. Track your starter's personal peak time rather than relying on
+                    clock guidelines.
+                </p>
+            </div>
+
+            <div class="sg-health-grid">
+                @foreach (var h in _healthSigns)
+                {
+                    <div class="sg-health-card sg-health-card--@h.StatusClass">
+                        <div class="sg-health-header">
+                            <span class="sg-health-icon">@h.Icon</span>
+                            <div class="sg-health-name">@h.Name</div>
+                            <span class="sg-health-badge sg-health-badge--@h.StatusClass">@h.Status</span>
+                        </div>
+                        <p class="sg-health-desc">@h.Description</p>
+                    </div>
+                }
+            </div>
+
+            <div class="sg-smell-card">
+                <div class="sg-smell-title">What your starter smells like</div>
+                <div class="sg-smell-grid">
+                    @foreach (var s in _smells)
+                    {
+                        <div class="sg-smell-row sg-smell-row--@s.Class">
+                            <span class="sg-smell-icon">@s.Icon</span>
+                            <div>
+                                <div class="sg-smell-name">@s.Name</div>
+                                <div class="sg-smell-text">@s.Meaning</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="sg-aliquot-card">
+                <div class="sg-aliquot-title">The aliquot jar test</div>
+                <p class="sg-aliquot-desc">
+                    Drop a small spoonful of starter into a glass of room-temperature water immediately after feeding.
+                    Mark the level with a rubber band or tape. The jar mirrors the bulk container — when the aliquot
+                    has risen to your target (50–75%), your bulk dough is likely there too.
+                </p>
+                <div class="sg-aliquot-grid">
+                    <div class="sg-aliquot-item">
+                        <strong>Floats</strong>
+                        <span>Sufficient gas trapped — starter is active and near or past peak</span>
+                    </div>
+                    <div class="sg-aliquot-item">
+                        <strong>Sinks</strong>
+                        <span>Not enough gas yet — starter needs more time, or has already peaked and collapsed</span>
+                    </div>
+                    <div class="sg-aliquot-item">
+                        <strong>Float but looks flat</strong>
+                        <span>Past peak — gas still present but volume fell; use within 1 h or refrigerate</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+    }
+    else if (_activeTab == "feeding")
+    {
+        <section class="sg-section">
+            <p class="sg-intro">
+                The feed ratio (starter : flour : water) is the primary dial for controlling peak time and
+                flavour. A higher ratio dilutes the existing population, extending the time to peak. A lower
+                ratio concentrates it, accelerating activity. Change one variable at a time.
+            </p>
+
+            <div class="sg-ratio-grid">
+                @foreach (var r in _ratios)
+                {
+                    <div class="sg-ratio-card">
+                        <div class="sg-ratio-header">
+                            <div class="sg-ratio-name">@r.Ratio</div>
+                            <span class="sg-ratio-tag sg-ratio-tag--@r.SpeedClass">@r.Speed</span>
+                        </div>
+                        <div class="sg-ratio-peak">⏱ Peak at @r.PeakTime at 24 °C</div>
+                        <p class="sg-ratio-desc">@r.Description</p>
+                        <div class="sg-ratio-use"><strong>Best for:</strong> @r.BestFor</div>
+                        <div class="sg-ratio-example">
+                            <div class="sg-ratio-ex-title">Example (200 g total levain)</div>
+                            @foreach (var line in r.Example)
+                            {
+                                <div class="sg-ratio-ex-line">@line</div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="sg-flour-card">
+                <div class="sg-flour-title">Flour choice for feeding</div>
+                <div class="sg-flour-grid">
+                    @foreach (var f in _feedFlours)
+                    {
+                        <div class="sg-flour-row">
+                            <span class="sg-flour-icon">@f.Icon</span>
+                            <div>
+                                <div class="sg-flour-name">@f.Name</div>
+                                <div class="sg-flour-text">@f.Description</div>
+                            </div>
+                            <span class="sg-flour-tag sg-flour-tag--@f.TagClass">@f.Tag</span>
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="sg-schedule-card">
+                <div class="sg-schedule-title">Maintenance schedules</div>
+                <div class="sg-schedule-grid">
+                    @foreach (var s in _maintenanceSchedules)
+                    {
+                        <div class="sg-schedule-item">
+                            <div class="sg-schedule-name">@s.Name</div>
+                            <div class="sg-schedule-freq">@s.Frequency</div>
+                            <p class="sg-schedule-desc">@s.Description</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </section>
+    }
+    else if (_activeTab == "troubleshoot")
+    {
+        <section class="sg-section">
+            <p class="sg-intro">
+                Most starter problems resolve with a change of flour, temperature, or ratio — not time alone.
+                If a starter is not improving after 3–4 corrective feeds, try a more drastic intervention
+                (fresher flour, filtered water, higher ratio).
+            </p>
+
+            <div class="sg-trouble-grid">
+                @foreach (var t in _troubles)
+                {
+                    <div class="sg-trouble-card">
+                        <div class="sg-trouble-header">
+                            <span class="sg-trouble-icon">@t.Icon</span>
+                            <div>
+                                <div class="sg-trouble-symptom">@t.Symptom</div>
+                                <span class="sg-trouble-sev sg-trouble-sev--@t.SevClass">@t.Severity</span>
+                            </div>
+                        </div>
+                        <div class="sg-trouble-body">
+                            <div>
+                                <div class="sg-trouble-section-title">Likely causes</div>
+                                <ul class="sg-cause-list">
+                                    @foreach (var c in t.Causes) { <li>@c</li> }
+                                </ul>
+                            </div>
+                            <div>
+                                <div class="sg-trouble-section-title">Fixes</div>
+                                <ul class="sg-fix-list">
+                                    @foreach (var f in t.Fixes) { <li>@f</li> }
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="sg-nuclear-card">
+                <div class="sg-nuclear-title">🔄 When to start fresh</div>
+                <p class="sg-nuclear-desc">
+                    A starter is worth restarting (from scratch or from a new culture) if it shows
+                    <strong>pink or orange streaks</strong> (Serratia marcescens or similar contamination),
+                    <strong>fuzzy mould growth</strong> on the surface that returns after scraping,
+                    or if it has been <strong>left unattended for months</strong> at room temperature
+                    without feeding. Hooch (grey liquid), a strange smell, and slow activity are not
+                    reasons to discard — these are recoverable with correct feeding.
+                </p>
+                <div class="sg-nuclear-chips">
+                    <span class="sg-nuclear-chip sg-nuclear-chip--restart">Restart: pink/orange streaks</span>
+                    <span class="sg-nuclear-chip sg-nuclear-chip--restart">Restart: fuzzy mould returns</span>
+                    <span class="sg-nuclear-chip sg-nuclear-chip--recover">Recover: hooch (grey liquid)</span>
+                    <span class="sg-nuclear-chip sg-nuclear-chip--recover">Recover: slow/no rise</span>
+                    <span class="sg-nuclear-chip sg-nuclear-chip--recover">Recover: too sour</span>
+                    <span class="sg-nuclear-chip sg-nuclear-chip--recover">Recover: strange smell</span>
+                </div>
+            </div>
+        </section>
+    }
+
+</div>
+
+@code {
+    private string _activeTab = "reading";
+
+    private record Tab(string Id, string Label);
+    private readonly Tab[] _tabs =
+    [
+        new("reading",     "Reading your starter"),
+        new("feeding",     "Feeding ratios"),
+        new("troubleshoot","Troubleshooting"),
+    ];
+
+    private record PeakStage(string Label, string Time, string Description, string Class);
+    private readonly PeakStage[] _peakStages =
+    [
+        new("Just fed",   "0 h",   "Quiet. Yeast and bacteria are in lag phase — consuming oxygen, reproducing.", "lag"),
+        new("Rising",     "2–5 h", "Visible bubbles. Volume increasing. Sweet, lactic smell developing.",          "rise"),
+        new("Peak",       "6–8 h", "Maximum volume. Domed surface. Webbed interior. Use now for maximum lift.",    "peak"),
+        new("Past peak",  "8–10 h","Dome flattens. Volume slowly falling. More acidic; still usable for flavour.", "past"),
+        new("Collapsed",  "12 h+", "Volume fallen below start. Hooch may form. Feed again; do not bake with this.","collapse"),
+    ];
+
+    private record HealthSign(string Icon, string Name, string Status, string StatusClass, string Description);
+    private readonly HealthSign[] _healthSigns =
+    [
+        new("📈", "Doubles in 4–8 h at 24 °C",        "Healthy",  "good",    "The clearest sign of a vigorous, balanced culture. Consistent doubling means yeast population is strong and lactic bacteria are producing enough CO₂."),
+        new("🫧", "Bubbles throughout the mass",        "Healthy",  "good",    "Gas production from throughout the culture, not just the surface. A bubbly, webbed interior seen through a glass jar confirms activity is distributed evenly."),
+        new("🍋", "Smells yoghurt-like or milky",      "Healthy",  "good",    "Lactic acid dominant — the smell of a well-balanced, frequently fed starter. Clean, slightly sour, pleasant enough to taste."),
+        new("⏱️", "Consistent peak time each feed",    "Healthy",  "good",    "Reproducibility is the best health indicator. If your starter reliably peaks at 7 h after a 1:2:2 feed at 24 °C, it is performing well regardless of absolute timing."),
+        new("🐌", "Rises only 50% in 12 h",           "Sluggish", "warn",    "Either the temperature is low, the ratio is too high, or the flour is stale. Not a sick starter — an underpowered one. Correct the environment first."),
+        new("💧", "Grey liquid on top (hooch)",        "Hungry",   "warn",    "Ethanol produced when yeast exhausts the food supply. The starter is past peak and hungry. Pour it off (or stir in), feed immediately. Not harmful."),
+        new("🧪", "Smells sharply acidic or acetone",  "Overfed", "warn",    "High acetic acid — the starter is cold, infrequently fed, or used from a stiff culture. Normal for some styles; feed more frequently to reduce."),
+        new("🚫", "Pink or orange streaks",            "Discard",  "bad",     "Contamination by bacteria (usually Serratia marcescens or similar). Not recoverable by feeding. Discard, sterilise the jar, and begin a new culture."),
+    ];
+
+    private record SmellEntry(string Icon, string Name, string Meaning, string Class);
+    private readonly SmellEntry[] _smells =
+    [
+        new("🍼", "Mild, milky, yoghurt-like", "Healthy lactic acid. Balanced culture at or approaching peak.", "good"),
+        new("🍋", "Tart, tangy, vinegary",     "Acetic acid dominant. Active but cold or infrequently fed. Produces more sour bread.", "ok"),
+        new("🍺", "Yeasty, beer-like, boozy",  "Ethanol produced. Past peak or fed too much sugar. Smell dissipates after feeding.", "ok"),
+        new("🧀", "Sharp cheese or acetone",   "Very high acetic acid. Stiff culture, cold conditions. Reduce ratio and warm the starter.", "warn"),
+        new("🪣", "Musty, damp, earthy",       "Possible mould beginning. Check the surface carefully. Feed and monitor.", "warn"),
+        new("🌸", "Sweet, floral, fruity",     "Ester production from active yeast — common in young starters and warm conditions. Pleasant and normal.", "good"),
+        new("🤢", "Vomit, rancid, or putrid",  "Butyric acid from bacterial contamination. Discard and start fresh. Not recoverable.", "bad"),
+    ];
+
+    private record FeedRatio(string Ratio, string Speed, string SpeedClass, string PeakTime,
+        string Description, string BestFor, string[] Example);
+    private readonly FeedRatio[] _ratios =
+    [
+        new("1 : 1 : 1", "Fast", "fast", "3–5 h",
+            "Equal parts starter, flour, water. High concentration of existing organisms — peak arrives quickly. " +
+            "Little dilution of accumulated acids, so flavour is more sour.",
+            "Daily maintenance, same-day baking, warm kitchens",
+            ["Existing starter: 33 g", "Flour: 33 g", "Water: 33 g", "Total: 99 g"]),
+        new("1 : 2 : 2", "Standard", "std", "6–8 h",
+            "The most widely recommended ratio. Provides enough fresh food to develop structure without " +
+            "over-diluting the culture. Peak is reliable and predictable at typical room temperatures.",
+            "Overnight levain builds, standard sourdough timing",
+            ["Existing starter: 33 g", "Flour: 67 g", "Water: 67 g", "Total: 167 g"]),
+        new("1 : 5 : 5", "Slow", "slow", "10–14 h",
+            "High dilution extends peak time significantly — useful when you need to delay activity " +
+            "to fit your schedule, or when the kitchen is warm. Produces milder, less acidic bread.",
+            "Warm summer kitchens, long overnight schedules",
+            ["Existing starter: 18 g", "Flour: 91 g", "Water: 91 g", "Total: 200 g"]),
+        new("1 : 10 : 10", "Very slow", "vslow", "16–20 h",
+            "Extreme dilution for very warm conditions or a baker who needs maximum schedule flexibility. " +
+            "The small seed of existing organisms takes a long time to populate the fresh flour.",
+            "Hot kitchens (26 °C+), 24 h baking cycles",
+            ["Existing starter: 9 g", "Flour: 95 g", "Water: 95 g", "Total: 199 g"]),
+    ];
+
+    private record FeedFlour(string Icon, string Name, string Description, string Tag, string TagClass);
+    private readonly FeedFlour[] _feedFlours =
+    [
+        new("⚪", "White bread flour (12–13% protein)",
+            "The most neutral choice. Supports a large, consistent yeast population with minimal enzyme interference. Good for establishing and maintaining a reliable culture.",
+            "Standard", "std"),
+        new("🟤", "Wholemeal / whole wheat",
+            "Higher enzyme activity and natural microorganism load accelerates fermentation and diversifies the culture. Use for boosting a sluggish starter or adding complexity.",
+            "Activating", "active"),
+        new("🌿", "Rye flour (any amount)",
+            "The most powerful activator. Even 20% rye in the feed dramatically accelerates activity due to very high amylase content and natural wild yeast density. Excellent for reviving a slow starter.",
+            "Best activator", "rye"),
+        new("🥛", "Unbleached AP flour",
+            "Similar to bread flour with slightly less protein. Works well for lower-hydration (stiff) levain builds. Produces a slightly milder, creamier flavour.",
+            "Good", "std"),
+        new("❌", "Bleached flour",
+            "Chemical bleaching destroys natural microorganisms and enzyme activity. Avoid for sourdough maintenance — the culture will weaken over successive feeds.",
+            "Avoid", "avoid"),
+        new("❌", "Self-raising flour",
+            "Contains added baking powder and salt, both of which inhibit yeast and bacteria. Never use for starter maintenance.",
+            "Never use", "avoid"),
+    ];
+
+    private record MaintenanceSchedule(string Name, string Frequency, string Description);
+    private readonly MaintenanceSchedule[] _maintenanceSchedules =
+    [
+        new("Counter maintenance",
+            "Feed once or twice daily",
+            "Active starter left at room temperature needs feeding every 12–24 h to prevent collapse. Best for bakers baking 3+ times per week. Use a 1:2:2 or 1:5:5 ratio depending on kitchen temperature."),
+        new("Refrigerator storage",
+            "Feed once per week",
+            "A fed starter can be refrigerated immediately and stored for up to 2 weeks without attention. Remove 24–48 h before baking, discard most of it, and feed twice at room temperature before building your levain."),
+        new("Long-term storage (dried)",
+            "Revive every 6–12 months",
+            "Spread active starter thinly on parchment and dry at room temperature for 24–48 h. Crumble into flakes and store in an airtight container indefinitely. Rehydrate with warm water and flour and feed daily for 3–5 days to revive."),
+        new("Stiff culture storage",
+            "Feed every 7–10 days",
+            "A stiff starter (50–65% hydration) ferments more slowly than a liquid one and can be refrigerated for longer between feeds. Particularly useful in hot climates where liquid starters are hard to manage."),
+    ];
+
+    private record StarterTrouble(string Icon, string Symptom, string Severity, string SevClass,
+        string[] Causes, string[] Fixes);
+
+    private readonly StarterTrouble[] _troubles =
+    [
+        new("🐌", "Not rising at all after feeding", "Urgent", "high",
+            ["Starter is brand new (< 7 days old) — normal; patience needed",
+             "Kitchen too cold (below 18 °C) — yeast is dormant, not dead",
+             "Flour is bleached or self-raising — inhibits microorganisms",
+             "Water contains chlorine or chloramine — kills bacteria",
+             "Jar too narrow — CO₂ cannot expand the culture"],
+            ["Place jar in a warm spot (24–26 °C) — top of the fridge, inside an oven with just the light on",
+             "Switch to unbleached bread flour or add 20% rye",
+             "Use filtered water or leave tap water uncovered overnight to off-gas chlorine",
+             "Use a wider, straight-sided jar — a tall narrow jar suppresses rise visually",
+             "If < 14 days old: be patient and keep feeding daily"]),
+        new("📉", "Rises then collapses too fast", "Moderate", "warn",
+            ["Kitchen is very warm (26 °C+) — fermentation races to peak and beyond",
+             "Ratio too low (1:1:1 in warm conditions) — not enough food for the activity level",
+             "Starter was already overdue a feed before you fed it"],
+            ["Move to a cooler spot or feed at a higher ratio (1:5:5)",
+             "Use cold water to slow the feed",
+             "Feed on a fixed schedule rather than waiting for collapse"]),
+        new("🧪", "Too sour — unpleasant sharp or acetone smell", "Cosmetic", "low",
+            ["Acetic acid dominant — starter is cold, infrequently fed, or very stiff",
+             "Starter left too long between feeds",
+             "Using a very stiff culture (< 65% hydration)"],
+            ["Feed more frequently or increase the ratio to 1:5:5",
+             "Move to a warmer location — warmth favours lactic (milder) over acetic (sharper) acid",
+             "Increase hydration slightly — a wetter culture favours lactic bacteria"]),
+        new("😶", "Not sour enough / bland flavour", "Cosmetic", "low",
+            ["Feeding too frequently — acids are diluted before they build",
+             "Kitchen too warm — fast fermentation gives yeast priority over acid producers",
+             "Always using at peak — some acidity develops after peak"],
+            ["Reduce feeding frequency or use at just-past-peak rather than at peak",
+             "Try a cooler fermentation temperature",
+             "Add 10–20% rye to the feed flour — rye produces a more flavourful culture"]),
+        new("💧", "Grey or brown liquid on top (hooch)", "Minor", "ok",
+            ["Starter has exhausted its food supply — past peak",
+             "Refrigerated starter that has not been fed recently"],
+            ["Pour off the hooch or stir it back in (it is mildly acidic, not harmful)",
+             "Feed immediately with a higher ratio than usual (1:5:5) to dilute accumulated acids",
+             "Feed more frequently to prevent hooch forming"]),
+        new("🏗️", "Thick, gluey, stringy texture (rope-like)", "Urgent", "high",
+            ["Contamination by rope-forming bacteria (Bacillus subtilis)",
+             "Using flour that was already contaminated"],
+            ["Discard immediately — do not bake with ropy starter",
+             "Sterilise the jar thoroughly with boiling water",
+             "Begin a new culture with fresh flour from a different bag",
+             "Ropy bread (caused by Bacillus subtilis) has a hollow, stringy crumb and is unsafe to eat"]),
+        new("🎨", "Pink or orange streaks or patches", "Critical", "bad",
+            ["Contamination by Serratia marcescens or similar pigment-producing bacteria",
+             "Often introduced via unwashed hands, contaminated water, or unclean equipment"],
+            ["Discard the entire starter — do not attempt to rescue",
+             "Sterilise all equipment with boiling water or dilute bleach solution",
+             "Wash hands thoroughly before handling starter",
+             "Begin a new culture from scratch"]),
+        new("🍄", "Fuzzy mould growth on surface", "Critical", "bad",
+            ["Mould spores from the environment settling on the surface",
+             "Starter left uncovered or inadequately covered",
+             "Very low acid environment — new or repeatedly over-diluted starter"],
+            ["Scrape off the mould and feed if it appears once and does not return — the acid environment will prevent regrowth",
+             "If mould returns after feeding: discard and start fresh",
+             "Cover loosely (not airtight) with a cloth or loose lid — airflow is fine, spore landing is not",
+             "A healthy, acidic starter is naturally resistant to mould; if mould recurs, the culture is too weak"]),
+        new("🌊", "Starter overflows the jar constantly", "Minor", "ok",
+            ["Jar too small for the feed ratio",
+             "Kitchen warmer than expected — faster rise than anticipated"],
+            ["Use a larger, straight-sided jar (500 ml minimum for a 200 g starter)",
+             "Reduce the feed ratio temporarily until you find the right container",
+             "Mark the jar at the feed level so you can see the rise without being surprised"]),
+    ];
+}
