@@ -1,0 +1,318 @@
+@page "/flourspec"
+@inject NavigationManager Nav
+
+<div class="flourspec-page">
+
+    <div class="flourspec-header">
+        <button class="back-btn" @onclick='() => Nav.NavigateTo("/history")'>← History</button>
+        <div class="flourspec-title-group">
+            <h2 class="flourspec-title">Flour Rheology</h2>
+            <p class="flourspec-subtitle">Baker's guide §33 · Reading alveograph, extensograph and flour spec sheets</p>
+        </div>
+    </div>
+
+    <p class="flourspec-intro">
+        Professional flour carries a lab data sheet that tells you more about how the flour will behave in the dough than the protein percentage alone. Three instruments produce the most useful numbers: the alveograph (measures bubble-inflation energy and shape), the extensograph (measures stretch resistance), and the falling number apparatus (measures starch enzyme activity). Once you know what the numbers mean, you can choose flour for the job rather than guessing from the label.
+    </p>
+
+    <div class="flourspec-tabs" role="tablist">
+        @foreach (var tab in _tabs)
+        {
+            <button class="flourspec-tab @(_activeTab == tab.Id ? "flourspec-tab-active" : "")"
+                    role="tab"
+                    @onclick="() => _activeTab = tab.Id">
+                <span>@tab.Icon</span> @tab.Label
+            </button>
+        }
+    </div>
+
+    @if (_activeTab == "alveograph")
+    {
+        <div class="flourspec-section">
+            <p class="flourspec-section-intro">The alveograph inflates a disc of standardised dough like a bubble until it bursts. Three numbers come from the pressure curve.</p>
+
+            <div class="alveograph-diagram">
+                <div class="alveograph-bubble-wrap">
+                    <div class="alveograph-bubble">
+                        <span class="alveograph-bubble-label">W</span>
+                        <span class="alveograph-bubble-sublabel">energy = area under curve</span>
+                    </div>
+                    <div class="alveograph-axis">
+                        <div class="alveograph-y">P (resistance)</div>
+                        <div class="alveograph-x">L (extensibility)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alveograph-params">
+                @foreach (var p in _alveographParams)
+                {
+                    <div class="alveo-param-card">
+                        <div class="alveo-param-header">
+                            <span class="alveo-param-symbol">@p.Symbol</span>
+                            <div>
+                                <div class="alveo-param-name">@p.Name</div>
+                                <div class="alveo-param-unit">@p.Unit</div>
+                            </div>
+                        </div>
+                        <p class="alveo-param-desc">@p.Description</p>
+                        <div class="alveo-range-grid">
+                            @foreach (var r in p.Ranges)
+                            {
+                                <div class="alveo-range alveo-range--@r.Class">
+                                    <span class="alveo-range-val">@r.Value</span>
+                                    <span class="alveo-range-label">@r.Label</span>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="flourspec-callout">
+                <strong>Practical W selection guide:</strong><br/>
+                Baguette / lean bread: W 200–280 · Sourdough boule / levain: W 260–320 · Long cold retard (16–20h): W 300–380 · Enriched / brioche: W 300–380 · Pizza Napoletana (VPN): W 250–320 · Croissant / laminated: W 320–380+
+            </div>
+        </div>
+    }
+
+    @if (_activeTab == "extensograph")
+    {
+        <div class="flourspec-section">
+            <p class="flourspec-section-intro">The extensograph stretches a ball of dough to breaking point on a hook, measuring both how far it stretches (extensibility) and how much it resists stretching (resistance). Measured at 45, 90 and 135 minutes rest after mixing.</p>
+
+            <div class="extenso-params">
+                @foreach (var p in _extensoParams)
+                {
+                    <div class="extenso-param-card">
+                        <div class="extenso-symbol">@p.Symbol</div>
+                        <div>
+                            <div class="extenso-name">@p.Name</div>
+                            <p class="extenso-desc">@p.Description</p>
+                            <div class="extenso-good">
+                                <span class="extenso-good-label">Ideal range:</span> @p.IdealRange
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="extenso-comparison">
+                <h3 class="flourspec-h3">R/E Ratio — the key balance</h3>
+                <div class="re-ratio-cards">
+                    <div class="re-card re-low">
+                        <div class="re-ratio-label">R/E too low (&lt; 1.5)</div>
+                        <div class="re-ratio-name">Slack / extensible dough</div>
+                        <p>Dough spreads rather than rising. Needs more strength; add a small amount of ascorbic acid, or blend in a stronger flour.</p>
+                    </div>
+                    <div class="re-card re-ideal">
+                        <div class="re-ratio-label">R/E 1.5–3.0</div>
+                        <div class="re-ratio-name">Balanced — most bread</div>
+                        <p>Good volume and shape retention. Dough is workable and holds gas through proof and bake.</p>
+                    </div>
+                    <div class="re-card re-high">
+                        <div class="re-ratio-label">R/E too high (&gt; 4.0)</div>
+                        <div class="re-ratio-name">Stiff / resistant dough</div>
+                        <p>Dough tears rather than stretching. Resists shaping; loaf volume suffers. Rest longer between folds, or blend in a weaker flour.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flourspec-callout">
+                <strong>Time effect:</strong> Extenso readings at 135 min > 45 min means the flour relaxes and becomes more extensible with rest — important for long fermentation. A flour that stays stiff at 135 min will be difficult to shape after a cold overnight ferment.
+            </div>
+        </div>
+    }
+
+    @if (_activeTab == "falling")
+    {
+        <div class="flourspec-section">
+            <p class="flourspec-section-intro">The falling number test measures alpha-amylase enzyme activity. A stirrer is dropped into a hot starch-flour paste; the time it takes to fall is measured in seconds. High amylase activity liquefies the starch quickly → short falling number → fast drop.</p>
+
+            <div class="falling-scale">
+                @foreach (var f in _fallingNumbers)
+                {
+                    <div class="falling-band falling-band--@f.Class">
+                        <div class="falling-seconds">@f.Seconds s</div>
+                        <div class="falling-label">@f.Label</div>
+                        <p class="falling-desc">@f.Description</p>
+                    </div>
+                }
+            </div>
+
+            <div class="flourspec-callout">
+                <strong>Why does this matter to bakers?</strong> Too much amylase = sticky, gummy crumb that never quite sets. The classic symptom is bread that seems baked (sounds hollow, correct internal temperature) but cuts into a damp, gummy interior. This is called "starch attack" and is why very dark malted flours need careful handling — the malt enzyme activity overwhelms the starch during baking.
+            </div>
+
+            <h3 class="flourspec-h3">Diastatic Malt: Controlled Alpha-Amylase</h3>
+            <div class="malt-explainer">
+                <div class="malt-card">
+                    <div class="malt-title">Diastatic malt flour / powder</div>
+                    <p class="malt-desc">Contains active alpha-amylase (and beta-amylase). Added at 0.1–0.5% of flour weight to provide enzyme-available sugars for yeast/LAB and crust browning. Typical falling number: 150–250 s (deliberately short).</p>
+                    <div class="malt-caution">Caution: too much (> 1%) causes a gummy crumb. Start at 0.2% and adjust.</div>
+                </div>
+                <div class="malt-card">
+                    <div class="malt-title">Non-diastatic malt / malt extract</div>
+                    <p class="malt-desc">Heat-treated — no active enzymes. Adds sweetness, colour and Maillard precursors (maltose) only. Used in bagels (honey-malt boil), dark malted loaves and enriched breads. No effect on falling number.</p>
+                    <div class="malt-caution">Safe to use at higher percentages — no starch attack risk.</div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (_activeTab == "specsheet")
+    {
+        <div class="flourspec-section">
+            <p class="flourspec-section-intro">A flour mill's technical data sheet can contain a dozen or more values. Here are the ones that appear most often and what to look for.</p>
+
+            <div class="specsheet-table">
+                <div class="specsheet-header-row">
+                    <span>Parameter</span>
+                    <span>Typical unit</span>
+                    <span>What it tells you</span>
+                    <span>Ideal range (bread)</span>
+                </div>
+                @foreach (var s in _specSheetRows)
+                {
+                    <div class="specsheet-row">
+                        <span class="spec-param">@s.Parameter</span>
+                        <span class="spec-unit">@s.Unit</span>
+                        <span class="spec-meaning">@s.Meaning</span>
+                        <span class="spec-range">@s.IdealRange</span>
+                    </div>
+                }
+            </div>
+
+            <div class="flourspec-callout" style="margin-top:16px">
+                <strong>The two numbers worth checking first:</strong> Protein % tells you strength potential. Falling number tells you whether the starch is intact. If both are in range, the flour is suitable for lean sourdough. The alveograph W then determines how long a ferment it can handle.
+            </div>
+
+            <h3 class="flourspec-h3">Blending Flours</h3>
+            <div class="blending-tips">
+                @foreach (var b in _blendingTips)
+                {
+                    <div class="blending-tip">
+                        <span class="blending-tip-icon">@b.Icon</span>
+                        <p>@b.Text</p>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+</div>
+
+@code {
+    private string _activeTab = "alveograph";
+
+    private record TabDef(string Id, string Icon, string Label);
+    private readonly TabDef[] _tabs =
+    [
+        new("alveograph",  "🫧", "Alveograph (W, P/L)"),
+        new("extensograph","↔️", "Extensograph (R, E)"),
+        new("falling",     "⏱️", "Falling Number"),
+        new("specsheet",   "📋", "Reading a Spec Sheet"),
+    ];
+
+    // ── Alveograph ────────────────────────────────────────────
+    private record AlveoRange(string Value, string Label, string Class);
+    private record AlveoParam(string Symbol, string Name, string Unit, string Description, AlveoRange[] Ranges);
+
+    private readonly AlveoParam[] _alveographParams =
+    [
+        new("W", "Dough strength", "×10⁻⁴ J",
+            "The area under the alveograph curve — total energy required to inflate the bubble. The single most useful number. High W = strong flour that tolerates long fermentation, keeps gas in, and stays springy. Low W = tender, extensible dough for short ferments and soft loaves.",
+            [
+                new("< 150", "Very weak — cake/biscuit flour", "weak"),
+                new("150–220", "Weak — pastry, tender crumb", "weak-bread"),
+                new("220–280", "Medium — baguette, ciabatta", "medium"),
+                new("280–360", "Strong — sourdough, long ferment", "strong"),
+                new("> 360", "Very strong — enriched, laminated", "very-strong"),
+            ]),
+        new("P", "Tenacity (resistance)", "mm",
+            "Maximum pressure reached during inflation — how strongly the dough resists being stretched. A high P value means a tight, resistant dough that fights shaping. Too low and the dough lacks enough structure to hold gas.",
+            [
+                new("< 40", "Very slack — needs more strength", "weak"),
+                new("40–80", "Normal range", "medium"),
+                new("> 80", "Very tight — mix longer or rest more", "strong"),
+            ]),
+        new("L", "Extensibility", "mm",
+            "Length of the curve — how far the dough stretches before bursting. High L = extensible, relaxed dough. Low L = brittle, tears rather than stretching.",
+            [
+                new("< 60", "Brittle / short dough", "weak"),
+                new("60–100", "Normal range", "medium"),
+                new("> 100", "Very extensible", "strong"),
+            ]),
+        new("P/L", "Shape ratio (balance)", "—",
+            "The ratio of tenacity to extensibility. A perfectly balanced flour has P/L ≈ 0.5–0.7. Higher = dough that resists stretching more than it yields (tough). Lower = dough that yields more than it resists (slack). Most bread flours should sit between 0.4 and 1.0.",
+            [
+                new("< 0.4", "Slack / extensible (pizza, ciabatta)", "weak"),
+                new("0.4–1.0", "Balanced — general bread", "medium"),
+                new("> 1.0", "Tight / resistant — mix needs relaxation", "strong"),
+            ]),
+    ];
+
+    // ── Extensograph ─────────────────────────────────────────
+    private record ExtensoParam(string Symbol, string Name, string Description, string IdealRange);
+    private readonly ExtensoParam[] _extensoParams =
+    [
+        new("R₄₅", "Resistance at 45 min",
+            "Force required to stretch the dough ball to a fixed point, measured after 45 minutes rest. Higher = stronger / more elastic. Directly related to gluten quantity and quality.",
+            "400–700 BU (bread flour)"),
+        new("E", "Extensibility",
+            "Length the dough stretches to before breaking. Higher E = more relaxed, extensible dough. Long fermentation and enzyme activity increase E over time.",
+            "150–200 mm (bread flour)"),
+        new("A", "Area under curve",
+            "Total energy input — comparable to alveograph W but for the extensograph. A higher area means a stronger, more elastic dough. Useful for comparing flours from the same mill.",
+            "> 90 cm² (bread flour)"),
+    ];
+
+    // ── Falling Number ────────────────────────────────────────
+    private record FallingBand(string Seconds, string Label, string Description, string Class);
+    private readonly FallingBand[] _fallingNumbers =
+    [
+        new("< 150", "Severely damaged — sprouted grain",
+            "Very high amylase. The grain began to germinate before harvest (pre-harvest sprouting). Starch converts to dextrin during baking; bread crumb is gummy, sticky and cannot set. Unusable for most bread without enzyme-inactive blend.",
+            "danger"),
+        new("150–220", "High amylase — malted flour territory",
+            "Good for bagel boils, dark malt breads and baguettes where a small dose of enzyme activity adds crust colour and feeds fermentation. Use carefully — this is approaching gummy crumb risk if used at 100%.",
+            "caution"),
+        new("220–300", "Optimal — most bread flours",
+            "Enzyme activity is present but controlled. Provides enough sugar for fermentation and browning without overconverting starch. This is the ideal zone for lean sourdough and most artisan bread.",
+            "ideal"),
+        new("300–400", "Slightly high — reliable, clean bake",
+            "Less amylase activity. Safe against gummy crumb; slightly less help with browning. Fine for any recipe; fermentation sugars may need a small supplement from malt or honey.",
+            "ok"),
+        new("> 400", "Very low amylase — mechanically damaged starch risk",
+            "Almost no enzyme activity. Minimal fermentation support from flour sugars. Check for high ash content or bleaching that may have damaged enzymes. Usually fine for enriched breads where added sugar compensates.",
+            "ok"),
+    ];
+
+    // ── Spec sheet ───────────────────────────────────────────
+    private record SpecRow(string Parameter, string Unit, string Meaning, string IdealRange);
+    private readonly SpecRow[] _specSheetRows =
+    [
+        new("Protein %", "% (14% mc)", "Total protein — the main predictor of gluten strength potential", "11–14% (bread)"),
+        new("Moisture %", "%", "Water content at delivery — affects shelf life and absorption calculation", "< 14.5%"),
+        new("Ash %", "% (dm)", "Mineral content — rises with more bran. Higher ash = more whole grain, darker flour, more enzyme substrate", "0.45–0.65% (T65)"),
+        new("Wet gluten %", "%", "Actual gluten protein washed from flour — more directly related to network than total protein", "> 25%"),
+        new("Gluten index", "0–100", "Gluten quality / strength. 100 = maximum strength. < 60 indicates weak, extensible gluten", "> 80 (bread)"),
+        new("Alveograph W", "×10⁻⁴ J", "Total dough strength — see Alveograph tab", "220–360 (bread)"),
+        new("Alveograph P/L", "ratio", "Tenacity/extensibility balance", "0.4–1.0"),
+        new("Falling number", "seconds", "Alpha-amylase activity — see Falling Number tab", "220–350"),
+        new("Water absorption", "%", "How much water the flour absorbs to a target consistency — measured by farinograph", "55–65% (bread)"),
+        new("Development time", "min", "Time to reach optimum dough consistency in the farinograph. Longer = slower flour to develop", "2–6 min"),
+        new("Stability", "min", "How long the dough holds optimum consistency before weakening. Longer = more tolerant", "> 6 min"),
+        new("Hagberg FN", "s", "Same as falling number — Hagberg is a common brand name for the same test", "220–350"),
+    ];
+
+    private record BlendTip(string Icon, string Text);
+    private readonly BlendTip[] _blendingTips =
+    [
+        new("➕", "To increase W and strength: blend in a high-W flour (T00 / bread flour with W 300+). A 20–30% addition raises the blend's W noticeably without changing flavour much."),
+        new("➖", "To decrease W (make dough more extensible): blend in a lower-W flour (pastry or all-purpose). Useful for pizza where extensibility matters more than gas retention."),
+        new("🌾", "To increase whole-grain nutrition without full rye structure problems: substitute 10–20% with wholemeal or ancient grain. The blend keeps workability while gaining flavour, mineral bioavailability and fibre."),
+        new("⚗️", "Protein percentages blend linearly by weight: a 50/50 blend of 10% and 14% protein flour gives approximately 12% protein. Falling number also blends approximately linearly."),
+        new("📏", "W does not blend linearly. Blending a very strong flour (W 380) and a weak one (W 120) at 50/50 gives roughly W 200, not W 250. The network strength relationship is non-linear — test small batches."),
+    ];
+}
