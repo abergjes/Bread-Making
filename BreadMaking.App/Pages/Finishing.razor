@@ -1,0 +1,262 @@
+@page "/finishing"
+@inject NavigationManager Nav
+
+<div class="finishing-page">
+
+    <div class="finishing-header">
+        <button class="back-btn" @onclick='() => Nav.NavigateTo("/history")'>← History</button>
+        <div class="finishing-title-group">
+            <h2 class="finishing-title">Finishing, Glazing & Crust</h2>
+            <p class="finishing-subtitle">Washes · Scoring · Toppings · Steam</p>
+        </div>
+    </div>
+
+    <div class="finishing-tabs" role="tablist">
+        @foreach (var tab in _tabs)
+        {
+            <button class="finishing-tab @(_activeTab == tab.Id ? "finishing-tab-active" : "")"
+                    role="tab"
+                    @onclick="() => _activeTab = tab.Id">
+                <span>@tab.Icon</span> @tab.Label
+            </button>
+        }
+    </div>
+
+    @if (_activeTab == "washes")
+    {
+        <div class="finishing-section">
+            <p class="finishing-intro">The wash brushed onto a shaped loaf decides two things: how brown the crust goes and how much it shines. The two effects come from different sources — browning from Maillard chemistry (proteins + sugars), shine from egg proteins that set glossy under heat.</p>
+
+            <div class="wash-grid">
+                @foreach (var w in _washes)
+                {
+                    <div class="wash-card">
+                        <div class="wash-card-top">
+                            <span class="wash-icon">@w.Icon</span>
+                            <div>
+                                <div class="wash-name">@w.Name</div>
+                                @if (w.Timing != "Before bake")
+                                {
+                                    <div class="wash-timing wash-timing-after">@w.Timing</div>
+                                }
+                                else
+                                {
+                                    <div class="wash-timing">@w.Timing</div>
+                                }
+                            </div>
+                        </div>
+                        <div class="wash-meters">
+                            <div class="wash-meter-row">
+                                <span class="wash-meter-label">Browning</span>
+                                <div class="wash-dots">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        <span class="wash-dot @(i <= w.Browning ? "wash-dot-on" : "")"></span>
+                                    }
+                                </div>
+                            </div>
+                            <div class="wash-meter-row">
+                                <span class="wash-meter-label">Shine</span>
+                                <div class="wash-dots">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        <span class="wash-dot wash-dot-shine @(i <= w.Shine ? "wash-dot-on" : "")"></span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        <p class="wash-best-for"><strong>Best for:</strong> @w.BestFor</p>
+                        @if (!string.IsNullOrEmpty(w.Tip))
+                        {
+                            <p class="wash-tip">@w.Tip</p>
+                        }
+                    </div>
+                }
+            </div>
+
+            <div class="finishing-callout">
+                <strong>Steam &amp; washes:</strong> Steam in the first 15–20 minutes keeps the crust moist so washes brown evenly rather than scorching. Apply washes to cold, firm dough directly before loading the oven.
+            </div>
+        </div>
+    }
+
+    @if (_activeTab == "scoring")
+    {
+        <div class="finishing-section">
+            <p class="finishing-intro">Scoring is functional before it is decorative: the cut sets the path of least resistance, directing where the loaf opens instead of leaving it to burst at random. Blade angle is the master variable — shallow for an ear, vertical for an even split.</p>
+
+            <div class="finishing-blade-section">
+                <h3 class="finishing-h3">Blade Angle</h3>
+                <div class="blade-cards">
+                    <div class="blade-card blade-shallow">
+                        <div class="blade-diagram">
+                            <svg viewBox="0 0 80 60" width="80" height="60" aria-hidden="true">
+                                <ellipse cx="40" cy="42" rx="30" ry="14" fill="var(--tan)" opacity=".3"/>
+                                <ellipse cx="40" cy="42" rx="30" ry="14" fill="none" stroke="var(--tan)" stroke-width="1.5"/>
+                                <path d="M30 28 Q45 18 60 22" stroke="var(--accent)" stroke-width="2" fill="none" stroke-linecap="round"/>
+                                <path d="M30 28 Q35 24 38 30" fill="var(--accent)" opacity=".35"/>
+                                <text x="22" y="16" font-size="7" fill="var(--text-muted)">30–45°</text>
+                                <line x1="30" y1="28" x2="22" y2="12" stroke="var(--text-muted)" stroke-width=".8" stroke-dasharray="2 2"/>
+                            </svg>
+                        </div>
+                        <div class="blade-label">Shallow (30–45°)</div>
+                        <div class="blade-result">Lifts a flap → <strong>ear / grigne</strong></div>
+                        <p class="blade-note">The cut becomes a flap; oven spring raises it into the characteristic ridge. Requires surface tension, steam and correct proof level.</p>
+                    </div>
+                    <div class="blade-card blade-vertical">
+                        <div class="blade-diagram">
+                            <svg viewBox="0 0 80 60" width="80" height="60" aria-hidden="true">
+                                <ellipse cx="40" cy="42" rx="30" ry="14" fill="var(--tan)" opacity=".3"/>
+                                <ellipse cx="40" cy="42" rx="30" ry="14" fill="none" stroke="var(--tan)" stroke-width="1.5"/>
+                                <line x1="40" y1="18" x2="40" y2="34" stroke="var(--accent)" stroke-width="2" stroke-linecap="round"/>
+                                <text x="44" y="16" font-size="7" fill="var(--text-muted)">90°</text>
+                            </svg>
+                        </div>
+                        <div class="blade-label">Vertical (90°)</div>
+                        <div class="blade-result">Even split, <strong>no ear</strong></div>
+                        <p class="blade-note">Opens symmetrically on both sides; rounds the cross-section. Good for decorative grids and boules where height matters less than width.</p>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="finishing-h3">Common Scoring Patterns</h3>
+            <div class="score-grid">
+                @foreach (var s in _scores)
+                {
+                    <div class="score-card">
+                        <div class="score-art">@s.Art</div>
+                        <div class="score-info">
+                            <div class="score-name">@s.Name</div>
+                            <div class="score-shape">@s.Shape</div>
+                            <p class="score-desc">@s.Description</p>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="finishing-callout">
+                <strong>Depth matters:</strong> 5–15 mm is the target. Too shallow and the crust seals before the loaf expands; too deep and it degasses and spreads. One fast, confident stroke on cold dough, with a fresh sharp blade.
+            </div>
+        </div>
+    }
+
+    @if (_activeTab == "toppings")
+    {
+        <div class="finishing-section">
+            <p class="finishing-intro">A wash doubles as glue for toppings. Brush before pressing seeds into the surface; flour and rice flour need no glue at all. Alkaline dips (lye or baked-soda wash) speed the Maillard reaction dramatically, reaching mahogany colours an ordinary wash cannot.</p>
+
+            <div class="topping-grid">
+                @foreach (var t in _toppings)
+                {
+                    <div class="topping-card">
+                        <span class="topping-icon">@t.Icon</span>
+                        <div>
+                            <div class="topping-name">@t.Name</div>
+                            <div class="topping-glue">Glue: @t.Glue</div>
+                            <p class="topping-desc">@t.Description</p>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+    @if (_activeTab == "steam")
+    {
+        <div class="finishing-section">
+            <p class="finishing-intro">Steam in the first 15–20 minutes is what lets the crust stay soft long enough for scores to bloom and washes to set evenly. Without it, the crust dries and sets before the loaf can spring — the result is a dense, pale, split-sided loaf.</p>
+
+            <div class="steam-grid">
+                @foreach (var s in _steamMethods)
+                {
+                    <div class="steam-card">
+                        <div class="steam-card-header">
+                            <span class="steam-icon">@s.Icon</span>
+                            <div>
+                                <div class="steam-name">@s.Name</div>
+                                <div class="steam-effort">@s.Effort</div>
+                            </div>
+                        </div>
+                        <p class="steam-desc">@s.Description</p>
+                        @if (!string.IsNullOrEmpty(s.Tip))
+                        {
+                            <div class="steam-tip">@s.Tip</div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    }
+
+</div>
+
+@code {
+    private string _activeTab = "washes";
+
+    private record Tab(string Id, string Icon, string Label);
+    private readonly Tab[] _tabs =
+    [
+        new("washes",  "🖌️",  "Washes"),
+        new("scoring", "🔪",  "Scoring"),
+        new("toppings","🌿",  "Toppings"),
+        new("steam",   "♨️",  "Steam"),
+    ];
+
+    private record Wash(string Icon, string Name, string Timing, int Browning, int Shine, string BestFor, string Tip);
+    private readonly Wash[] _washes =
+    [
+        new("💧", "Water mist / brush", "Before bake", 2, 1,
+            "Lean and crusty breads; gluing seeds without adding colour",
+            "Dissolves surface starch into glucose that feeds the Maillard reaction — modest browning with almost no gloss."),
+        new("🥛", "Milk wash", "Before bake", 3, 2,
+            "Sandwich loaves, dinner rolls, brioche au lait; tender golden crust",
+            "Lactose and milk proteins both feed the Maillard reaction. Gives a soft, satiny finish slightly sweeter than water."),
+        new("🥚", "Whole egg wash", "Before bake", 3, 3,
+            "Most enriched breads, rolls, pastry — the baker's all-purpose choice",
+            "Balanced colour and shine. Whisk with a pinch of salt to break the albumen; brush in a thin, even coat."),
+        new("🌟", "Egg white wash", "Before bake", 4, 4,
+            "Decorative finishes; crisp gloss; gluing seeds without deep amber colour",
+            "Highest shine, lighter colour than whole egg — ideal when shine matters more than depth of colour."),
+        new("✨", "Egg yolk + cream", "Before bake", 5, 5,
+            "Brioche, challah, kugelhopf — deep amber shell finish",
+            "The professional choice for enriched doughs. Near-shellacked gloss and deep amber. Loosen one yolk with 1–2 tsp cream."),
+        new("🧈", "Butter (melted)", "After bake — brush on hot crust", 0, 3,
+            "Soft dinner rolls, milk bread, steamed buns; a rich, supple crust",
+            "Applied before baking it burns; applied immediately out of the oven it melts in and softens the crust without gloss."),
+    ];
+
+    private record ScorePattern(string Art, string Name, string Shape, string Description);
+    private readonly ScorePattern[] _scores =
+    [
+        new("╱", "Single ear score", "Bâtard / oval loaf", "One shallow diagonal cut from end to end. Classic workhorse — a single confident stroke creates a long, even ear running the length of the loaf."),
+        new("╱╱╱", "Baguette grignes", "Long baton", "Five to seven overlapping diagonal cuts, each offset slightly — the cuts overlap by one-third so the entire baton springs open as a continuous ear."),
+        new("✕", "Cross / X", "Round boule", "Two perpendicular cuts at shallow angle. The loaf opens in four triangular flaps, giving a rosette effect. Traditional for pain de campagne."),
+        new("◈", "Square / box", "Large miche", "Four cuts forming a rectangle, or a diamond rotated 45°. Gives a bold architectural bloom with four distinct ears framing the top."),
+        new("☆", "Star / radial", "Boule", "Four to six cuts radiating from the centre. Opens like petals. Often combined with a rice-flour dusting for a dramatic contrast."),
+        new("⌇", "Wheat stalk (épi)", "Baguette", "Scissors held at 45°, cutting halfway through — each segment pushed alternately left and right. Not a lame cut; the result is a pull-apart wheat-stalk shape."),
+    ];
+
+    private record Topping(string Icon, string Name, string Glue, string Description);
+    private readonly Topping[] _toppings =
+    [
+        new("⚫", "Poppy seeds", "Water or egg white", "Classic on rolls and challah. Light and almost neutral in flavour; dense black seed gives high visual contrast."),
+        new("🤍", "Sesame seeds", "Water or egg white", "Nutty, versatile topping for rolls, baguettes, sandwich loaves and bagels. Toast first for deeper flavour; raw is softer."),
+        new("🌻", "Sunflower seeds", "Water or whole egg", "Robust topping with a mild nutty flavour. Common on German mixed-grain breads. Soak in water 30 min first to prevent scorching."),
+        new("🌾", "Rolled oats", "Milk or whole egg", "Gives a soft, rustic top with a slightly chewy texture. Classic on soft sandwich loaves. Pressed gently into the washed surface before baking."),
+        new("🍀", "Mixed seed coat", "Water or egg white", "Sesame, poppy, flax and sometimes caraway blended. Press the washed loaf face-down into a tray of seeds, then flip. Full coverage."),
+        new("⬜", "Flour dusting (white)", "None needed", "The rustic look of a country loaf. Dust through a fine sieve before scoring — score marks appear as dark lines against the white. No wash required."),
+        new("🟫", "Rice flour stencil", "None needed", "White rice flour through a cardboard or metal stencil creates a sharply-edged pattern that holds through the bake. Dramatic on dark-crusted boules."),
+        new("🟤", "Alkaline bath (lye / baked-soda wash)", "None — replaces wash", "Dipping or brushing with 1–4% NaOH (food-grade lye) or boiling 1% baked soda raises surface pH, speeding the Maillard reaction to a deep mahogany that ordinary washes cannot reach. Essential for pretzels; optional for rolls."),
+        new("🌿", "Cracked grain / bran", "Water or whole egg", "Whole cracked rye, wheat or mixed grain pressed into the top crust. Adds texture, visual interest and a hint of nutty flavour. Common on German multigrain breads."),
+    ];
+
+    private record SteamMethod(string Icon, string Name, string Effort, string Description, string Tip);
+    private readonly SteamMethod[] _steamMethods =
+    [
+        new("🍲", "Dutch oven / combo cooker", "⭐ Best", "The easiest and most reliable home method. Preheat the cast iron vessel in the oven for 45–60 min. Load the loaf cold from the fridge directly into the screaming-hot vessel; lid traps all the evaporating surface moisture.", "Remove the lid after 20 min to let the crust colour and dry. Preheat to 250 °C; finish uncovered at 220 °C."),
+        new("🪨", "Lava rocks + boiling water", "⭐⭐ High", "Fill a cast iron tray with lava rocks or chain-mail in the bottom of the oven. Preheat 30+ min. When you load the loaf, pour 250 ml boiling water into the rocks immediately and close the door fast.", "Lava rocks store more energy than a bare tray — far more steam per pour. Never use a glass baking dish; it will shatter."),
+        new("🌊", "Towel-in-steam tray method", "⭐⭐ Medium", "Wet two small towels, wring partially, fold and place in an oven-safe dish on the bottom rack. The towels slowly release steam through the first 15 min — gentler than lava rocks, more sustained than a single pour.", "Works best when the oven is well sealed. If your oven vents aggressively, combine with a light door spray at load."),
+        new("🫧", "Spray bottle at load", "⭐⭐ Easy", "Mist the oven walls (not the element or bulb) 5–10 times with a spray bottle immediately after loading, then close the door fast. Gives a burst of steam at the critical moment.", "This is the weakest method — effective for small rolls and enriched loaves but usually insufficient alone for a large lean boule. Best combined with a Dutch oven or covered pan."),
+        new("🍳", "Covered roasting tin", "⭐ Good", "A deep roasting pan inverted over the loaf on a hot baking steel or stone acts like a makeshift Dutch oven. Preheat both; slide the loaf in on a peel, cover quickly and remove the lid after 20 min.", "The steel or stone underneath gives strong bottom heat; the inverted pan traps surface steam. Score the loaf before covering — working underneath is awkward."),
+    ];
+}

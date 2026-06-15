@@ -4582,3 +4582,259 @@ body {
     .breads-tab  { padding: 7px 10px; font-size: .82rem; }
     .breads-grid { grid-template-columns: 1fr; }
 }
+
+/* ── M27 Finishing, Glazing & Crust guide ────────────────────────────────── */
+
+.finishing-page { max-width: 900px; margin: 0 auto; padding: 20px 16px 60px; }
+
+.finishing-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.finishing-title-group { flex: 1; }
+.finishing-title    { margin: 0 0 2px; font-size: 1.6rem; color: var(--text); }
+.finishing-subtitle { margin: 0; color: var(--text-muted); font-size: .9rem; }
+
+/* Tabs */
+.finishing-tabs {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+    border-bottom: 2px solid var(--border);
+    padding-bottom: 0;
+}
+
+.finishing-tab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    cursor: pointer;
+    font-size: .9rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    transition: color .15s, border-color .15s;
+}
+
+.finishing-tab:hover { color: var(--text); }
+.finishing-tab-active { color: var(--accent); border-bottom-color: var(--accent); }
+
+.finishing-intro {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    color: var(--text-muted);
+    font-size: .88rem;
+    line-height: 1.65;
+    margin-bottom: 20px;
+}
+
+.finishing-h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 12px;
+}
+
+.finishing-callout {
+    background: color-mix(in srgb, var(--accent) 8%, var(--panel));
+    border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    font-size: .84rem;
+    color: var(--text-muted);
+    margin-top: 20px;
+}
+
+/* ── Washes ─────────────────────────────────────────────────────────────── */
+
+.wash-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+}
+
+.wash-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.wash-card-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.wash-icon   { font-size: 1.6rem; line-height: 1; flex-shrink: 0; }
+.wash-name   { font-weight: 700; font-size: .9rem; color: var(--text); line-height: 1.2; }
+.wash-timing { font-size: .74rem; color: var(--text-muted); margin-top: 2px; }
+.wash-timing-after { color: #f59e0b; }
+
+.wash-meters { display: flex; flex-direction: column; gap: 6px; }
+.wash-meter-row { display: flex; align-items: center; gap: 8px; }
+.wash-meter-label { font-size: .74rem; color: var(--text-muted); width: 58px; flex-shrink: 0; }
+
+.wash-dots { display: flex; gap: 4px; }
+.wash-dot {
+    width: 10px; height: 10px; border-radius: 50%;
+    background: var(--border);
+    transition: background .1s;
+}
+.wash-dot.wash-dot-on           { background: var(--accent); }
+.wash-dot.wash-dot-shine.wash-dot-on { background: #e2d07a; }
+
+.wash-best-for {
+    margin: 0;
+    font-size: .8rem;
+    color: var(--text);
+    line-height: 1.4;
+}
+
+.wash-tip {
+    margin: 0;
+    font-size: .78rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+    border-top: 1px solid var(--border);
+    padding-top: 8px;
+}
+
+/* ── Scoring ────────────────────────────────────────────────────────────── */
+
+.finishing-blade-section { margin-bottom: 28px; }
+
+.blade-cards {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.blade-card {
+    flex: 1;
+    min-width: 220px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    text-align: center;
+}
+
+.blade-diagram { margin-bottom: 4px; }
+.blade-label   { font-size: .85rem; font-weight: 700; color: var(--text); }
+.blade-result  { font-size: .82rem; color: var(--text-muted); }
+.blade-note    { margin: 0; font-size: .78rem; color: var(--text-muted); line-height: 1.5; }
+
+.blade-shallow { border-top: 3px solid var(--accent); }
+.blade-vertical { border-top: 3px solid #3b82f6; }
+
+.score-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+}
+
+.score-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+}
+
+.score-art {
+    font-size: 1.8rem;
+    line-height: 1;
+    flex-shrink: 0;
+    width: 36px;
+    text-align: center;
+    color: var(--accent);
+    font-family: monospace;
+    letter-spacing: -.1em;
+}
+
+.score-name  { font-weight: 700; font-size: .88rem; color: var(--text); margin-bottom: 2px; }
+.score-shape { font-size: .76rem; color: var(--accent); margin-bottom: 6px; }
+.score-desc  { margin: 0; font-size: .78rem; color: var(--text-muted); line-height: 1.5; }
+
+/* ── Toppings ────────────────────────────────────────────────────────────── */
+
+.topping-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 12px;
+}
+
+.topping-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.topping-icon { font-size: 1.4rem; flex-shrink: 0; line-height: 1; margin-top: 2px; }
+.topping-name { font-weight: 700; font-size: .88rem; color: var(--text); margin-bottom: 2px; }
+.topping-glue { font-size: .74rem; color: var(--text-muted); margin-bottom: 6px; }
+.topping-desc { margin: 0; font-size: .78rem; color: var(--text-muted); line-height: 1.5; }
+
+/* ── Steam methods ───────────────────────────────────────────────────────── */
+
+.steam-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+}
+
+.steam-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.steam-card:first-child { border-top: 3px solid #22c55e; }
+
+.steam-card-header { display: flex; align-items: flex-start; gap: 10px; }
+.steam-icon   { font-size: 1.6rem; line-height: 1; flex-shrink: 0; }
+.steam-name   { font-weight: 700; font-size: .9rem; color: var(--text); margin-bottom: 2px; }
+.steam-effort { font-size: .74rem; color: var(--text-muted); }
+.steam-desc   { margin: 0; font-size: .82rem; color: var(--text-muted); line-height: 1.55; }
+.steam-tip {
+    font-size: .78rem;
+    color: var(--text-muted);
+    background: color-mix(in srgb, var(--accent) 6%, var(--panel));
+    border-radius: 6px;
+    padding: 8px 10px;
+    line-height: 1.5;
+}
+
+@media (max-width: 600px) {
+    .blade-cards { flex-direction: column; }
+    .wash-grid, .score-grid, .topping-grid, .steam-grid { grid-template-columns: 1fr; }
+}
