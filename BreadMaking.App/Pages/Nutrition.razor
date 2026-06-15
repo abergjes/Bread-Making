@@ -1,0 +1,133 @@
+@page "/nutrition"
+@inject NavigationManager Nav
+
+<div class="nutrition-page">
+
+    <div class="nutrition-header">
+        <button class="back-btn" @onclick='() => Nav.NavigateTo("/history")'>← History</button>
+        <div class="nutrition-title-group">
+            <h2 class="nutrition-title">Nutrition & Health</h2>
+            <p class="nutrition-subtitle">Baker's guide §31 · What slow fermentation does to bread's nutrition</p>
+        </div>
+    </div>
+
+    <div class="nutrition-callout nutrition-callout--warning">
+        <strong>Important:</strong> None of the fermentation effects described here make bread safe for someone with coeliac disease. This section is not medical advice.
+    </div>
+
+    <p class="nutrition-intro">
+        Long, slow sourdough fermentation doesn't just build flavour — it measurably changes bread's nutritional profile. Four well-documented effects sit behind sourdough's nutritional reputation, each following from the same root cause: the extended action of acids, enzymes and microbes on the dough before baking. The mechanisms are solid; how much they matter to any individual varies widely.
+    </p>
+
+    <!-- Four benefits cards -->
+    <div class="nutrition-benefits-grid">
+        @foreach (var b in _benefits)
+        {
+            <div class="nutrition-benefit-card">
+                <div class="benefit-header">
+                    <span class="benefit-icon">@b.Icon</span>
+                    <div>
+                        <div class="benefit-title">@b.Title</div>
+                        <div class="benefit-strength @("benefit-strength--" + b.StrengthClass)">@b.Strength</div>
+                    </div>
+                </div>
+                <p class="benefit-desc">@b.Description</p>
+                @if (!string.IsNullOrEmpty(b.Caveat))
+                {
+                    <div class="benefit-caveat">@b.Caveat</div>
+                }
+            </div>
+        }
+    </div>
+
+    <!-- Evidence quality note -->
+    <div class="nutrition-evidence-section">
+        <h3 class="nutrition-h3">Where the Evidence Is Firm — and Where It Isn't</h3>
+        <div class="evidence-grid">
+            <div class="evidence-card evidence-firm">
+                <div class="evidence-label">Well-established</div>
+                <ul class="evidence-list">
+                    <li>Lower glycaemic index in controlled studies</li>
+                    <li>Phytase activity and phytic acid degradation</li>
+                    <li>Fructan (FODMAP) consumption during fermentation</li>
+                    <li>Gluten and ATI proteolysis increases with fermentation time</li>
+                </ul>
+            </div>
+            <div class="evidence-card evidence-variable">
+                <div class="evidence-label">More variable / context-dependent</div>
+                <ul class="evidence-list">
+                    <li>Clinical benefit of FODMAP reduction for IBS individuals</li>
+                    <li>At least one controlled trial found sourdough no better tolerated than ordinary bread for FODMAP-sensitive people</li>
+                    <li>Symptom improvement from gluten/ATI reduction varies greatly by individual</li>
+                    <li>All effects depend on fermentation length, acidity, flour type</li>
+                </ul>
+            </div>
+        </div>
+        <p class="nutrition-footnote">
+            Long fermentation reliably improves bread on average and may help an individual considerably or barely — this is the kind of honest uncertainty a good reference states plainly.
+        </p>
+    </div>
+
+    <!-- Maximising the benefits -->
+    <div class="nutrition-levers-section">
+        <h3 class="nutrition-h3">How to Maximise Each Effect</h3>
+        <div class="lever-grid">
+            @foreach (var l in _levers)
+            {
+                <div class="lever-card">
+                    <span class="lever-icon">@l.Icon</span>
+                    <div>
+                        <div class="lever-title">@l.Title</div>
+                        <p class="lever-action">@l.Action</p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Dark crust footnote -->
+    <div class="nutrition-callout">
+        <strong>Dark crust note:</strong> Very dark baking develops acrylamide through the same Maillard chemistry that gives crust its flavour. The flavour chapter argues for a deep mahogany, not charcoal — here is one more reason to agree. Moderate darkness is both tastier and nutritionally wiser than charring.
+    </div>
+
+</div>
+
+@code {
+    private record BenefitCard(string Icon, string Title, string Strength, string StrengthClass, string Description, string Caveat);
+    private readonly BenefitCard[] _benefits =
+    [
+        new("📉", "Lower glycaemic index",
+            "Best-supported benefit", "strong",
+            "Sourdough bread raises blood sugar more slowly than ordinary white bread — often cited around a GI of ~53 against markedly higher figures for standard white. Organic acids (lactic and acetic) slow both gastric emptying and the enzymatic digestion of starch, producing a gentler blood-sugar curve.",
+            "The size of the reduction varies with fermentation length, acidity and the individual. Whole grain flours compound the effect through their fibre content."),
+        new("🔬", "Degraded phytic acid — better mineral absorption",
+            "Well-established mechanism", "strong",
+            "Whole grains carry phytic acid (phytate), an antinutrient that binds zinc, iron, magnesium and calcium so the body can't absorb them. The acidic sourdough environment activates phytase — an enzyme that breaks phytic acid down — freeing those minerals for absorption. The effect is greatest in longer, more acidic ferments.",
+            "Phytase activity is highest in whole-grain flours; refined white flour has far less phytic acid to begin with. Use wholemeal or ancient-grain flour and ferment for at least 4–6 hours for meaningful reduction."),
+        new("🫧", "Reduced FODMAPs",
+            "Mechanism sound; clinical variability high", "medium",
+            "Wheat contains fructans — fermentable carbohydrates (FODMAPs) that trigger bloating and discomfort in people with irritable bowel syndrome. A long fermentation allows the microbes to consume much of the fructan content, which is why many people who find ordinary bread uncomfortable may tolerate long-fermented sourdough better.",
+            "At least one controlled study found sourdough no better tolerated than ordinary bread for FODMAP-sensitive people. Treat this as 'may help' rather than 'will help.'"),
+        new("🌾", "Partially broken-down gluten and ATIs",
+            "Demonstrated; not a cure", "medium",
+            "Extended fermentation proteolyses some of the gluten proteins and reduces amylase-trypsin inhibitors (ATIs) — compounds implicated in non-coeliac wheat sensitivity. This can make the bread sit more easily for wheat-sensitive individuals, explaining why some people tolerate long-fermented sourdough better than commercially yeasted bread.",
+            "This does NOT make bread gluten-free or safe for coeliacs. Coeliac disease triggers an immune response to gluten protein fragments that fermentation does not eliminate."),
+    ];
+
+    private record Lever(string Icon, string Title, string Action);
+    private readonly Lever[] _levers =
+    [
+        new("⏱️", "Extend fermentation time",
+            "Bulk at room temperature then cold retard for 8–16 hours. More time = more phytase activity, more fructan consumption, more gluten proteolysis."),
+        new("🌡️", "Promote acidity",
+            "A more acidic dough (lower pH) is the common driver of all four effects. Cool temperatures, stiff levain and longer retard all build acidity. Target pH 3.8–4.2 in the crumb."),
+        new("🌾", "Choose whole or ancient grain flour",
+            "Whole grain flours carry more phytic acid to degrade (so the payoff from fermentation is larger), more fibre (for glycaemic benefit), and more phenolic antioxidants that become more bioavailable through fermentation."),
+        new("💧", "Keep hydration moderate to high",
+            "Higher-hydration doughs move fermentation products and enzymes more freely. This tends to favour phytase and proteolytic activity. Stiff retarded doughs also build more acetic acid (see Flavour page)."),
+        new("🧫", "Maintain a healthy, active starter",
+            "A well-established starter at peak activity has a richer bacterial community. The heterofermentative LAB most responsible for acidity (and thus for driving phytase and reducing FODMAPs) thrive in a mature, well-fed culture."),
+        new("🍞", "Don't over-bake",
+            "Very dark baking (charcoal crust) generates acrylamide, a compound classified as a probable human carcinogen at high doses. Aim for deep mahogany, not black. Steam in the first 20 minutes gives an even, well-developed crust without scorching."),
+    ];
+}

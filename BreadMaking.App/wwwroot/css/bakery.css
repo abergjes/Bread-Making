@@ -5056,3 +5056,189 @@ body {
     .compound-grid, .knob-grid { grid-template-columns: 1fr; }
     .acid-cards { flex-direction: column; }
 }
+
+/* ── M30: Nutrition & Health ─────────────────────────────── */
+
+.nutrition-page {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+}
+
+.nutrition-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.nutrition-title-group { flex: 1; }
+.nutrition-title  { font-size: 1.5rem; font-weight: 700; margin: 0 0 4px; color: var(--text); }
+.nutrition-subtitle { font-size: .85rem; color: var(--text-muted); margin: 0; }
+
+.nutrition-callout {
+    background: color-mix(in srgb, var(--accent) 8%, var(--panel));
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    font-size: .85rem;
+    color: var(--text);
+    margin-bottom: 18px;
+    line-height: 1.5;
+}
+
+.nutrition-callout--warning {
+    background: color-mix(in srgb, #ef4444 8%, var(--panel));
+    border-left-color: #ef4444;
+}
+
+.nutrition-intro {
+    color: var(--text-muted);
+    font-size: .88rem;
+    line-height: 1.65;
+    margin: 0 0 20px;
+}
+
+/* Benefits grid */
+.nutrition-benefits-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+    gap: 14px;
+    margin-bottom: 30px;
+}
+
+.nutrition-benefit-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.benefit-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.benefit-icon { font-size: 1.6rem; flex-shrink: 0; }
+
+.benefit-title { font-weight: 700; font-size: .9rem; color: var(--text); margin-bottom: 4px; }
+
+.benefit-strength {
+    display: inline-block;
+    font-size: .7rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+}
+
+.benefit-strength--strong {
+    background: color-mix(in srgb, #22c55e 15%, var(--panel));
+    color: #16a34a;
+}
+
+.benefit-strength--medium {
+    background: color-mix(in srgb, #f59e0b 15%, var(--panel));
+    color: #b45309;
+}
+
+.benefit-desc {
+    margin: 0;
+    font-size: .83rem;
+    color: var(--text);
+    line-height: 1.55;
+}
+
+.benefit-caveat {
+    font-size: .78rem;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border);
+    padding-top: 8px;
+    line-height: 1.5;
+}
+
+/* Evidence section */
+.nutrition-evidence-section {
+    margin-bottom: 30px;
+}
+
+.nutrition-h3 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 12px;
+}
+
+.evidence-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 12px;
+}
+
+.evidence-card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+}
+
+.evidence-firm   { border-top: 3px solid #22c55e; }
+.evidence-variable { border-top: 3px solid #f59e0b; }
+
+.evidence-label {
+    font-weight: 700;
+    font-size: .8rem;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+}
+
+.evidence-list {
+    margin: 0;
+    padding-left: 18px;
+    font-size: .82rem;
+    color: var(--text);
+    line-height: 1.7;
+}
+
+.nutrition-footnote {
+    font-size: .8rem;
+    color: var(--text-muted);
+    font-style: italic;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* Levers section */
+.nutrition-levers-section { margin-bottom: 24px; }
+
+.lever-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+}
+
+.lever-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+}
+
+.lever-icon  { font-size: 1.4rem; flex-shrink: 0; margin-top: 2px; }
+.lever-title { font-weight: 700; font-size: .85rem; color: var(--text); margin-bottom: 4px; }
+.lever-action { margin: 0; font-size: .8rem; color: var(--text-muted); line-height: 1.5; }
+
+@media (max-width: 640px) {
+    .nutrition-benefits-grid,
+    .evidence-grid,
+    .lever-grid { grid-template-columns: 1fr; }
+}
